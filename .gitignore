@@ -1,0 +1,7 @@
+*.pyc
+__pycache__
+yo.egg-info
+build
+dist
+.tox
+.coverage
