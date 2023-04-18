@@ -22,16 +22,11 @@ A minimum of Python 3.6 is required in order to use Yo.
 
 **Via Pip:**
 
-Yo is not currently available on the Python Package Index. Check back soon!
+    pip install yo oci-cli
 
-**From Source:**
-
-Clone the repository, and then install with:
-
-    python setup.py install
-
-After installation, you'll need to configure Yo to work with your OCI tenancy.
-Please see the [documentation][] for detailed instructions.
+This will install the standard OCI CLI alongside Yo, which can be useful as
+well.  After installation, you'll need to configure Yo to work with your OCI
+tenancy.  Please see the [documentation][] for detailed instructions.
 
 ## Documentation
 
