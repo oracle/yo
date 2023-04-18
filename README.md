@@ -1,5 +1,4 @@
 # yo - fast and simple OCI client
-===============================
 
 yo is a command-line client for managing OCI instances. It makes launching OCI
 instances as simple as rudely telling your computer "yo, launch an instance".
@@ -18,7 +17,6 @@ how yo tries to improve on the OCI command line and browser tools:
 - yo aggressively caches data to make operations as quick as possible.
 
 ## Installation
-------------
 
 A minimum of Python 3.6 is required in order to use Yo.
 
@@ -36,13 +34,11 @@ After installation, you'll need to configure Yo to work with your OCI tenancy.
 Please see the [documentation][] for detailed instructions.
 
 ## Documentation
--------------
 
 The [documentation][] contains information on the configuration file, as well as
 a listing of sub-commands and features offered.
 
 ## Examples
---------
 
 ```bash
 # Launch an instance based on your default settings, and SSH into it
@@ -62,26 +58,22 @@ yo terminate my-vm
 ```
 
 ## Help
-----
 
 We hope you can find all the answers to your questions in our documentation. But
 if you're still having trouble, feel free to open a Github issue and we'll try
 our best to help!
 
 ## Contributing
-------------
 
 We welcome contributions from the community. Before submitting a pull request,
 please [review our contribution guide][contributing].
 
 ## Security
---------
 
 Please consult the [security guide][security] for our responsible security
 vulnerability disclosure process.
 
 ## License
--------
 
 Copyright (c) 2023 Oracle and/or its affiliates.
 
