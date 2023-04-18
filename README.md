@@ -54,7 +54,7 @@ yo ssh my-vm
 yo scp ./files my-vm:
 
 # Terminate my-vm
-yo terminate my-vm
+yo terminate my-vm.
 ```
 
 ## Help
