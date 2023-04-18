@@ -60,7 +60,7 @@ docs:
 
 .PHONY: docs-publish
 docs-publish: docs
-	rsync -avz .tox/docs_out/ ca-common:public_html/yo
+	@echo "Publishing docs automatically is not yet supported."
 
 .PHONY: _release_sanity_check
 _release_sanity_check:
@@ -97,7 +97,7 @@ release: _release_sanity_check test
 	@echo "Point of no return: time to tag and upload this release"
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@echo Confirmed
-	twine upload -r oracle dist/yo-$(VERSION)*
+	twine upload -r yo dist/yo-$(VERSION)*
 	git push origin master
 	git tag v$(VERSION)
 	git push origin v$(VERSION)
