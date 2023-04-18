@@ -45,7 +45,7 @@ a listing of sub-commands and features offered.
 yo launch -s
 
 # Launch a flexible instance with given shape, size, and name
-yo launch -S VM.Standard.x86.Generic --cpu 3 --mem 12 -n my-vm
+yo launch -S VM.Standard.E4.Flex --cpu 3 --mem 12 -n my-vm
 
 # SSH into my-vm
 yo ssh my-vm
