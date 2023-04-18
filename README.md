@@ -13,7 +13,7 @@ how yo tries to improve on the OCI command line and browser tools:
   configurations, etc can all be stored in your config. It really can be as
   simple as `yo launch` (or, for the lazier, `yo la`).
 - yo lets you refer to your instances by name. You should never need to memorize
-  an IP address again.
+  an IP address again
 - yo aggressively caches data to make operations as quick as possible.
 
 ## Installation
