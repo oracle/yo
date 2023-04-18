@@ -64,8 +64,8 @@ docs-publish: docs
 
 .PHONY: _release_sanity_check
 _release_sanity_check:
-	@if [ ! $$(git symbolic-ref -q HEAD) = "refs/heads/master"  ]; then \
-	    echo error: You must be on master to release a new version.; \
+	@if [ ! $$(git symbolic-ref -q HEAD) = "refs/heads/main"  ]; then \
+	    echo error: You must be on main to release a new version.; \
 	    exit 1; \
 	fi
 	@if [ ! -z "$$(git status --porcelain)" ]; then \
@@ -76,7 +76,7 @@ _release_sanity_check:
 	    echo error: It looks like you have not bumped the version since last release.; \
 	    exit 1; \
 	fi
-	@if [ -z "$$(grep ^$(shell echo $(VERSION) | sed 's/\./\\./g') CHANGELOG.md)" ]; then \
+	@if [ -z "$$(grep "^## "$(shell echo $(VERSION) | sed 's/\./\\./g') CHANGELOG.md)" ]; then \
 	    echo error: It looks like you have not documented this release in CHANGELOG.md; \
 	    exit 1; \
 	fi
@@ -98,6 +98,6 @@ release: _release_sanity_check test
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@echo Confirmed
 	twine upload -r yo dist/yo-$(VERSION)*
-	git push origin master
+	git push origin main
 	git tag v$(VERSION)
 	git push origin v$(VERSION)
