@@ -18,16 +18,13 @@ resources for you.
 Installation
 ------------
 
-Currently, Yo is not available on Pip, but it will be soon. In the meantime, you
-can install from Git:
-
 .. code:: bash
 
-    python setup.py install
-    pip install oci-cli
+    pip install yo oci-cli
 
-The above will also install the ``oci-cli`` package, which will help you
-configure yo.
+It's recommended that you use the above command to install yo. If you run it as
+a non-root user, it will install to your home directory. The above will also
+install the ``oci-cli`` package, which will help you configure yo.
 
 Initial Configuration
 ---------------------
