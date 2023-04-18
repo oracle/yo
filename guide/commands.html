@@ -1,0 +1,645 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Commands &#8212; yo v1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="icon" href="../_static/yo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tasks" href="tasks.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="commands">
+<h1>Commands<a class="headerlink" href="#commands" title="Permalink to this heading">¶</a></h1>
+<p>Yo has an extensive list of commands. By default, yo allows you to use the
+shortest unambiguous prefix as a shortcut for the command name. For example, you
+may use <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">la</span></code> instead of <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code>. However, as new commands are added,
+these aliases may stop working. For instance, <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">li</span></code> was a valid shortcut for
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> until v0.23.0 added <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">limits</span></code>.</p>
+<p>You may instead create an <code class="docutils literal notranslate"><span class="pre">[aliases]</span></code> configuration section in your
+<code class="docutils literal notranslate"><span class="pre">~/.oci/yo.ini</span></code> file. This will disable the shortest-prefix aliasing, and allow
+you full control over the aliases. See the configuration documentation for more
+information.</p>
+<section id="instance-management">
+<h2>Instance Management<a class="headerlink" href="#instance-management" title="Permalink to this heading">¶</a></h2>
+<section id="yo-list">
+<h3>yo list<a class="headerlink" href="#yo-list" title="Permalink to this heading">¶</a></h3>
+<p>Lists all instances which were created by me. (Defaults to a particular
+compartment which is hard-coded, but will be configurable in the future).</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo list
+┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━┳━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name            ┃ Shape            ┃ Mem ┃ CPU ┃ State       ┃ Created             ┃
+┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━╇━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
+│ stepbren-vm     │ VM.Standard.E2.2 │ 16  │ 2   │ TERMINATING │ 2020-10-14 15:51:23 │
+│ stepbren-vm-1   │ VM.Standard.E2.2 │ 16  │ 2   │ TERMINATING │ 2020-10-15 15:28:48 │
+│ stepbren-vm-2   │ VM.Standard.E2.2 │ 16  │ 2   │ TERMINATING │ 2020-10-15 15:29:07 │
+│ stepbren-vm-3   │ VM.Standard.E2.2 │ 16  │ 2   │ TERMINATING │ 2020-10-15 15:29:38 │
+│ stepbren-vm-cmd │ VM.Standard.E2.2 │ 16  │ 2   │ TERMINATING │ 2020-10-15 14:15:58 │
+└─────────────────┴──────────────────┴─────┴─────┴─────────────┴─────────────────────┘
+</pre></div>
+</div>
+</section>
+<section id="yo-launch">
+<h3>yo launch<a class="headerlink" href="#yo-launch" title="Permalink to this heading">¶</a></h3>
+<p>Launch a new instance. Optionally wait and connect to it via SSH once it is
+running.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo launch -n stepbren-vm-cmd-1 --ssh
+Using subnet App-AD3-iad.sub
+Using image Oracle-Linux-8.2-2020.09.23-0
+Launching instance stepbren-vm-cmd-1
+Wait for Instance stepbren-vm-cmd-1 to enter state RUNNING
+Instance stepbren-vm-cmd-1 starts in state PROVISIONING
+WAIT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+Instance stepbren-vm-cmd-1 has reached state RUNNING!
+Found instance ip 100.100.243.108
+SSH is up!
+Wait for SSH ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+ssh opc@100.100.243.108...
+Host key fingerprint is SHA256:j3g4WFJ2fDtLvawGmzqIhLgQ81ZEdMTcFc/1UB5XNg4
++---[ECDSA 256]---+
+|   oo+o. .o. Eo+*|
+|    ..o..  o .o=+|
+|   .  o o . o  .o|
+|o   .o . . o     |
+|.= .. . S + .    |
+|+ +  + o.+ + .   |
+|.+ ...+ o+o o    |
+|. . . .oo ..     |
+|      .o ..      |
++----[SHA256]-----+
+Activate the web console with: systemctl enable --now cockpit.socket
+
+[opc@stepbren-vm-cmd-1 ~]$ logout
+Connection to 100.100.243.108 closed.
+</pre></div>
+</div>
+<p>Accepts args:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-p,</span> <span class="pre">--profile</span></code> - specify the “instance profile” (a group of instance
+settings) to use for this instance. See the “instance profile” section below
+for details.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--name,</span> <span class="pre">-n</span></code> - name the instance</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--wait,</span> <span class="pre">-w</span></code> - wait until the instance is in the running state</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--ssh,</span> <span class="pre">-s</span></code> - ssh into the instance once it is running (implies <code class="docutils literal notranslate"><span class="pre">--wait</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--os</span></code> - specify operating system and version separated by colon, eg:
+<code class="docutils literal notranslate"><span class="pre">--os</span> <span class="pre">'Canonical</span> <span class="pre">Ubuntu:20.04'</span></code>. This option is designed to make it easy to
+get the up-to-date image best suited to the OS you want to run. However, if
+you need to directly specify an image, see the <code class="docutils literal notranslate"><span class="pre">--image</span></code> option below.</p></li>
+</ul>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--image</span></code> - specify the name of a custom image (also residing inside of the
+same compartment you use for instances) to use.</p></li>
+</ul>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--shape</span></code> - specify the shape to use. Currently, flex shapes (with custom OCPU
+and memory selections) cannot be customized and will use their default values.</p></li>
+</ul>
+</section>
+<section id="yo-ssh">
+<h3>yo ssh<a class="headerlink" href="#yo-ssh" title="Permalink to this heading">¶</a></h3>
+<p>Connect to an instance via SSH. You can run it with no arguments if you only
+have one running instance. Otherwise, specify the name of the instance as the
+next argument.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo ssh
+Connecting to instance stepbren-vm-cmd
+ssh opc@100.100.243.206
+The authenticity of host &#39;100.100.243.206 (100.100.243.206)&#39; can&#39;t be established.
+ECDSA key fingerprint is SHA256:8nR8sFnqR+48CRKkgQuLNjLOv84ZFhNljHy3IQva4Pg.
++---[ECDSA 256]---+
+|  . o+           |
+| ..+++.o.        |
+|o.++o.++o . .    |
+|==..o..... *     |
+|=o.o  . S.* o    |
+| oE o  +.o.+     |
+|  .o    ....o.   |
+|  o.o      +o    |
+|  .=.       o.   |
++----[SHA256]-----+
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added &#39;100.100.243.206&#39; (ECDSA) to the list of known hosts.
+Activate the web console with: systemctl enable --now cockpit.socket
+
+[opc@stepbren-vm-cmd ~]$
+</pre></div>
+</div>
+<p>Yo does its best to determine which username it should use, based on the <code class="docutils literal notranslate"><span class="pre">--os</span></code>
+argument you used to launch the instance. However, for some custom images, this
+won’t work. In this case, you can specify the username in the same way as you
+would via SSH: <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ssh</span> <span class="pre">username&#64;instance</span></code>.</p>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ssh</span></code> to execute a single command on an instance, much like
+you might do with <code class="docutils literal notranslate"><span class="pre">ssh</span></code>. Simply place that command at the end of the yo command.
+To avoid yo interpreting any of your arguments as part of the <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ssh</span></code> command,
+it is recommended to separate the command with a double hyphen (<code class="docutils literal notranslate"><span class="pre">--</span></code>) as this
+conventionally signals the end of option processing.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo ssh ol8-2 -- ls /etc/yum.repos.d
+Connecting to instance stepbren-ol8-2
+Found instance ip 100.100.242.96
+ssh opc@100.100.242.96...
+ksplice-ol8.repo
+mysql-ol8.repo
+oci-included-ol8.repo
+oracle-epel-ol8.repo
+oraclelinux-developer-ol8.repo
+oracle-linux-ol8.repo
+uek-ol8.repo
+virt-ol8.repo
+</pre></div>
+</div>
+</section>
+<section id="yo-mosh">
+<h3>yo mosh<a class="headerlink" href="#yo-mosh" title="Permalink to this heading">¶</a></h3>
+<p>Connect to an instance via Mosh. This is similar to SSH, but sessions are
+persistent even in the face of heavy packet loss, disconnections, high RTT, and
+more. Mosh features local echo and a slew of other niceties - but the downside
+is that it doesn’t allow scrollback. You may find it more useful in combination
+with heavy use of pagers, screen, or tmux.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>yo mosh vm-1
+</pre></div>
+</div>
+<p>To use mosh, you’ll first need to install it. On Oracle Linux, it is available
+in EPEL, and can be installed by the following commands:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo dnf config-manager --enable ol9_developer_EPEL
+sudo dnf install -y mosh
+</pre></div>
+</div>
+<p>You can even place the commands necessary to install mosh into a
+<a class="reference internal" href="tasks.html"><span class="std std-doc">Task</span></a> which can be run automatically.</p>
+</section>
+<section id="yo-console">
+<h3>yo console<a class="headerlink" href="#yo-console" title="Permalink to this heading">¶</a></h3>
+<p>Connects you to the instance serial console.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo console
+Connecting to instance stepbren-focal-1 console
+Created instance console connection. Waiting for it to become active.
+Wait for InstanceConsoleConnection to enter state ACTIVE
+InstanceConsoleConnection starts in state CREATING
+WAIT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+InstanceConsoleConnection has reached state ACTIVE!
+About to execute:
+[
+    &#39;ssh&#39;,
+    &#39;-o&#39;,
+    &#39;ProxyCommand=ssh -W %h:%p -p 443
+ocid1.instanceconsoleconnection.oc1.iad.anuwcljsgj4tlxyc2une5ykyejfyvwgoh3heizszhahyewc6yoh7raypcqrq@instance-console.us-
+    &#39;ocid1.instance.oc1.iad.anuwcljsgj4tlxycvynmtmopr6kq3jahn6snvlgz7iqbktojcfr6m2tyiepa&#39;,
+    &#39;-o&#39;,
+    &#39;ServerAliveInterval=60&#39;,
+    &#39;-o&#39;,
+    &#39;TCPKeepAlive=yes&#39;
+]
+This connection will stay open for a long time.
+To exit a running SSH connection, use the escape sequence: &lt;Return&gt;~.
+Host key fingerprint is SHA256:NvHnkwGWIT+nHSP93xHcb2hXcN2Ud3pEkGm+fTYHZUE
+...
+</pre></div>
+</div>
+</section>
+<section id="yo-console-history">
+<h3>yo console-history<a class="headerlink" href="#yo-console-history" title="Permalink to this heading">¶</a></h3>
+<p>Fetches the most recent console history, and prints it out. This way, even if
+you didn’t have a serial console connection, you can still see recent data,
+including crash log lines.</p>
+</section>
+<section id="yo-scp">
+<h3>yo scp<a class="headerlink" href="#yo-scp" title="Permalink to this heading">¶</a></h3>
+<p>A simple <code class="docutils literal notranslate"><span class="pre">scp</span></code> wrapper. As arguments, you may specify either files, or remote
+filename specifiers. A remote file can be specified using the instance name
+(e.g. <code class="docutils literal notranslate"><span class="pre">vm-1:dir/file.txt</span></code>), or with the instance name omitted (e.g.
+<code class="docutils literal notranslate"><span class="pre">:dir/file.txt</span></code>). If the instance name is omitted from the remote file
+specifier, you can provide it via the <code class="docutils literal notranslate"><span class="pre">-n</span></code> argument.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo scp hello.py vm-cmd4:
+Found instance ip 100.100.243.42
+Copying to instance stepbren-vm-cmd4 (opc@100.100.243.42)
+hello.py                                100%  888    11.4KB/s   00:00
+</pre></div>
+</div>
+<p>Wherever you specify the instance name, you can also specify a username in the
+normal way (<code class="docutils literal notranslate"><span class="pre">user&#64;instance</span></code>).</p>
+</section>
+<section id="yo-rsync">
+<h3>yo rsync<a class="headerlink" href="#yo-rsync" title="Permalink to this heading">¶</a></h3>
+<p>An <code class="docutils literal notranslate"><span class="pre">rsync</span></code> wrapper, which is very similar to scp. Note that the <code class="docutils literal notranslate"><span class="pre">rsync_args</span></code>
+configuration argument is used by default. You can leave it empty or set some
+useful arguments.</p>
+</section>
+<section id="yo-vnc">
+<h3>yo vnc<a class="headerlink" href="#yo-vnc" title="Permalink to this heading">¶</a></h3>
+<p>This command allows you to use the VNC protocol to access a remote desktop for
+your instance. Note that this requires instance configuration in most Linux
+cases. See <a class="reference internal" href="vnc.html"><span class="std std-doc">VNC and Remote Desktop</span></a> for setup steps.</p>
+<p>By default, this uses an SSH tunnel, which can be disabled with <code class="docutils literal notranslate"><span class="pre">--no-tunnel</span></code> or
+<code class="docutils literal notranslate"><span class="pre">-T</span></code>.</p>
+<p>To use this, you should set the <a class="reference internal" href="configuration.html#vnc-prog"><span class="std std-ref">vnc_prog</span></a> configuration setting.</p>
+</section>
+<section id="yo-rdp">
+<h3>yo rdp<a class="headerlink" href="#yo-rdp" title="Permalink to this heading">¶</a></h3>
+<p>This command allows you to use the RDP protocol  to access a remote desktop for
+your instance. This also requires instance configuration. See <a class="reference internal" href="vnc.html"><span class="std std-doc">VNC and Remote
+Desktop</span></a> for setup steps.</p>
+<p>By default, this uses an SSH tunnel, which can be disabled with <code class="docutils literal notranslate"><span class="pre">--no-tunnel</span></code> or
+<code class="docutils literal notranslate"><span class="pre">-T</span></code>. You will need to use this option to connect to Windows Server instances,
+which do not use SSH tunneling.</p>
+<p>To use this wrapper, you should set the <a class="reference internal" href="configuration.html#rdp-prog"><span class="std std-ref">rdp_prog</span></a> configuration setting.</p>
+</section>
+<section id="yo-terminate">
+<h3>yo terminate<a class="headerlink" href="#yo-terminate" title="Permalink to this heading">¶</a></h3>
+<p>Terminate a single instance, or all instances created by you. Unlike the
+non-destructive ssh commands above, this command requires you either explicitly
+specify one or more names on the command line, or pass <code class="docutils literal notranslate"><span class="pre">--all</span></code> to terminate all
+instances created by you. If you have only one instance, this command will
+<strong>not</strong> default to that instance. Further, it always requires confirmation,
+unless you use <code class="docutils literal notranslate"><span class="pre">--yes</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo terminate --all
+About to terminate 5 instances:
+- stepbren-vm
+- stepbren-vm-1
+- stepbren-vm-2
+- stepbren-vm-3
+- stepbren-vm-cmd.
+Is this ok? [y/n]: y
+Confirmed.
+Working... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+</pre></div>
+</div>
+</section>
+<section id="yo-reboot-yo-stop-yo-start">
+<h3>yo reboot, yo stop, yo start<a class="headerlink" href="#yo-reboot-yo-stop-yo-start" title="Permalink to this heading">¶</a></h3>
+<p>These commands allow you to reboot, stop, or start instances. Same as <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">terminate</span></code>, there is no default argument; you must explicitly pass one or more
+instance names (or <code class="docutils literal notranslate"><span class="pre">--all</span></code>) on the command line.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">reboot</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span></code>, there is an additional argument <code class="docutils literal notranslate"><span class="pre">--force</span></code>. This allows
+you to directly stop a machine without communicating with the operating system
+via ACPI commands. While this risks data loss, it’s the best option for a
+completely locked up system.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo reboot focal-1
+About to reboot 1 instances:
+- stepbren-focal-1.
+Is this ok? [y/n]: y
+Confirmed.
+Working... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+</pre></div>
+</div>
+<p>For <code class="docutils literal notranslate"><span class="pre">reboot</span></code> and <code class="docutils literal notranslate"><span class="pre">start</span></code>, you can use <code class="docutils literal notranslate"><span class="pre">--ssh</span></code> to wait and connect to the
+instance once it is up. Of course, this only works if you specify one instance
+on the command line. Please note that unfortunately, specifying a username for
+SSH is not supported in these commands – instead you’ll need to manually run
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ssh</span></code> after the command completes.</p>
+</section>
+<section id="yo-resize">
+<h3>yo resize<a class="headerlink" href="#yo-resize" title="Permalink to this heading">¶</a></h3>
+<p>This command is similar to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">reboot</span></code>, except that you must specify a new shape
+for the instance(s). If OCI determines that the shapes are compatible, then your
+instance(s) will be shut down, and started up in a new shape. If you specify
+only one instance, you can optionally <code class="docutils literal notranslate"><span class="pre">--ssh</span></code> (though you cannot specify a
+username).</p>
+</section>
+<section id="yo-rename">
+<h3>yo rename<a class="headerlink" href="#yo-rename" title="Permalink to this heading">¶</a></h3>
+<p>This command allows you to alter the name of an instance:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>yo rename ol9-1 my-precious
+</pre></div>
+</div>
+</section>
+<section id="yo-protect">
+<h3>yo protect<a class="headerlink" href="#yo-protect" title="Permalink to this heading">¶</a></h3>
+<p>This command allows you to set or remove a tag on the instance, which signifies
+that it should not be terminated. Yo will not terminate an instance with this
+flag.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>yo protect ol9-1 on       # enable it
+yo terminate --yes ol9-1  # fails!
+yo protect ol9-1 off      # disable it
+yo terminate --yes ol9-1  # terminated
+</pre></div>
+</div>
+<p>This ensures that you won’t accidentally terminate the instance by carelessly
+running a command. But please note, termination protection is a Yo feature,
+<strong>not an OCI feature</strong>. It will prevent you from terminating the instance from
+Yo, but not from the OCI console or command line. You have been warned!</p>
+</section>
+<section id="yo-wait">
+<h3>yo wait<a class="headerlink" href="#yo-wait" title="Permalink to this heading">¶</a></h3>
+<p>Wait for an instance to enter a state. Typically, an instance starts in
+“PROVISIONING” state, moves to “STARTING”, and then “RUNNING”. It moves through
+other states as you interact with it. The full list of states at the time of
+writing is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>CREATING_IMAGE, MOVING, PROVISIONING, RUNNING, STARTING, STOPPED,
+STOPPING, TERMINATED, TERMINATING
+</pre></div>
+</div>
+<p>This command allows you to wait for an instance to enter a particular state. For
+example, after the reboot command, you could wait for the instance to enter the
+RUNNING state:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo wait -n focal-1 -s RUNNING
+Wait for Instance stepbren-focal-1 to enter state RUNNING
+Instance stepbren-focal-1 starts in state STOPPING
+Instance stepbren-focal-1 entered state STARTING
+WAIT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+Instance stepbren-focal-1 has reached state RUNNING!
+</pre></div>
+</div>
+<p>You can specify an instance by name (or the only one running is the default).
+The default state to wait for is RUNNING, so <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">wait</span></code> sensibly waits for the
+only active instance to become RUNNING.</p>
+</section>
+<section id="yo-ip">
+<h3>yo ip<a class="headerlink" href="#yo-ip" title="Permalink to this heading">¶</a></h3>
+<p>Print the IP address for an instance. If you don’t provide an instance name as
+an argument, fetch all instance IPs.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo ip focal-1
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Name             ┃ IP              ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ stepbren-focal-1 │ 100.100.235.106 │
+└──────────────────┴─────────────────┘
+</pre></div>
+</div>
+</section>
+</section>
+<section id="informational-commands">
+<h2>Informational Commands<a class="headerlink" href="#informational-commands" title="Permalink to this heading">¶</a></h2>
+<section id="yo-os">
+<h3>yo os<a class="headerlink" href="#yo-os" title="Permalink to this heading">¶</a></h3>
+<p>Print all operating systems available. The values here are taken directly from
+the set of official images published on OCI. Any value here is suitable for use
+in <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code> for an instance OS.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo os
+...
+Oracle Linux:6.10
+Oracle Linux:7.8
+Oracle Linux:7.9
+Oracle Linux:8
+...
+</pre></div>
+</div>
+</section>
+<section id="yo-images">
+<h3>yo images<a class="headerlink" href="#yo-images" title="Permalink to this heading">¶</a></h3>
+<p>Lists available images. Specify an operating system as the first argument to get
+a list of only matching images. When called without OS, lists all official
+(non-custom) images. Currently, yo does not support custom images in any way. Yo
+is also completely untested on non-Linux operating systems.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo images &quot;Oracle Linux:8&quot;
+Here are the matching images:
+- Oracle-Linux-8.3-aarch64-2021.04.06-0 - Oracle Linux - 8
+- Oracle-Linux-8.3-2021.04.09-0 - Oracle Linux - 8
+- Oracle-Linux-8.3-2021.03.19-0 - Oracle Linux - 8
+- Oracle-Linux-8.3-2021.01.12-0 - Oracle Linux - 8
+- Oracle-Linux-8.2-2020.11.10-0 - Oracle Linux - 8
+- Oracle-Linux-8.2-2020.09.23-0 - Oracle Linux - 8
+Would use image Oracle-Linux-8.3-aarch64-2021.04.06-0
+</pre></div>
+</div>
+</section>
+<section id="yo-shapes">
+<h3>yo shapes<a class="headerlink" href="#yo-shapes" title="Permalink to this heading">¶</a></h3>
+<p>Print a table of shape names and their features (memory, disk, CPU, GPU, etc).</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo shapes
+┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Shape                  ┃ Mem    ┃ CPUs  ┃ GPUs ┃ Disk(GiB) ┃ Net(gbps) ┃ CPU Info                                      ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ BM.DenseIO1.36         │ 512.0  │ 36.0  │ 0    │ 29491.2   │ 10.0      │ 2.3 GHz Intel® Xeon® E5-2699 v3 (Haswell)     │
+│ BM.DenseIO2.52         │ 768.0  │ 52.0  │ 0    │ 52428.8   │ 50.0      │ 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake) │
+│ BM.GPU2.2              │ 256.0  │ 28.0  │ 2    │ 0         │ 50.0      │ 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake) │
+│ BM.GPU3.8              │ 768.0  │ 52.0  │ 8    │ 0         │ 50.0      │ 2.0 GHz Intel® Xeon® Platinum 8167M (Skylake) │
+...
+</pre></div>
+</div>
+<p>You can specify the kind of information you’d like to see:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--cpu</span></code> - the default, shows the name of the CPU model used</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--gpu</span></code> - replaces “CPU Info” with the name of the GPU model, if relevant</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--disk</span></code> - replaces “CPU Info” with a count of disks and a description of the
+info regarding the disks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--availability</span></code> - displays each AD in your region, and computes the total
+amount of instances with the each shape could “fit” into that AD according to
+the limits. This can help you choose an instance that you’ll actually be able
+to launch!</p></li>
+</ul>
+</section>
+<section id="yo-limits">
+<h3>yo limits<a class="headerlink" href="#yo-limits" title="Permalink to this heading">¶</a></h3>
+<p>Prints a series of tables which summarizes your tenancy’s resource limits.</p>
+<p>This command always prints the following:</p>
+<ul class="simple">
+<li><p>If available, a table “Resource Limits per-AD”. These limits differ in each
+AD.</p></li>
+<li><p>If available, a table “Global or Regional Limits”. These limits are the same
+across all ADs. Since yo can only operate in one OCI region, these are
+considered “global”, applying the same to each AD.</p></li>
+</ul>
+<p>When you provide the <code class="docutils literal notranslate"><span class="pre">-S</span></code> argument to specify a shape, the above tables get
+filtered to only the resources required for that shape. Then, two additional
+tables are printed, to help you understand where that shape could fit, and why.</p>
+<ul class="simple">
+<li><p>“Resources Required” gives you the amount of resource that yo believes is
+necessary to launch an instance. Note that this is not terribly well
+documented by OCI. We gave it our best guess, but it could be off. Please
+report any errors you see.</p></li>
+<li><p>“Will it fit?” gives a row for each AD, indicating the amount of instances
+which could “fit” into that AD according to the limits. Of course, this is a
+maximum and it’s not necessarily guaranteed to be 100% accurate. When
+instances don’t fit (i.e. the fit/space is 0), a third column will contain
+info about which limits are applying. If necessary, you can take this to the
+relevant teams to get limits increased.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ yo limits -S BM.Standard.A1.160
+                                     Resource Limits per-AD
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Limit                    ┃ VkEH:US-ASHBURN-AD-1 ┃ VkEH:US-ASHBURN-AD-2 ┃ VkEH:US-ASHBURN-AD-3 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ standard-a1-core-count   │ 53.0 / 1160          │ 171.0 / 1160         │ 222.0 / 1160         │
+│ standard-a1-memory-count │ 646.0 / 7704         │ 674.0 / 7704         │ 1064.0 / 7704        │
+└──────────────────────────┴──────────────────────┴──────────────────────┴──────────────────────┘
+                  Global or Regional Limits
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Limit                             ┃ Availability           ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ standard-a1-core-regional-count   │ 99997158.0 / 100000000 │
+│ standard-a1-memory-regional-count │ 99980546.0 / 100000000 │
+└───────────────────────────────────┴────────────────────────┘
+─────────────────────────────────────────────────────── But... will it fit? ───────────────────────────────────────────────────────
+                Resources Required
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ Resource                          ┃ Requirement ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│ standard-a1-memory-count          │ 1024.0      │
+│ standard-a1-memory-regional-count │ 1024.0      │
+│ standard-a1-core-count            │ 160.0       │
+│ standard-a1-core-regional-count   │ 160.0       │
+└───────────────────────────────────┴─────────────┘
+                                          Will it fit?
+┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ AD                   ┃ Space ┃ Limiting Factor?                                              ┃
+┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ VkEH:US-ASHBURN-AD-1 │ 0     │ standard-a1-memory-count: require 1024.0 but only 646.0 avail │
+│                      │       │ standard-a1-core-count: require 160.0 but only 53.0 avail     │
+│ VkEH:US-ASHBURN-AD-2 │ 0     │ standard-a1-memory-count: require 1024.0 but only 674.0 avail │
+│ VkEH:US-ASHBURN-AD-3 │ 1     │ --                                                            │
+└──────────────────────┴───────┴───────────────────────────────────────────────────────────────┘
+</pre></div>
+</div>
+</section>
+<section id="yo-shape">
+<h3>yo shape<a class="headerlink" href="#yo-shape" title="Permalink to this heading">¶</a></h3>
+<p>Print detailed information about a particular shape.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo shape BM.Optimized3.36
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃            Topic ┃ Info                                     ┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│             Name │ BM.Optimized3.36                         │
+│        Processor │ 3.0 GHz Intel® Xeon® Platinum (Ice lake) │
+│           # CPUs │ 36.0                                     │
+│     Memory (GiB) │ 512.0                                    │
+│ Bandwidth (gpbs) │ 50.0                                     │
+│       Max # VNIC │ 256                                      │
+│  GPU Description │                                          │
+│           # GPUs │ 0                                        │
+│      Local Disks │ NVMe SSD Storage                         │
+│    # Local Disks │ 1                                        │
+│ Total Disk (GiB) │ 3840.0                                   │
+└──────────────────┴──────────────────────────────────────────┘
+</pre></div>
+</div>
+</section>
+<section id="yo-task-run-task-status-task-wait-task-join-task-list-task-info">
+<h3>yo task-run, task-status, task-wait, task-join, task-list, task-info<a class="headerlink" href="#yo-task-run-task-status-task-wait-task-join-task-list-task-info" title="Permalink to this heading">¶</a></h3>
+<p>These commands allow you to manage “Tasks”, a simple way to start scripts in the
+background and configure your instance before you connect to it. See the “Tasks”
+page in the user guide for more information about them.</p>
+</section>
+<section id="yo-volume-create-volume-delete-attach-attached-detach-volume-list">
+<h3>yo volume-create, volume-delete, attach, attached, detach, volume-list<a class="headerlink" href="#yo-volume-create-volume-delete-attach-attached-detach-volume-list" title="Permalink to this heading">¶</a></h3>
+<p>These commands allow you to manage block volumes. Please see the “Block Volume
+Management” page in the guide for more information about them.</p>
+</section>
+<section id="yo-version">
+<h3>yo version<a class="headerlink" href="#yo-version" title="Permalink to this heading">¶</a></h3>
+<p>Print the current version of yo, check for updates, and give the necessary
+upgrade commands.</p>
+</section>
+<section id="yo-help">
+<h3>yo help<a class="headerlink" href="#yo-help" title="Permalink to this heading">¶</a></h3>
+<p>Print a help info, similar to what you would find in the Guide.</p>
+</section>
+<section id="yo-debug">
+<h3>yo debug<a class="headerlink" href="#yo-debug" title="Permalink to this heading">¶</a></h3>
+<p>A special command which loads yo and places you inside a Python interpreter.
+This is useful if you’re familiar with the guts of yo and want to play with some
+code.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/yo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="../index.html">yo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vnc.html">VNC and Remote desktop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="block.html">Block Volume Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../optional_setup.html">Optional Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User Guide</a><ul>
+      <li>Previous: <a href="configuration.html" title="previous chapter">Configuration</a></li>
+      <li>Next: <a href="tasks.html" title="next chapter">Tasks</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020-2023, Oracle and/or its affiliates.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/guide/commands.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
