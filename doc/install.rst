@@ -18,13 +18,16 @@ resources for you.
 Installation
 ------------
 
+First, ensure you have at least Python 3.6 installed, along with pip. For Oracle
+Linux users, ``yum install python3-pip`` should do the trick.
+
 .. code:: bash
 
     pip install yo oci-cli
 
 It's recommended that you use the above command to install yo. If you run it as
-a non-root user, it will install to your home directory. The above will also
-install the ``oci-cli`` package, which will help you configure yo.
+a non-root user (recommended), it will install to your home directory. The above
+will also install the ```oci-cli`` package, which will help you configure yo.
 
 Initial Configuration
 ---------------------
