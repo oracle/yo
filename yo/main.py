@@ -150,8 +150,8 @@ SSH_OPTIONS = [
 SSH_MINIMUM_TIME = 4
 
 # TODO: update with an external link
-REPOSITORY_URL = "https://github.com/oracle-samples/yo"
-DOCUMENTATION_URL = "https://oracle-samples.github.io/yo/"
+REPOSITORY_URL = "https://github.com/oracle/yo"
+DOCUMENTATION_URL = "https://oracle.github.io/yo/"
 INITIAL_CONFIG_LINK = REPOSITORY_URL
 
 warned_about_SSH_timeout = False

@@ -58,7 +58,7 @@ setup(
         "argcomplete",
         "dataclasses",
     ],
-    url="https://github.com/oracle-samples/yo",
+    url="https://github.com/oracle/yo",
     author="Oracle",
     author_email="stephen.s.brennan@oracle.com",
     license="UPL",
