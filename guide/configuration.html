@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Configuration &#8212; yo v1.0.0 documentation</title>
+    <title>Configuration &#8212; yo v1.0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -95,17 +95,36 @@ get used as the login name for your instances; it’s just an identifier used in
 the names.</p>
 </section>
 <section id="ssh-public-key">
-<h3><code class="docutils literal notranslate"><span class="pre">ssh_public_key</span></code><a class="headerlink" href="#ssh-public-key" title="Permalink to this heading">¶</a></h3>
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">ssh_public_key</span></code><a class="headerlink" href="#ssh-public-key" title="Permalink to this heading">¶</a></h3>
 <p>(String, Optional) The file path to your SSH public key. If omitted, the default
 of <code class="docutils literal notranslate"><span class="pre">~/.ssh/id_rsa.pub</span></code> is used.</p>
-<p>This public key is used for launching instances, as well as creating instance
-console connections. Yo also explicitly instructs <code class="docutils literal notranslate"><span class="pre">ssh</span></code> to use the
-corresponding private key (same name, without the “.pub” extension) for all SSH
-commands. This means that you can have many SSH keys in your <code class="docutils literal notranslate"><span class="pre">~/.ssh</span></code> folder,
-and pick one of them for use with Yo.</p>
+<p>This public key is provided to OCI when launching instances, as well as creating
+instance console connections. Yo also passes the <code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">path/to/key</span></code> argument to
+the SSH command, instructing it to use that given key file. This means that you
+can have many SSH keys in your <code class="docutils literal notranslate"><span class="pre">~/.ssh</span></code> folder, and pick one of them for use
+with Yo. However, you should know that the <code class="docutils literal notranslate"><span class="pre">-i</span></code> argument does not prevent SSH
+from using a different key, if suitable. If you want to ensure that Yo <em>only</em>
+uses this key, you should add <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">IdentitiesOnly=yes</span></code> to the <a class="reference internal" href="#ssh-args"><span class="std std-ref">ssh_args</span></a> configuration field.</p>
+<p>Password protected SSH keys may result in Yo prompting you for passwords
+repeatedly, as sometimes Yo executes some SSH commands non-interactively. It is
+recommended that you either use an SSH agent, or store the key without password
+protection – if this is appropriate for your environment and security
+requirements.</p>
+<p>Please note, when launching instances, Yo provides your SSH public key and it is
+included in your instance’s <code class="docutils literal notranslate"><span class="pre">~/.ssh/authorized_keys</span></code> file. However, if you
+change the configuration value, Yo has no way to detect this and update the
+instance’s authorized keys. Thus, changing the configuration value could result
+in some instances being inaccessible.</p>
+<p>At the time of writing, the Intstance Console Connection feature (i.e. <code class="docutils literal notranslate"><span class="pre">yo</span>
+<span class="pre">console</span></code> command) is not compatible with ED25519 keys. It is recommended that
+you use 4096-bit RSA keys with Yo for the time being. You can generate one via
+the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span><span class="o">-</span><span class="n">keygen</span> <span class="o">-</span><span class="n">t</span> <span class="n">rsa</span> <span class="o">-</span><span class="n">b</span> <span class="mi">4096</span> <span class="o">-</span><span class="n">f</span> <span class="o">~/.</span><span class="n">ssh</span><span class="o">/</span><span class="n">id_yo</span>
+</pre></div>
+</div>
 </section>
 <section id="vnc-prog">
-<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">vnc_prog</span></code><a class="headerlink" href="#vnc-prog" title="Permalink to this heading">¶</a></h3>
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">vnc_prog</span></code><a class="headerlink" href="#vnc-prog" title="Permalink to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired program to launch for VNC (remote desktop).
 This string will be interpreted by your shell, but first Python’s format method
 will replace the following strings:</p>
@@ -117,7 +136,7 @@ will replace the following strings:</p>
 desktop client), feel free to modify it.</p>
 </section>
 <section id="rdp-prog">
-<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">rdp_prog</span></code><a class="headerlink" href="#rdp-prog" title="Permalink to this heading">¶</a></h3>
+<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">rdp_prog</span></code><a class="headerlink" href="#rdp-prog" title="Permalink to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired program to launch for RDP (remote desktop).
 This string will be interpreted by your shell, but first Python’s format method
 will replace the following strings:</p>
@@ -129,7 +148,7 @@ will replace the following strings:</p>
 <code class="docutils literal notranslate"><span class="pre">krdc</span> <span class="pre">rdp://{user}&#64;{host}</span></code>.</p>
 </section>
 <section id="notify-prog">
-<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">notify_prog</span></code><a class="headerlink" href="#notify-prog" title="Permalink to this heading">¶</a></h3>
+<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">notify_prog</span></code><a class="headerlink" href="#notify-prog" title="Permalink to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired command to run in order to send notifications
 for waits. For example, when launching an instance and waiting for SSH or tasks.
 If unset (the default), notifications will not be sent. This string will first
@@ -173,9 +192,9 @@ setups, you may have multiple profiles in your <code class="docutils literal not
 specify which profile is used by setting this. The default value is “DEFAULT”.</p>
 </section>
 <section id="ssh-args-and-ssh-interactive-args">
-<h3><code class="docutils literal notranslate"><span class="pre">ssh_args</span></code> and <code class="docutils literal notranslate"><span class="pre">ssh_interactive_args</span></code><a class="headerlink" href="#ssh-args-and-ssh-interactive-args" title="Permalink to this heading">¶</a></h3>
-<p>(String, Optional) You can use this to customize the SSH command line. In
-particular, you can set SSH options (<code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">Key=value</span></code>) specific to your Yo
+<span id="ssh-args"></span><h3><code class="docutils literal notranslate"><span class="pre">ssh_args</span></code> and <code class="docutils literal notranslate"><span class="pre">ssh_interactive_args</span></code><a class="headerlink" href="#ssh-args-and-ssh-interactive-args" title="Permalink to this heading">¶</a></h3>
+<p>(String, Optional) You can use these options to customize the SSH command line.
+In particular, you can set SSH options (<code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">Key=value</span></code>) specific to your Yo
 sessions. The <code class="docutils literal notranslate"><span class="pre">ssh_args</span></code> are added to <em>all</em> SSH commands, while the
 <code class="docutils literal notranslate"><span class="pre">ssh_interactive_args</span></code> are only added to the ones which result in an
 interactive prompt. This is because Yo does a lot of SSH commands besides the
@@ -635,7 +654,7 @@ of copy/paste.</p>
       &copy;2020-2023, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.2.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

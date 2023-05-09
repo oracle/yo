@@ -25,8 +25,8 @@ Contact
 -------
 
 yo is created and maintained by Oracle and contributors. Its code is hosted
-`here <https://github.com/oracle-samples/yo>`_ -- feel free to file bugs or
-issues there, or fork it and submit a pull request.
+`here <https://github.com/oracle/yo>`_ -- feel free to file bugs or issues
+there, or fork it and submit a pull request.
 
 Contents
 --------

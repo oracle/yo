@@ -76,17 +76,43 @@ Otherwise, you could use your first name or whatever you prefer. This will not
 get used as the login name for your instances; it's just an identifier used in
 the names.
 
+.. _ssh_public_key:
+
 ``ssh_public_key``
 ~~~~~~~~~~~~~~~~~~
 
 (String, Optional) The file path to your SSH public key. If omitted, the default
 of ``~/.ssh/id_rsa.pub`` is used.
 
-This public key is used for launching instances, as well as creating instance
-console connections. Yo also explicitly instructs ``ssh`` to use the
-corresponding private key (same name, without the ".pub" extension) for all SSH
-commands. This means that you can have many SSH keys in your ``~/.ssh`` folder,
-and pick one of them for use with Yo.
+This public key is provided to OCI when launching instances, as well as creating
+instance console connections. Yo also passes the ``-i path/to/key`` argument to
+the SSH command, instructing it to use that given key file. This means that you
+can have many SSH keys in your ``~/.ssh`` folder, and pick one of them for use
+with Yo. However, you should know that the ``-i`` argument does not prevent SSH
+from using a different key, if suitable. If you want to ensure that Yo *only*
+uses this key, you should add ``-o IdentitiesOnly=yes`` to the :ref:`ssh_args
+<ssh_args>` configuration field.
+
+Password protected SSH keys may result in Yo prompting you for passwords
+repeatedly, as sometimes Yo executes some SSH commands non-interactively. It is
+recommended that you either use an SSH agent, or store the key without password
+protection -- if this is appropriate for your environment and security
+requirements.
+
+Please note, when launching instances, Yo provides your SSH public key and it is
+included in your instance's ``~/.ssh/authorized_keys`` file. However, if you
+change the configuration value, Yo has no way to detect this and update the
+instance's authorized keys. Thus, changing the configuration value could result
+in some instances being inaccessible.
+
+At the time of writing, the Intstance Console Connection feature (i.e. ``yo
+console`` command) is not compatible with ED25519 keys. It is recommended that
+you use 4096-bit RSA keys with Yo for the time being. You can generate one via
+the following command:
+
+.. code-block::
+
+   ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_yo
 
 .. _vnc_prog:
 
@@ -175,11 +201,13 @@ an issue (or pull request) regarding it, to help us prioritize.
 setups, you may have multiple profiles in your ``~/.oci/config`` file. You can
 specify which profile is used by setting this. The default value is "DEFAULT".
 
+.. _ssh_args:
+
 ``ssh_args`` and ``ssh_interactive_args``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(String, Optional) You can use this to customize the SSH command line. In
-particular, you can set SSH options (``-o Key=value``) specific to your Yo
+(String, Optional) You can use these options to customize the SSH command line.
+In particular, you can set SSH options (``-o Key=value``) specific to your Yo
 sessions. The ``ssh_args`` are added to *all* SSH commands, while the
 ``ssh_interactive_args`` are only added to the ones which result in an
 interactive prompt. This is because Yo does a lot of SSH commands besides the

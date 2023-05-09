@@ -18,13 +18,16 @@ resources for you.
 Installation
 ------------
 
+First, ensure you have at least Python 3.6 installed, along with pip. For Oracle
+Linux users, ``yum install python3-pip`` should do the trick.
+
 .. code:: bash
 
     pip install yo oci-cli
 
 It's recommended that you use the above command to install yo. If you run it as
-a non-root user, it will install to your home directory. The above will also
-install the ``oci-cli`` package, which will help you configure yo.
+a non-root user (recommended), it will install to your home directory. The above
+will also install the ``oci-cli`` package, which will help you configure yo.
 
 Initial Configuration
 ---------------------
@@ -79,6 +82,34 @@ how to organize your instance and which subnets to use.
    in your region (try ``oci iam availability-domain list`` to get their names).
 
 .. _get_tenancy_id: https://docs.oracle.com/en-us/iaas/Content/GSG/Tasks/contactingsupport_topic-Finding_Your_Tenancy_OCID_Oracle_Cloud_Identifier.htm
+
+SSH Key
+~~~~~~~
+
+A major part of managing your OCI instances is being able to access them over
+SSH. You'll probably want to take a minute to ensure your SSH key is configured
+correctly. As a default, Yo assumes your SSH public key is
+``~/.ssh/id_rsa.pub``, but you can change that with the :ref:`ssh_public_key`
+configuration value in ``~/.oci/yo.ini``. Please keep the following in mind:
+
+1. Yo sometimes connects via SSH to execute single commands. If your SSH key is
+   password protected, you may find yourself being prompted for the password
+   more than you'd like. It's recommended to use an SSH agent to avoid frequent
+   password prompts, or if it is appropriate and secure for your system, to
+   store your SSH key without password protection.
+
+2. ED25519 keys are supported by some operating systems, but not all. What's
+   more, the OCI Instance Console Connection service (that is, ``yo console``)
+   does not support ED25519. If you intend to use the serial console, or older
+   OS versions, you should configure a 4096-bit RSA key.
+
+You may find it simplest to just create a SSH key especially for Yo and your OCI
+instances, then configure that in your :ref:`ssh_public_key` setting:
+
+.. code-block::
+
+   ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_yo
+   # enter blank to disable passphrase
 
 Done!
 ~~~~~

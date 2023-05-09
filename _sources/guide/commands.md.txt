@@ -153,7 +153,13 @@ You can even place the commands necessary to install mosh into a
 
 ### yo console
 
-Connects you to the instance serial console.
+Connects you to the instance serial console. This is not a replacement or an
+alternative for an SSH connection: instead, it can be used for diagnostic
+purposes: emergency recovery or monitoring OS/kernel logs, or even for selecting
+kernels on the GRUB menu at boot time.
+
+**Please note:** ED25519 keys are *not* supported by OCI's console connection
+service. You must use an RSA key: see {ref}`ssh_public_key` for details.
 
     $ yo console
     Connecting to instance stepbren-focal-1 console
