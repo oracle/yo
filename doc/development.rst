@@ -2,7 +2,7 @@ Development
 ===========
 
 You can find the source code for yo
-`here <https://github.com/oracle-samples/yo>`_. You are welcomed to participate
+`here <https://github.com/oracle/yo>`_. You are welcomed to participate
 in its development in many ways:
 
 - Report bugs via issues
@@ -26,7 +26,7 @@ development tools:
 
 .. code:: bash
 
-   git clone git@github.com:oracle-samples/yo
+   git clone git@github.com:oracle/yo
    cd yo
    make development
 

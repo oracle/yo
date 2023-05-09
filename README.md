@@ -75,6 +75,6 @@ Copyright (c) 2023 Oracle and/or its affiliates.
 Released under the Universal Permissive License v1.0 as shown at
 https://oss.oracle.com/licenses/upl/.
 
-[documentation]: https://oracle-samples.github.io/yo/
+[documentation]: https://oracle.github.io/yo/
 [contributing]: ./CONTRIBUTING.md
 [security]: ./SECURITY.md
