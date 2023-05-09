@@ -147,6 +147,10 @@ SSH_OPTIONS = [
     "-oServerAliveInterval=60",
     "-oTCPKeepAlive=yes",
 ]
+SSH_CONSOLE_OPTIONS = [
+    "-oHostKeyAlgorithms +ssh-rsa",
+    "-oPubkeyAcceptedAlgorithms +ssh-rsa",
+]
 SSH_MINIMUM_TIME = 4
 
 # TODO: update with an external link
@@ -1319,11 +1323,11 @@ class ConsoleCmd(SingleInstanceCommand):
             if val == "ssh":
                 continue  # strip the ssh command from the args
             elif identity is not None and "ProxyCommand" in val:
-                # We need to insert the "-i" for identity into the SSH proxy
-                # command. However, we shouldn't modify the rest of the
-                # arguments, because we really don't want to mess it up.
+                insert_args = f" -i {identity}"
+                for arg in SSH_CONSOLE_OPTIONS:
+                    insert_args += " " + shlex.quote(arg)
                 ssh_ix = val.index("ssh") + 3
-                val = val[:ssh_ix] + f" -i {identity}" + val[ssh_ix:]
+                val = val[:ssh_ix] + insert_args + val[ssh_ix:]
                 processed_args.append(val)
             elif inst.id in val:
                 target = val  # identify the target of the SSH
@@ -1337,7 +1341,7 @@ class ConsoleCmd(SingleInstanceCommand):
                 "yo bug, please report it on Github."
             )
 
-        cmd = ssh_cmd(self.c, target, processed_args)
+        cmd = ssh_cmd(self.c, target, SSH_CONSOLE_OPTIONS, processed_args)
 
         self.c.con.print("About to execute:")
         self.c.con.print(cmd)
