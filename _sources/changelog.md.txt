@@ -5,6 +5,10 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.0.3 - Fri, June 2, 2023
+
+- A minor change to an internal extension API, which was omitted in 1.0.2.
+
 ## 1.0.2 - Fri, June 2, 2023
 
 - The SSH options added in 1.0.1 have been updated to improve compatibility with
