@@ -3122,6 +3122,33 @@ class HelpCmd(YoCmd):
         print(__doc__.strip())
 
 
+def _extend(ctx: YoCtx) -> None:
+    """
+    This is for advanced users to add custom extension scripts.  It is not
+    mentioned in the documentation, and for good reason: there is no stable API
+    defined (yet). However, it can still be useful to stick a stub in here for
+    something.
+    """
+    # The configuration "extension_modules" is still supported, but no longer
+    # recommended. Entry points (below) are a better way that don't require the
+    # user to manually configure things.
+    for module in ctx.config.extension_modules:
+        importlib.import_module(module)
+
+    # The importlib.metadata API is from Python 3.8+. So we can support the
+    # prior versions by falling back to pkg_resources.
+    try:
+        from importlib.metadata import entry_points  # novermin
+    except ImportError:
+        import pkg_resources
+
+        def entry_points(group):  # type: ignore
+            return pkg_resources.iter_entry_points(group)
+
+    for entry_point in entry_points(group="yo.extensions.v1"):
+        entry_point.load()
+
+
 def main() -> None:
     os.environ["OCI_PYTHON_SDK_NO_SERVICE_IMPORTS"] = "True"
     try:
@@ -3132,11 +3159,7 @@ def main() -> None:
         )
         parser = argparse.ArgumentParser(description=desc)
         ctx, aliases = YoCmd.setup_config()
-        # This is for advanced users to add custom extension scripts.
-        # It is not mentioned in the documentation, and for good reason:
-        # there is no stable API defined (yet).
-        for module in ctx.config.extension_modules:
-            importlib.import_module(module)
+        _extend(ctx)
         YoCmd.add_commands(
             parser,
             default="help",
