@@ -5,6 +5,18 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.0.2 - Fri, June 2, 2023
+
+- The SSH options added in 1.0.1 have been updated to improve compatibility with
+  older SSH versions. If you encountered the following error during a `yo
+  console`, then it's likely this fix will resolve your issue:
+
+      command-line: line 0: Bad configuration option: pubkeyacceptedalgorithms
+
+- Yo no longer crashes when encountering an instance with multiple VNIC
+  attachments. Instead, it just warns that it is blindly taking the first VNIC.
+  We'll need more user feedback to inform the correct behavior.
+
 ## 1.0.1 - Tue, May 9, 2023
 
 - Yo is now located at `https://github.com/oracle/yo`, and documentation is now
