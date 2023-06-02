@@ -1209,11 +1209,16 @@ class YoCtx:
                 instance_id=inst.id,
             )
             vnic_attachments = list(vnic_gen)
-            vnic_attachment = one(
-                vnic_attachments,
-                "There are no attached vnics for this instance (expected one)",
-                "There are multiple attached vnics for this instance (expected one)",
-            )
+            if not vnic_attachments:
+                raise YoExc("There are no attached VNICs for this instance")
+            elif len(vnic_attachments) > 1:
+                self.con.print(
+                    "[red]warning:[/red] your instance has multiple attached "
+                    "VNICs, which may have multiple IPs. Yo is choosing to use "
+                    "first one. If you encounter issues, please mention this "
+                    "when reporting it."
+                )
+            vnic_attachment = vnic_attachments[0]
             vnic = self.vnet.get_vnic(vnic_attachment.vnic_id).data
             yovnic = YoVnic.from_oci(vnic, vnic_attachment)
             self._vnics.insert(yovnic)
