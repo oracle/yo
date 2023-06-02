@@ -1312,6 +1312,9 @@ class ConsoleCmd(SingleInstanceCommand):
     name = "console"
     description = "ssh into an instance serial console"
 
+    states_allowlist = ()
+    states_denylist = ("STOPPED", "TERMINATED")
+
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         super().add_args(parser)
         parser.add_argument(
