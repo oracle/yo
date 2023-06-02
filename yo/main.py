@@ -148,8 +148,19 @@ SSH_OPTIONS = [
     "-oTCPKeepAlive=yes",
 ]
 SSH_CONSOLE_OPTIONS = [
-    "-oHostKeyAlgorithms +ssh-rsa",
-    "-oPubkeyAcceptedAlgorithms +ssh-rsa",
+    "-oHostKeyAlgorithms=+ssh-rsa",
+    # From the OpenSSH 8.5 Changelog:
+    #
+    #   ssh(1), sshd(8): rename the PubkeyAcceptedKeyTypes keyword to
+    #   PubkeyAcceptedAlgorithms. The previous name incorrectly suggested
+    #   that it control allowed key algorithms, when this option actually
+    #   specifies the signature algorithms that are accepted. The previous
+    #   name remains available as an alias. bz#3253
+    #
+    # Thankfully, the alias seems to be available for a while. Unfortunately,
+    # it means we're using an "undocumented" option in order to retain maximal
+    # compatibility with OpenSSH versions.
+    "-oPubkeyAcceptedKeyTypes=+ssh-rsa",
 ]
 SSH_MINIMUM_TIME = 4
 
