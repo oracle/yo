@@ -3135,14 +3135,17 @@ def _extend(ctx: YoCtx) -> None:
     for module in ctx.config.extension_modules:
         importlib.import_module(module)
 
-    # The importlib.metadata API is from Python 3.8+. So we can support the
-    # prior versions by falling back to pkg_resources.
-    try:
+    # The importlib.metadata API is included in Python 3.8+. Normally, one might
+    # simply try to import it, catching the ImportError and falling back to the
+    # older API. However, the API was _transitional_ in 3.8 and 3.9, and it is
+    # different enough to break callers compared to the non-transitional API. So
+    # here we are, using sys.version_info like heathens.
+    if sys.version_info >= (3, 10):
         from importlib.metadata import entry_points  # novermin
-    except ImportError:
+    else:
         import pkg_resources
 
-        def entry_points(group):  # type: ignore
+        def entry_points(group):
             return pkg_resources.iter_entry_points(group)
 
     for entry_point in entry_points(group="yo.extensions.v1"):
