@@ -5,6 +5,10 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.0.4 - Mon, June 5, 2023
+
+- Bugfix release for the extension API changes in 1.0.3.
+
 ## 1.0.3 - Fri, June 2, 2023
 
 - A minor change to an internal extension API, which was omitted in 1.0.2.
