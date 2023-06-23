@@ -81,6 +81,8 @@ if t.TYPE_CHECKING:
 _ISOFORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 
 TERMPROTECT = "yo-termination-protected"
+CREATEDBY = "yo-created-by"
+AUTO_TAG_DOC_LINK = "https://docs.oracle.com/en-us/iaas/Content/Tagging/Concepts/understandingautomaticdefaulttags.htm"
 
 
 def fromisoformat(s: str) -> datetime.datetime:
@@ -1009,7 +1011,7 @@ class YoCtx:
         self._cache_file = os.path.expanduser(cache_file)
         self.load_cache()
 
-    def list_instances(self) -> t.List[YoInstance]:
+    def list_instances(self, verbose: bool = False) -> t.List[YoInstance]:
         cid = self.config.instance_compartment_id
         my_email = self.config.my_email
         instances_generator = self.oci.list_call_get_all_results(
@@ -1018,10 +1020,32 @@ class YoCtx:
             limit=1000,
         ).data
         instances = []
+        warned_on_missing_tag = not verbose
         for instance in instances_generator:
             email = instance.defined_tags.get("Oracle-Tags", {}).get(
                 "CreatedBy"
             )
+            if not email:
+                if not warned_on_missing_tag:
+                    self.con.print(
+                        "[red]warning:[/red] Instances in your tenancy "
+                        "do not have the automatic Oracle-Tags.CreatedBy "
+                        "tag - your tenancy may be older, or your tenancy "
+                        "administrator disabled these automatic tag "
+                        "defaults. As a result, Yo cannot track and manage "
+                        "instances created by you on the Web Console -- "
+                        "only instances which you launch via 'yo launch'.\n"
+                        "Your tenancy administrator can resolve this by "
+                        "reinstating the automatic tag rule for "
+                        "Oracle-Tags.CreatedBy.\n"
+                        "To learn more, please visit this documentation "
+                        f"page: {AUTO_TAG_DOC_LINK}\n"
+                        "To silence this warning, please add:\n"
+                        "  [blue]silence_automatic_tag_warning = true[/blue]\n"
+                        r"to your '~/.oci/yo.ini' file, in the \[yo] section."
+                    )
+                    warned_on_missing_tag = True
+                email = instance.freeform_tags.get(CREATEDBY)
             if email == my_email:
                 instances.append(YoInstance.from_oci(instance))
         self._instances.set(instances)
@@ -1471,6 +1495,15 @@ class YoCtx:
             details["shape_config"] = self.oci.LaunchInstanceShapeConfigDetails(
                 **shape_config,
             )
+        # Most tenancies will automatically create "Oracle-Tags.CreatedBy" which
+        # has the user email address, but seemingly not all of them. It is
+        # definitely better to have those tags, because this allows Yo to manage
+        # instances which you created on the UI. However, by creating a
+        # Yo-specific tag, we can at least ensure that we will be able to list
+        # and manage the instances created by Yo.
+        details["freeform_tags"] = {
+            CREATEDBY: self.config.my_email,
+        }
         details = self.oci.LaunchInstanceDetails(**details)
         instance = YoInstance.from_oci(
             self.compute.launch_instance(details).data
