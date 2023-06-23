@@ -86,6 +86,7 @@ class YoConfig:
     extension_modules: t.List[str] = dataclasses.field(default_factory=list)
     task_dir: str = "/tmp/tasks"
     image_compartment_ids: t.List[str] = dataclasses.field(default_factory=list)
+    silence_automatic_tag_warning: t.Optional[bool] = None
 
     @property
     def ssh_public_key_full(self) -> str:

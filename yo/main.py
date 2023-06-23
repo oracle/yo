@@ -771,10 +771,11 @@ class ListCmd(YoCmd):
         )
 
     def run(self) -> None:
+        verbose = not self.c.config.silence_automatic_tag_warning
         if self.args.cached:
             instances = self.c.list_instances_cached()
         else:
-            instances = self.c.list_instances()
+            instances = self.c.list_instances(verbose=verbose)
 
         instances = [x for x in instances if x.state != "TERMINATED"]
 

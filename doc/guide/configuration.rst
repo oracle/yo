@@ -260,6 +260,40 @@ removing a value), yo's cache becomes out-of-date in a way which it cannot
 detect. Once you've updated this configuration value, please run ``yo
 cache-clean`` to force yo to fetch the latest image list next time you run it.
 
+``silence_automatic_tag_warning``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Boolean, Optional) Set this to true in order to silence a rather verbose
+warning during ``yo list``. If you haven't seen a warning mentioning this
+configuration value: you don't need to touch this configuration, or read the
+remaining explanation.
+
+Yo is dedicated to managing the instances which you, an individual user,
+created. It was designed for the idea of a shared tenancy, in which multiple
+users create and manage their own instances. When Yo lists instances, it filters
+them to the ones which have the tag: ``Oracle-Tags.CreatedBy`` matching your
+email address.
+
+However, this approach depends on an `automatic tag rule`_, which was added to
+new tenancies starting in December 17, 2019. Older tenancies, or tenancies whose
+administrator removed the rule, lack the rule.
+
+When the tag rule exists, Yo is able to filter to all instances you created,
+*regardless* of how you launched them (e.g. via Yo, via the OCI CLI, terraform,
+or the Web Console). If the tag rule does not exist, then Yo falls back to
+looking for a freeform tag that it includes with every new instance:
+``yo-created-by``. This means that Yo will only be able to see and manage the
+instances you created within Yo. So, during ``yo list``, we print a noisy
+warning providing information regarding this issue.
+
+The best resolution is to contact your tenancy administrator and ask that they
+include this automatic tag rule: not only is it now standard, but it is quite
+useful for cost tracking, which should interest your administrators. However, if
+this is not possible, or if you're happy with the reduced feature set entailed
+by this, then you can simply set this configuration value to ``true`` in order
+to stop the message from being printed.
+
+.. _automatic tag rule: https://docs.oracle.com/en-us/iaas/Content/Tagging/Concepts/understandingautomaticdefaulttags.htm
 
 Instance Profiles
 -----------------

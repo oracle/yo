@@ -5,6 +5,16 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+- Yo now adds the freeform tag: `{"yo-created-by": "your.email@example.com"}` to
+  every instance it launches.
+  - In cases where the tenancy does not automatically add a
+    `Oracle-Tags.CreatedBy` tag, we fall back to the above freeform tag to
+    identify instances launched by the current Yo user.
+  - If the `Oracle-Tags.CreatedBy` tag is not present on instances in your
+    tenancy, Yo prints a loud warning with more information. You can silence
+    this warning by setting `silence_automatic_tag_warning = true` in the
+    config.
+
 ## 1.0.4 - Mon, June 5, 2023
 
 - Bugfix release for the extension API changes in 1.0.3.
