@@ -387,7 +387,7 @@ class YoImage(YoCachedWithId):
             size_in_mbs=img.size_in_mbs,
             time_created=img.time_created,
             compatibility={},
-            created_by=img.defined_tags.get("Operations", {}).get("CreateBy"),
+            created_by=img.defined_tags.get("Oracle-Tags", {}).get("CreatedBy"),
         )
 
 
@@ -425,7 +425,7 @@ class YoVolume(YoCachedWithId):
             compartment_id=bv.compartment_id,
             size_in_gbs=bv.size_in_gbs,
             time_created=bv.time_created,
-            created_by=bv.defined_tags.get("Operations", {}).get("CreateBy"),
+            created_by=bv.defined_tags.get("Oracle-Tags", {}).get("CreatedBy"),
         )
 
     @classmethod
@@ -440,7 +440,7 @@ class YoVolume(YoCachedWithId):
             compartment_id=bv.compartment_id,
             size_in_gbs=bv.size_in_gbs,
             time_created=bv.time_created,
-            created_by=bv.defined_tags.get("Operations", {}).get("CreateBy"),
+            created_by=bv.defined_tags.get("Oracle-Tags", {}).get("CreatedBy"),
         )
 
 
