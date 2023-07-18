@@ -5,6 +5,8 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.1.0 - Tue, July 18, 2023
+
 - Yo now adds the freeform tag: `{"yo-created-by": "your.email@example.com"}` to
   every instance it launches.
   - In cases where the tenancy does not automatically add a
