@@ -1046,6 +1046,13 @@ class YoCtx:
                     )
                     warned_on_missing_tag = True
                 email = instance.freeform_tags.get(CREATEDBY)
+            elif "/" in email:
+                # Unfortunately, the Oracle-Tags.CreatedBy may not necessarily
+                # be your email address.  A recent change has demonstrated that
+                # it could be something like oracle/$email. Since the slash is
+                # not valid in emails, strip away that part so that we can still
+                # get at the rest.
+                email = email.split("/", 1)[1]
             if email == my_email:
                 instances.append(YoInstance.from_oci(instance))
         self._instances.set(instances)
