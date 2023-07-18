@@ -1011,9 +1011,16 @@ class YoCtx:
         self._cache_file = os.path.expanduser(cache_file)
         self.load_cache()
 
+    def _match_email(self, s: t.Optional[str]) -> bool:
+        """Return true if the string matches the configured email"""
+        if not s:
+            return False
+        if "/" in s:
+            s = s.split("/", 1)[1]
+        return s == self.config.my_email
+
     def list_instances(self, verbose: bool = False) -> t.List[YoInstance]:
         cid = self.config.instance_compartment_id
-        my_email = self.config.my_email
         instances_generator = self.oci.list_call_get_all_results(
             self.compute.list_instances,
             cid,
@@ -1046,14 +1053,7 @@ class YoCtx:
                     )
                     warned_on_missing_tag = True
                 email = instance.freeform_tags.get(CREATEDBY)
-            elif "/" in email:
-                # Unfortunately, the Oracle-Tags.CreatedBy may not necessarily
-                # be your email address.  A recent change has demonstrated that
-                # it could be something like oracle/$email. Since the slash is
-                # not valid in emails, strip away that part so that we can still
-                # get at the rest.
-                email = email.split("/", 1)[1]
-            if email == my_email:
+            if self._match_email(email):
                 instances.append(YoInstance.from_oci(instance))
         self._instances.set(instances)
         self.save_cache()
@@ -1551,7 +1551,7 @@ class YoCtx:
         )
         for bootdev in bootdev_gen:
             bv = YoVolume.from_oci_boot(bootdev)
-            if bv.created_by == self.config.my_email:
+            if self._match_email(bv.created_by):
                 vols.append(bv)
                 ids.add(bv.id)
         boot_attch_gen = self.oci.list_call_get_all_results_generator(
@@ -1588,7 +1588,7 @@ class YoCtx:
         )
         for blockdev in blockdev_gen:
             vol = YoVolume.from_oci_block(blockdev)
-            if vol.created_by == self.config.my_email:
+            if self._match_email(vol.created_by):
                 vols.append(vol)
                 ids.add(vol.id)
         attch_gen = self.oci.list_call_get_all_results_generator(
