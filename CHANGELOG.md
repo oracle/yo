@@ -14,6 +14,8 @@ should appear here.
     tenancy, Yo prints a loud warning with more information. You can silence
     this warning by setting `silence_automatic_tag_warning = true` in the
     config.
+- Yo can now handle instances of `Oracle-Tags.CreatedBy` which contain a prefix
+  ending in a slash (`/`) before the email address.
 
 ## 1.0.4 - Mon, June 5, 2023
 
