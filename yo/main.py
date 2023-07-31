@@ -1716,10 +1716,15 @@ class LaunchCmd(YoCmd):
             help="Wait for the instance to start running",
         )
         parser.add_argument(
+            "--wait-ssh",
+            action="store_true",
+            help="Wait for the instance to be reachable via SSH (implies --wait)",
+        )
+        parser.add_argument(
             "--ssh",
             "-s",
             action="store_true",
-            help="SSH to the instance once it is running (implies --wait)",
+            help="SSH to the instance once it is running (implies --wait-ssh)",
         )
         parser.add_argument(
             "--exact-name",
@@ -1962,6 +1967,17 @@ class LaunchCmd(YoCmd):
             "ocpus": cpu,
         }
 
+    def standardize_wait(self, tasks: bool) -> None:
+        # There are several conditions where we may need to wait. Of course,
+        # --ssh requires waiting for the instance to be ready, but also running
+        # tasks on the instance. Finally, we have the --wait and --wait-ssh
+        # arguments. This simply makes all of the arguments consistent  with
+        # each other.
+        if self.args.ssh or tasks:
+            self.args.wait_ssh = True
+        if self.args.wait_ssh:
+            self.args.wait = True
+
     def run(self) -> None:
         profile = self.c.instance_profiles[self.args.profile]
         create_args = profile.create_arg_dict()
@@ -1997,17 +2013,16 @@ class LaunchCmd(YoCmd):
         inst = self.c.launch_instance(create_args)
 
         tasks = set(profile.tasks + self.args.tasks)
+        self.standardize_wait(bool(tasks))
 
-        # --wait, --ssh, or --task all mean that we need to enter the "wait"
-        # phase. Otherwise, let's exit now.
-        if not (self.args.wait or self.args.ssh or tasks):
+        if not self.args.wait:
             return
 
-        # First, we must wait for the instance to reach RUNNING
+        # Wait for the instance to reach RUNNING
         inst = self.c.wait_instance_state(inst.id, "RUNNING")
 
-        # In either case, we need SSH to be up
-        if self.args.ssh or tasks:
+        # Wait for SSH to come up
+        if self.args.wait_ssh:
             ip = self.c.get_instance_ip(inst)
             # TODO: specify username in launch command?
             user = OS_TO_USER[image.os]
