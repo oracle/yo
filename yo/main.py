@@ -765,6 +765,12 @@ class ListCmd(YoCmd):
             "out of date)",
         )
         parser.add_argument(
+            "--ip",
+            "-i",
+            action="store_true",
+            help="include IP addresses (this may require calling the API)",
+        )
+        parser.add_argument(
             "--ad",
             action="store_true",
             help="display the availability domain column",
@@ -788,6 +794,8 @@ class ListCmd(YoCmd):
         if self.args.ad:
             table.add_column("AD")
         table.add_column("Created")
+        if self.args.ip:
+            table.add_column("IP")
         for instance in instances:
             name = instance.name
             if instance.termination_protected:
@@ -804,6 +812,8 @@ class ListCmd(YoCmd):
             values += [
                 strftime(instance.time_created),
             ]
+            if self.args.ip:
+                values.append(self.c.get_instance_ip(instance, quiet=True))
             table.add_row(*values)
         self.c.con.print(table)
 
