@@ -980,7 +980,10 @@ class MultiInstanceCommand(YoCmd):
                     fmt_allow_deny(self.states_allowlist, self.states_denylist)
                 )
             )
-            names = self.args.instances
+            names = [
+                standardize_name(n, self.args.exact_name, self.c.config)
+                for n in self.args.instances
+            ]
             if names:
                 self.c.con.print(" name: {}".format(", ".join(names)))
             else:
