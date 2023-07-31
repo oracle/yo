@@ -1006,7 +1006,10 @@ class MultiInstanceCommand(YoCmd):
         )
 
         to_run = self.c.get_matching_instances(
-            names, self.states_allowlist, self.states_denylist
+            names,
+            self.states_allowlist,
+            self.states_denylist,
+            refresh=True,
         )
         self.instance_count = len(to_run)
         self.run_for_all(to_run)

@@ -1191,12 +1191,13 @@ class YoCtx:
         names_allowlist: t.Collection[str],
         states_allowlist: t.Collection[str],
         states_denylist: t.Collection[str],
+        refresh: bool = False,
     ) -> t.List[YoInstance]:
         """
         Return a list of instances matching the name collection, filtered by the
         allow and deny list.
         """
-        if not self._instances.is_current():
+        if refresh or not self._instances.is_current():
             self.list_instances()
         name_matches = self._instances_named(names_allowlist)
         return self._filter_instances(
