@@ -987,17 +987,25 @@ class YoCtx:
             yocache.load(cache.get(yocache.name, {}))
 
     def save_cache(self) -> None:
-        cache_file = self._cache_file
-        cache_dir = os.path.dirname(cache_file)
+        # It is possible for multiple executions of Yo to concurrently read and
+        # write the cache file. In this case, the writer would truncate the
+        # file, and it would be possible for the reader to retrieve only partial
+        # contents. To avoid this, we write to a temporary file identified by
+        # our PID. Once the contents are completely written, we can use rename()
+        # which will atomically replace the cache. The concurrent reader will
+        # see the old or new, but never a partial cache.
+        cache_pid_file = f"{self._cache_file}.{os.getpid()}"
+        cache_dir = os.path.dirname(cache_pid_file)
         cache = {}
         for cache_attr in self._caches:
             yc: YoCache[t.Any] = getattr(self, cache_attr)
             cache[yc.name] = yc.export()
         os.makedirs(cache_dir, exist_ok=True)
-        with open(cache_file, "w") as f:
+        with open(cache_pid_file, "w") as f:
             # It seems best to reduce the permission on this file
             os.fchmod(f.fileno(), stat.S_IRUSR | stat.S_IWUSR)
             json.dump(cache, f, indent=4)
+        os.rename(cache_pid_file, self._cache_file)
 
     def __init__(
         self,
