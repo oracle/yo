@@ -1027,7 +1027,9 @@ class YoCtx:
             s = s.split("/", 1)[1]
         return s == self.config.my_email
 
-    def list_instances(self, verbose: bool = False) -> t.List[YoInstance]:
+    def list_instances(
+        self, verbose: bool = False, show_all: bool = False
+    ) -> t.List[YoInstance]:
         cid = self.config.instance_compartment_id
         instances_generator = self.oci.list_call_get_all_results(
             self.compute.list_instances,
@@ -1035,6 +1037,7 @@ class YoCtx:
             limit=1000,
         ).data
         instances = []
+        instances_cache = []
         warned_on_missing_tag = not verbose
         for instance in instances_generator:
             email = instance.defined_tags.get("Oracle-Tags", {}).get(
@@ -1061,11 +1064,16 @@ class YoCtx:
                     )
                     warned_on_missing_tag = True
                 email = instance.freeform_tags.get(CREATEDBY)
+            yo_inst = YoInstance.from_oci(instance)
+            instances.append(yo_inst)
             if self._match_email(email):
-                instances.append(YoInstance.from_oci(instance))
-        self._instances.set(instances)
+                instances_cache.append(yo_inst)
+        self._instances.set(instances_cache)
         self.save_cache()
-        return instances
+        if show_all:
+            return instances
+        else:
+            return instances_cache
 
     def list_instances_cached(self) -> t.List[YoInstance]:
         if self._instances.last_refresh is None:

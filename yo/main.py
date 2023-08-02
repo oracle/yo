@@ -775,13 +775,25 @@ class ListCmd(YoCmd):
             action="store_true",
             help="display the availability domain column",
         )
+        parser.add_argument(
+            "--all",
+            "-a",
+            action="store_true",
+            help="display all instances in the compartment (not just yours)",
+        )
 
     def run(self) -> None:
         verbose = not self.c.config.silence_automatic_tag_warning
+        # We do not cache other people's instances. If --all is provided, we
+        # must not call list_instances_cached()
+        if self.args.all:
+            self.args.cached = False
         if self.args.cached:
             instances = self.c.list_instances_cached()
         else:
-            instances = self.c.list_instances(verbose=verbose)
+            instances = self.c.list_instances(
+                verbose=verbose, show_all=self.args.all
+            )
 
         instances = [x for x in instances if x.state != "TERMINATED"]
 
