@@ -65,8 +65,8 @@ criteria. Some examples:
                                #  stepbren-bug-2
   * yo ssh bug                 # connect to stepbren-bug
 
-To avoid this behavior, you can pass --exact-name to various subcommands. But I
-would encourage you to adopt this naming scheme!
+To avoid this behavior, you can pass --exact-name to various subcommands, or
+set "exact_name = true" in the [yo] section of your config.
 """
 import argparse
 import collections
@@ -852,9 +852,20 @@ class SingleInstanceCommand(YoCmd):
         )
         parser.add_argument(
             "--exact-name",
+            "-E",
             action="store_true",
+            default=None,
             help="Do not standardize the name by prefixing it with your "
             "system username if necessary.",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="Standardize the name by prefixing it with your system "
+            "username (this is the default, but can be used to override "
+            "your Yo configuration file)",
         )
         if self.positional_name:
             self.add_with_completer(
@@ -932,9 +943,20 @@ class MultiInstanceCommand(YoCmd):
         )
         parser.add_argument(
             "--exact-name",
+            "-E",
             action="store_true",
+            default=None,
             help="Do not standardize the name by prefixing it with your "
             "system username if necessary.",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="Standardize the name by prefixing it with your system "
+            "username (this is the default, but can be used to override "
+            "your Yo configuration file)",
         )
         parser.add_argument(
             "--yes",
@@ -1566,9 +1588,20 @@ class IpCmd(YoCmd):
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--exact-name",
+            "-E",
             action="store_true",
+            default=None,
             help="Do not standardize the name by prefixing it with your "
             "system useranme if necessary.",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="Standardize the name by prefixing it with your system "
+            "username (this is the default, but can be used to override "
+            "your Yo configuration file)",
         )
         self.add_with_completer(
             parser,
@@ -1765,11 +1798,21 @@ class LaunchCmd(YoCmd):
         )
         parser.add_argument(
             "--exact-name",
+            "-E",
             action="store_true",
+            default=None,
             help="When set, allows you to bypass the name rules implemented "
             "by this program. In particular: (1) allows non-unique "
             "instance names, and (2) allows you to use a name which is "
             "not prefixed by your username.",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="the opposite of --exact-name (this is the default, but can "
+            "be used to override your Yo configuration file)",
         )
         parser.add_argument(
             "--dry-run",
@@ -1828,9 +1871,7 @@ class LaunchCmd(YoCmd):
         name = profile.name
         if self.args.name is not None:
             name = self.args.name
-        pfx = f"{self.c.config.my_username}-"
-        if not name.startswith(pfx):
-            name = pfx + name
+        name = standardize_name(name, self.args.exact_name, self.c.config)
         all_instances = self.c.list_instances()
         names = set(
             inst.name for inst in all_instances if inst.state != "TERMINATED"
@@ -2765,6 +2806,22 @@ class AttachedCmd(YoCmd):
 
 
 def volume_attach_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--no-exact-name",
+        action="store_false",
+        dest="exact_name",
+        default=None,
+        help="follow Yo's normal rules on standardizing instance & volume names"
+        " (this is the default, but can be used to override the config file)",
+    )
+    parser.add_argument(
+        "--exact-name",
+        "-E",
+        action="store_true",
+        dest="exact_name",
+        default=None,
+        help="use the instance & volume names exactly as given",
+    )
     va = parser.add_argument_group(
         "Volume Attachment Arguments",
     )
@@ -2899,11 +2956,16 @@ class VolumeCreateCmd(YoCmd):
         ad = self.args.ad
         if self.args.inst_name:
             inst = self.c.get_instance_by_name(
-                self.args.inst_name, ("RUNNING",), ()
+                self.args.inst_name,
+                ("RUNNING",),
+                (),
+                exact_name=self.args.exact_name,
             )
             ad = inst.ad
 
-        name = standardize_name(self.args.name, False, self.c.config)
+        name = standardize_name(
+            self.args.name, self.args.exact_name, self.c.config
+        )
         # TODO: deduplicate...
         volume = self.c.create_volume(name, ad, self.args.size_gbs)
         self.c.wait_volume(volume, "AVAILABLE")
@@ -2936,15 +2998,36 @@ class AttachCmd(YoCmd):
     def run(self) -> None:
         if self.args.setup:
             self.args.wait = True
-        name = standardize_name(self.args.volume_name, False, self.c.config)
+        name = standardize_name(
+            self.args.volume_name, self.args.exact_name, self.c.config
+        )
         inst = self.c.get_instance_by_name(
-            self.args.instance_name, ("RUNNING",), ()
+            self.args.instance_name,
+            ("RUNNING",),
+            (),
+            exact_name=self.args.exact_name,
         )
         vol = self.c.get_volume(name)
         do_volume_attach(self.c, self.args, vol, inst)
 
 
 def detach_volume_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--no-exact-name",
+        action="store_false",
+        dest="exact_name",
+        default=None,
+        help="follow Yo's normal rules on standardizing instance & volume names"
+        " (this is the default, but can be used to override the config file)",
+    )
+    parser.add_argument(
+        "--exact-name",
+        "-E",
+        action="store_true",
+        dest="exact_name",
+        default=None,
+        help="use the instance & volume names exactly as given",
+    )
     parser.add_argument(
         "--no-teardown",
         action="store_false",
@@ -3018,14 +3101,19 @@ class DetachCmd(YoCmd):
     def run(self) -> None:
         if self.args.all and self.args.from_instance:
             raise YoExc("--from and --all are mutually exclusive")
-        name = standardize_name(self.args.volume, False, self.c.config)
+        name = standardize_name(
+            self.args.volume, self.args.exact_name, self.c.config
+        )
         vol = self.c.get_volume(name)
         vas = self.c.attachments_by_volume()[vol.id]
         vas = [va for va in vas if va.state == "ATTACHED"]
         detach_vas = []
         if self.args.from_instance:
             inst = self.c.get_instance_by_name(
-                self.args.from_instance, ("RUNNING",), ()
+                self.args.from_instance,
+                ("RUNNING",),
+                (),
+                exact_name=self.args.exact_name,
             )
             for va in vas:
                 if va.instance_id == inst.id:
@@ -3067,7 +3155,9 @@ class VolumeDeleteCmd(YoCmd):
         detach_volume_args(parser)
 
     def run(self) -> None:
-        name = standardize_name(self.args.name, False, self.c.config)
+        name = standardize_name(
+            self.args.name, self.args.exact_name, self.c.config
+        )
         volume = self.c.get_volume(name)
         vas = self.c.attachments_by_volume()[volume.id]
         vas = [va for va in vas if va.state == "ATTACHED"]

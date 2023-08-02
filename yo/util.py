@@ -87,6 +87,7 @@ class YoConfig:
     task_dir: str = "/tmp/tasks"
     image_compartment_ids: t.List[str] = dataclasses.field(default_factory=list)
     silence_automatic_tag_warning: t.Optional[bool] = None
+    exact_name: t.Optional[bool] = None
 
     @property
     def ssh_public_key_full(self) -> str:
@@ -195,8 +196,17 @@ def one(items: t.List[T], nonemsg: str, multiplemsg: str) -> T:
     return items[0]
 
 
-def standardize_name(name: str, exact_name: bool, config: YoConfig) -> str:
+def standardize_name(
+    name: str, exact_name: t.Optional[bool], config: YoConfig
+) -> str:
+    # When --exact-name is given on the CLI, return name unchanged.
     if exact_name:
+        return name
+    # When neither --exact-name nor --no-exact-name are given, but the config contains
+    # an exact_name configuration that's true, return the name unchanged.
+    # This means that an explicit --no-exact-name (exact_name == False) will fail this
+    # test and continue with the logic.
+    if exact_name is None and config.exact_name:
         return name
     pfx = f"{config.my_username}-"
     if not name.startswith(pfx):

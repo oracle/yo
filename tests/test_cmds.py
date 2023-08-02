@@ -160,7 +160,7 @@ def test_ssh_one_instance(mock_ctx, mock_ssh):
     mock_ssh.wait.assert_not_called()
 
 
-@pytest.mark.parametrize("exact_name", [True, False])
+@pytest.mark.parametrize("exact_name", [True, None])
 @pytest.mark.parametrize("dash_n", [True, False])
 def test_ssh_specify(mock_ctx, mock_ssh, exact_name, dash_n):
     mock_ctx.get_instance_by_name.return_value = instance_factory()

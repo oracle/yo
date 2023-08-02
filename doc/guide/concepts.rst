@@ -22,6 +22,8 @@ Of course, some of these limitations are due to laziness on the part of the
 developer. Feel free to make the case for an omission via Github issues. Or,
 even better, feel free to submit an improvement via Github pull request!
 
+.. _instance_naming:
+
 Instance Naming
 ---------------
 
@@ -46,7 +48,21 @@ criteria. Some examples:
                                #  stepbren-bug-2
     yo ssh bug                 # connect to stepbren-bug
 
-To avoid this behavior, you can pass ``--exact-name`` to various subcommands.
+This behavior is designed with the idea of shared compartments in mind. It's
+nice include your username in the name of the instance, so that other users can
+easily determine who created it without needing to investigate it further.
+
+Of course, if you don't share your compartment with anybody, or you have
+specific naming requirements, then this approach can quickly get in your way.
+You can avoid this behavior in two ways:
+
+* You can pass ``--exact-name`` to various subcommands, avoiding the behavior on
+  a case-by-case basis.
+
+* You can set the configuration value :ref:`exact_name` to true in your
+  configuration file. This operates globally, completely disabling the behavior.
+  If necessary, you can re-enable it on a case-by-case basis with
+  ``--no-exact-name``.
 
 Instance Profile
 ----------------
@@ -55,6 +71,8 @@ yo allows you to create "Instance Profiles" in the configuration file. These
 specify details such as the operating system, shape, name, availability domain,
 and SSH keys. You can refer to these by name and simply launch an instance from
 a profile via the following command:
+
+.. code::
 
     yo launch -p PROFILE
 
