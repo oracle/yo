@@ -373,6 +373,10 @@ class YoImage(YoCachedWithId):
         # and mark it as a separate image.
         if "GPU" in img.display_name:
             os_version += " GPU"
+
+        created_by = img.defined_tags.get("Oracle-Tags", {}).get("CreatedBy")
+        if not created_by:
+            created_by = img.freeform_tags.get(CREATEDBY)
         return cls(
             id=img.id,
             name=img.display_name,
@@ -387,7 +391,7 @@ class YoImage(YoCachedWithId):
             size_in_mbs=img.size_in_mbs,
             time_created=img.time_created,
             compatibility={},
-            created_by=img.defined_tags.get("Oracle-Tags", {}).get("CreatedBy"),
+            created_by=created_by,
         )
 
 
@@ -415,6 +419,9 @@ class YoVolume(YoCachedWithId):
 
     @classmethod
     def from_oci_boot(cls, bv: "BootVolume") -> "YoVolume":
+        created_by = bv.defined_tags.get("Oracle-Tags", {}).get("CreatedBy")
+        if not created_by:
+            created_by = bv.freeform_tags.get(CREATEDBY)
         return cls(
             id=bv.id,
             name=bv.display_name,
@@ -425,11 +432,14 @@ class YoVolume(YoCachedWithId):
             compartment_id=bv.compartment_id,
             size_in_gbs=bv.size_in_gbs,
             time_created=bv.time_created,
-            created_by=bv.defined_tags.get("Oracle-Tags", {}).get("CreatedBy"),
+            created_by=created_by,
         )
 
     @classmethod
     def from_oci_block(cls, bv: "Volume") -> "YoVolume":
+        created_by = bv.defined_tags.get("Oracle-Tags", {}).get("CreatedBy")
+        if not created_by:
+            created_by = bv.freeform_tags.get(CREATEDBY)
         return cls(
             id=bv.id,
             name=bv.display_name,
@@ -440,7 +450,7 @@ class YoVolume(YoCachedWithId):
             compartment_id=bv.compartment_id,
             size_in_gbs=bv.size_in_gbs,
             time_created=bv.time_created,
-            created_by=bv.defined_tags.get("Oracle-Tags", {}).get("CreatedBy"),
+            created_by=created_by,
         )
 
 
@@ -880,10 +890,10 @@ class YoCtx:
 
     _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 3)
     _vnics: YoCache[YoVnic] = YoCache(YoVnic, "vnics", 2)
-    _images: YoCache[YoImage] = YoCache(YoImage, "images", 5)
+    _images: YoCache[YoImage] = YoCache(YoImage, "images", 6)
     _consoles: YoCache[YoConsole] = YoCache(YoConsole, "consoles", 2)
     _shapes: YoCache[YoShape] = YoCache(YoShape, "shapes", 4)
-    _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 2)
+    _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 3)
     _vas: YoCache[YoVolumeAttachment] = YoCache(YoVolumeAttachment, "vas", 3)
 
     # Put all cache names from above here too so we automatically manage them
@@ -1720,11 +1730,15 @@ class YoCtx:
         return ret
 
     def create_volume(self, name: str, ad: str, size_gbs: int) -> YoVolume:
+        freeform_tags = {
+            CREATEDBY: self.config.my_email,
+        }
         details = self.oci.CreateVolumeDetails(
             compartment_id=self.config.instance_compartment_id,
             display_name=name,
             size_in_gbs=size_gbs,
             availability_domain=ad,
+            freeform_tags=freeform_tags,
         )
         result = self.block.create_volume(details)
         volume = YoVolume.from_oci_block(result.data)
