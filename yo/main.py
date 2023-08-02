@@ -785,6 +785,11 @@ class ListCmd(YoCmd):
 
         instances = [x for x in instances if x.state != "TERMINATED"]
 
+        # It's more efficient to bulk lookup the IPs. This will cache them so
+        # that below, we don't do individual calls.
+        if self.args.ip:
+            self.c.get_all_instance_ips(instances)
+
         table = rich.table.Table()
         table.add_column("Name")
         table.add_column("Shape")
@@ -1571,6 +1576,10 @@ class IpCmd(YoCmd):
         instances = self.c.get_matching_instances(
             names, self.states_allowlist, self.states_denylist
         )
+        # Use this to fetch all the IP addresses we don't already know.
+        # Doing it in bulk is more efficient than querying for each instance
+        # individually.
+        self.c.get_all_instance_ips(instances)
         table = rich.table.Table()
         table.add_column("Name")
         table.add_column("IP")

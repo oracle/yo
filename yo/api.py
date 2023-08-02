@@ -1268,6 +1268,55 @@ class YoCtx:
             self.con.print(f"Found instance ip [blue]{ip}")
         return ip
 
+    def get_all_instance_ips(
+        self, insts: t.List[YoInstance]
+    ) -> t.Dict[str, str]:
+        """
+        Return a map of instance ID to IP address. Caches them as well.
+        """
+        # Fetch the complete cache and see which instances we need to check again
+        inst_to_vnic = {v.instance_id: v for v in self._vnics.get_all()}
+        insts_fetch = []
+        for inst in insts:
+            if inst.id not in inst_to_vnic:
+                insts_fetch.append(inst)
+        if insts_fetch:
+            # Fetch all VnicAttachments from this compartment
+            vnic_gen = self.oci.list_call_get_all_results_generator(
+                self.compute.list_vnic_attachments,
+                "record",
+                self.config.instance_compartment_id,
+            )
+            inst_to_atchs = collections.defaultdict(list)
+            for vnic_atch in vnic_gen:
+                inst_to_atchs[vnic_atch.instance_id].append(vnic_atch)
+
+            # Filter to only the instances we don't have cached currently
+            inst_to_atchs_filtered = {}
+            for inst in insts_fetch:
+                if inst.id not in inst_to_atchs:
+                    raise YoExc(f"No attached VNICs for instance {inst.name}")
+                inst_to_atchs_filtered[inst.id] = inst_to_atchs[inst.id]
+
+            def load_vnic(
+                pair: t.Tuple[str, t.List["VnicAttachment"]]
+            ) -> t.Tuple[str, YoVnic]:
+                inst_id, atch_list = pair
+                vnic = self.vnet.get_vnic(atch_list[0].vnic_id).data
+                yovnic = YoVnic.from_oci(vnic, atch_list[0])
+                return inst_id, yovnic
+
+            # Use the thread pool to request all the vnics
+            inst_to_vnic.update(
+                dict(self._tpe.map(load_vnic, inst_to_atchs_filtered.items()))
+            )
+            self._vnics.set(list(inst_to_vnic.values()))
+            self.save_cache()
+        return {
+            id_: (vnic.public_ip or vnic.private_ip)
+            for id_, vnic in inst_to_vnic.items()
+        }
+
     def wait_instance_state(
         self,
         inst_id: str,
