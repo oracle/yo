@@ -97,7 +97,9 @@ def mock_notify():
 def test_list_empty(mock_ctx):
     mock_ctx.list_instances.return_value = []
     YoCmd.main("blah", args=["list"])
-    mock_ctx.list_instances.assert_called_once_with(verbose=False)
+    mock_ctx.list_instances.assert_called_once_with(
+        verbose=False, show_all=False
+    )
     mock_ctx.con.print.assert_called_once()
     table = mock_ctx.con.print.call_args[0][0]
     assert table._columns == ["Name", "Shape", "Mem", "CPU", "State", "Created"]
@@ -110,7 +112,9 @@ def test_list_results(mock_ctx):
     ]
     mock_ctx.list_instances.return_value = insts
     YoCmd.main("", args=["list"])
-    mock_ctx.list_instances.assert_called_once_with(verbose=False)
+    mock_ctx.list_instances.assert_called_once_with(
+        verbose=False, show_all=False
+    )
     mock_ctx.con.print.assert_called_once()
     table = mock_ctx.con.print.call_args[0][0]
     assert table._columns == ["Name", "Shape", "Mem", "CPU", "State", "Created"]
@@ -156,7 +160,7 @@ def test_ssh_one_instance(mock_ctx, mock_ssh):
     mock_ssh.wait.assert_not_called()
 
 
-@pytest.mark.parametrize("exact_name", [True, False])
+@pytest.mark.parametrize("exact_name", [True, None])
 @pytest.mark.parametrize("dash_n", [True, False])
 def test_ssh_specify(mock_ctx, mock_ssh, exact_name, dash_n):
     mock_ctx.get_instance_by_name.return_value = instance_factory()

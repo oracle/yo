@@ -987,17 +987,25 @@ class YoCtx:
             yocache.load(cache.get(yocache.name, {}))
 
     def save_cache(self) -> None:
-        cache_file = self._cache_file
-        cache_dir = os.path.dirname(cache_file)
+        # It is possible for multiple executions of Yo to concurrently read and
+        # write the cache file. In this case, the writer would truncate the
+        # file, and it would be possible for the reader to retrieve only partial
+        # contents. To avoid this, we write to a temporary file identified by
+        # our PID. Once the contents are completely written, we can use rename()
+        # which will atomically replace the cache. The concurrent reader will
+        # see the old or new, but never a partial cache.
+        cache_pid_file = f"{self._cache_file}.{os.getpid()}"
+        cache_dir = os.path.dirname(cache_pid_file)
         cache = {}
         for cache_attr in self._caches:
             yc: YoCache[t.Any] = getattr(self, cache_attr)
             cache[yc.name] = yc.export()
         os.makedirs(cache_dir, exist_ok=True)
-        with open(cache_file, "w") as f:
+        with open(cache_pid_file, "w") as f:
             # It seems best to reduce the permission on this file
             os.fchmod(f.fileno(), stat.S_IRUSR | stat.S_IWUSR)
             json.dump(cache, f, indent=4)
+        os.rename(cache_pid_file, self._cache_file)
 
     def __init__(
         self,
@@ -1019,7 +1027,9 @@ class YoCtx:
             s = s.split("/", 1)[1]
         return s == self.config.my_email
 
-    def list_instances(self, verbose: bool = False) -> t.List[YoInstance]:
+    def list_instances(
+        self, verbose: bool = False, show_all: bool = False
+    ) -> t.List[YoInstance]:
         cid = self.config.instance_compartment_id
         instances_generator = self.oci.list_call_get_all_results(
             self.compute.list_instances,
@@ -1027,6 +1037,7 @@ class YoCtx:
             limit=1000,
         ).data
         instances = []
+        instances_cache = []
         warned_on_missing_tag = not verbose
         for instance in instances_generator:
             email = instance.defined_tags.get("Oracle-Tags", {}).get(
@@ -1053,11 +1064,16 @@ class YoCtx:
                     )
                     warned_on_missing_tag = True
                 email = instance.freeform_tags.get(CREATEDBY)
+            yo_inst = YoInstance.from_oci(instance)
+            instances.append(yo_inst)
             if self._match_email(email):
-                instances.append(YoInstance.from_oci(instance))
-        self._instances.set(instances)
+                instances_cache.append(yo_inst)
+        self._instances.set(instances_cache)
         self.save_cache()
-        return instances
+        if show_all:
+            return instances
+        else:
+            return instances_cache
 
     def list_instances_cached(self) -> t.List[YoInstance]:
         if self._instances.last_refresh is None:
@@ -1183,12 +1199,13 @@ class YoCtx:
         names_allowlist: t.Collection[str],
         states_allowlist: t.Collection[str],
         states_denylist: t.Collection[str],
+        refresh: bool = False,
     ) -> t.List[YoInstance]:
         """
         Return a list of instances matching the name collection, filtered by the
         allow and deny list.
         """
-        if not self._instances.is_current():
+        if refresh or not self._instances.is_current():
             self.list_instances()
         name_matches = self._instances_named(names_allowlist)
         return self._filter_instances(
@@ -1258,6 +1275,55 @@ class YoCtx:
         if not quiet:
             self.con.print(f"Found instance ip [blue]{ip}")
         return ip
+
+    def get_all_instance_ips(
+        self, insts: t.List[YoInstance]
+    ) -> t.Dict[str, str]:
+        """
+        Return a map of instance ID to IP address. Caches them as well.
+        """
+        # Fetch the complete cache and see which instances we need to check again
+        inst_to_vnic = {v.instance_id: v for v in self._vnics.get_all()}
+        insts_fetch = []
+        for inst in insts:
+            if inst.id not in inst_to_vnic:
+                insts_fetch.append(inst)
+        if insts_fetch:
+            # Fetch all VnicAttachments from this compartment
+            vnic_gen = self.oci.list_call_get_all_results_generator(
+                self.compute.list_vnic_attachments,
+                "record",
+                self.config.instance_compartment_id,
+            )
+            inst_to_atchs = collections.defaultdict(list)
+            for vnic_atch in vnic_gen:
+                inst_to_atchs[vnic_atch.instance_id].append(vnic_atch)
+
+            # Filter to only the instances we don't have cached currently
+            inst_to_atchs_filtered = {}
+            for inst in insts_fetch:
+                if inst.id not in inst_to_atchs:
+                    raise YoExc(f"No attached VNICs for instance {inst.name}")
+                inst_to_atchs_filtered[inst.id] = inst_to_atchs[inst.id]
+
+            def load_vnic(
+                pair: t.Tuple[str, t.List["VnicAttachment"]]
+            ) -> t.Tuple[str, YoVnic]:
+                inst_id, atch_list = pair
+                vnic = self.vnet.get_vnic(atch_list[0].vnic_id).data
+                yovnic = YoVnic.from_oci(vnic, atch_list[0])
+                return inst_id, yovnic
+
+            # Use the thread pool to request all the vnics
+            inst_to_vnic.update(
+                dict(self._tpe.map(load_vnic, inst_to_atchs_filtered.items()))
+            )
+            self._vnics.set(list(inst_to_vnic.values()))
+            self.save_cache()
+        return {
+            id_: (vnic.public_ip or vnic.private_ip)
+            for id_, vnic in inst_to_vnic.items()
+        }
 
     def wait_instance_state(
         self,

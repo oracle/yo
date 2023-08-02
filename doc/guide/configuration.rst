@@ -295,6 +295,32 @@ to stop the message from being printed.
 
 .. _automatic tag rule: https://docs.oracle.com/en-us/iaas/Content/Tagging/Concepts/understandingautomaticdefaulttags.htm
 
+.. _exact_name:
+
+``exact_name``
+~~~~~~~~~~~~~~
+
+(Boolean, Optional) Set this to true to fully disable Yo's :ref:`instance
+naming<instance_naming>` scheme, in which it prefixes instance and block volume
+names with your username.  This allows you to create instances with any name,
+and it allows you to use Yo commands to reference those instances.
+
+This functionality is available on a case-by-case basis, by providing the
+argument ``--exact-name`` (or ``-E``) to any sub-command which takes an instance
+or block volume name as an argument.
+
+Should you decide to set this configuration to ``true``, then you will no longer
+need to use the ``--exact-name`` argument. If you'd like to return to Yo's
+instance naming behavior on a case-by-case basis, you can use the
+``--no-exact-name`` argument, which can override the configuration.
+
+If you're working in a compartment shared with many users, it's a nice idea to
+keep ``exact_name = false`` (the default), which retains Yo's default behavior.
+This ensures that anybody else can quickly identify the owner of an instance
+just by looking at its name. However, if you do not share a compartment, or if
+you have specific naming requirements, this can be a helpful config knob, to
+keep Yo from getting in your way.
+
 Instance Profiles
 -----------------
 

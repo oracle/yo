@@ -65,8 +65,8 @@ criteria. Some examples:
                                #  stepbren-bug-2
   * yo ssh bug                 # connect to stepbren-bug
 
-To avoid this behavior, you can pass --exact-name to various subcommands. But I
-would encourage you to adopt this naming scheme!
+To avoid this behavior, you can pass --exact-name to various subcommands, or
+set "exact_name = true" in the [yo] section of your config.
 """
 import argparse
 import collections
@@ -765,19 +765,42 @@ class ListCmd(YoCmd):
             "out of date)",
         )
         parser.add_argument(
+            "--ip",
+            "-i",
+            action="store_true",
+            help="include IP addresses (this may require calling the API)",
+        )
+        parser.add_argument(
             "--ad",
             action="store_true",
             help="display the availability domain column",
         )
+        parser.add_argument(
+            "--all",
+            "-a",
+            action="store_true",
+            help="display all instances in the compartment (not just yours)",
+        )
 
     def run(self) -> None:
         verbose = not self.c.config.silence_automatic_tag_warning
+        # We do not cache other people's instances. If --all is provided, we
+        # must not call list_instances_cached()
+        if self.args.all:
+            self.args.cached = False
         if self.args.cached:
             instances = self.c.list_instances_cached()
         else:
-            instances = self.c.list_instances(verbose=verbose)
+            instances = self.c.list_instances(
+                verbose=verbose, show_all=self.args.all
+            )
 
         instances = [x for x in instances if x.state != "TERMINATED"]
+
+        # It's more efficient to bulk lookup the IPs. This will cache them so
+        # that below, we don't do individual calls.
+        if self.args.ip:
+            self.c.get_all_instance_ips(instances)
 
         table = rich.table.Table()
         table.add_column("Name")
@@ -788,6 +811,8 @@ class ListCmd(YoCmd):
         if self.args.ad:
             table.add_column("AD")
         table.add_column("Created")
+        if self.args.ip:
+            table.add_column("IP")
         for instance in instances:
             name = instance.name
             if instance.termination_protected:
@@ -804,6 +829,8 @@ class ListCmd(YoCmd):
             values += [
                 strftime(instance.time_created),
             ]
+            if self.args.ip:
+                values.append(self.c.get_instance_ip(instance, quiet=True))
             table.add_row(*values)
         self.c.con.print(table)
 
@@ -825,9 +852,20 @@ class SingleInstanceCommand(YoCmd):
         )
         parser.add_argument(
             "--exact-name",
+            "-E",
             action="store_true",
+            default=None,
             help="Do not standardize the name by prefixing it with your "
             "system username if necessary.",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="Standardize the name by prefixing it with your system "
+            "username (this is the default, but can be used to override "
+            "your Yo configuration file)",
         )
         if self.positional_name:
             self.add_with_completer(
@@ -905,9 +943,20 @@ class MultiInstanceCommand(YoCmd):
         )
         parser.add_argument(
             "--exact-name",
+            "-E",
             action="store_true",
+            default=None,
             help="Do not standardize the name by prefixing it with your "
             "system username if necessary.",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="Standardize the name by prefixing it with your system "
+            "username (this is the default, but can be used to override "
+            "your Yo configuration file)",
         )
         parser.add_argument(
             "--yes",
@@ -970,7 +1019,10 @@ class MultiInstanceCommand(YoCmd):
                     fmt_allow_deny(self.states_allowlist, self.states_denylist)
                 )
             )
-            names = self.args.instances
+            names = [
+                standardize_name(n, self.args.exact_name, self.c.config)
+                for n in self.args.instances
+            ]
             if names:
                 self.c.con.print(" name: {}".format(", ".join(names)))
             else:
@@ -1006,7 +1058,10 @@ class MultiInstanceCommand(YoCmd):
         )
 
         to_run = self.c.get_matching_instances(
-            names, self.states_allowlist, self.states_denylist
+            names,
+            self.states_allowlist,
+            self.states_denylist,
+            refresh=True,
         )
         self.instance_count = len(to_run)
         self.run_for_all(to_run)
@@ -1533,9 +1588,20 @@ class IpCmd(YoCmd):
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--exact-name",
+            "-E",
             action="store_true",
+            default=None,
             help="Do not standardize the name by prefixing it with your "
             "system useranme if necessary.",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="Standardize the name by prefixing it with your system "
+            "username (this is the default, but can be used to override "
+            "your Yo configuration file)",
         )
         self.add_with_completer(
             parser,
@@ -1555,6 +1621,10 @@ class IpCmd(YoCmd):
         instances = self.c.get_matching_instances(
             names, self.states_allowlist, self.states_denylist
         )
+        # Use this to fetch all the IP addresses we don't already know.
+        # Doing it in bulk is more efficient than querying for each instance
+        # individually.
+        self.c.get_all_instance_ips(instances)
         table = rich.table.Table()
         table.add_column("Name")
         table.add_column("IP")
@@ -1716,18 +1786,33 @@ class LaunchCmd(YoCmd):
             help="Wait for the instance to start running",
         )
         parser.add_argument(
+            "--wait-ssh",
+            action="store_true",
+            help="Wait for the instance to be reachable via SSH (implies --wait)",
+        )
+        parser.add_argument(
             "--ssh",
             "-s",
             action="store_true",
-            help="SSH to the instance once it is running (implies --wait)",
+            help="SSH to the instance once it is running (implies --wait-ssh)",
         )
         parser.add_argument(
             "--exact-name",
+            "-E",
             action="store_true",
+            default=None,
             help="When set, allows you to bypass the name rules implemented "
             "by this program. In particular: (1) allows non-unique "
             "instance names, and (2) allows you to use a name which is "
             "not prefixed by your username.",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="the opposite of --exact-name (this is the default, but can "
+            "be used to override your Yo configuration file)",
         )
         parser.add_argument(
             "--dry-run",
@@ -1786,9 +1871,7 @@ class LaunchCmd(YoCmd):
         name = profile.name
         if self.args.name is not None:
             name = self.args.name
-        pfx = f"{self.c.config.my_username}-"
-        if not name.startswith(pfx):
-            name = pfx + name
+        name = standardize_name(name, self.args.exact_name, self.c.config)
         all_instances = self.c.list_instances()
         names = set(
             inst.name for inst in all_instances if inst.state != "TERMINATED"
@@ -1962,6 +2045,17 @@ class LaunchCmd(YoCmd):
             "ocpus": cpu,
         }
 
+    def standardize_wait(self, tasks: bool) -> None:
+        # There are several conditions where we may need to wait. Of course,
+        # --ssh requires waiting for the instance to be ready, but also running
+        # tasks on the instance. Finally, we have the --wait and --wait-ssh
+        # arguments. This simply makes all of the arguments consistent  with
+        # each other.
+        if self.args.ssh or tasks:
+            self.args.wait_ssh = True
+        if self.args.wait_ssh:
+            self.args.wait = True
+
     def run(self) -> None:
         profile = self.c.instance_profiles[self.args.profile]
         create_args = profile.create_arg_dict()
@@ -1997,17 +2091,16 @@ class LaunchCmd(YoCmd):
         inst = self.c.launch_instance(create_args)
 
         tasks = set(profile.tasks + self.args.tasks)
+        self.standardize_wait(bool(tasks))
 
-        # --wait, --ssh, or --task all mean that we need to enter the "wait"
-        # phase. Otherwise, let's exit now.
-        if not (self.args.wait or self.args.ssh or tasks):
+        if not self.args.wait:
             return
 
-        # First, we must wait for the instance to reach RUNNING
+        # Wait for the instance to reach RUNNING
         inst = self.c.wait_instance_state(inst.id, "RUNNING")
 
-        # In either case, we need SSH to be up
-        if self.args.ssh or tasks:
+        # Wait for SSH to come up
+        if self.args.wait_ssh:
             ip = self.c.get_instance_ip(inst)
             # TODO: specify username in launch command?
             user = OS_TO_USER[image.os]
@@ -2713,6 +2806,22 @@ class AttachedCmd(YoCmd):
 
 
 def volume_attach_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--no-exact-name",
+        action="store_false",
+        dest="exact_name",
+        default=None,
+        help="follow Yo's normal rules on standardizing instance & volume names"
+        " (this is the default, but can be used to override the config file)",
+    )
+    parser.add_argument(
+        "--exact-name",
+        "-E",
+        action="store_true",
+        dest="exact_name",
+        default=None,
+        help="use the instance & volume names exactly as given",
+    )
     va = parser.add_argument_group(
         "Volume Attachment Arguments",
     )
@@ -2847,11 +2956,16 @@ class VolumeCreateCmd(YoCmd):
         ad = self.args.ad
         if self.args.inst_name:
             inst = self.c.get_instance_by_name(
-                self.args.inst_name, ("RUNNING",), ()
+                self.args.inst_name,
+                ("RUNNING",),
+                (),
+                exact_name=self.args.exact_name,
             )
             ad = inst.ad
 
-        name = standardize_name(self.args.name, False, self.c.config)
+        name = standardize_name(
+            self.args.name, self.args.exact_name, self.c.config
+        )
         # TODO: deduplicate...
         volume = self.c.create_volume(name, ad, self.args.size_gbs)
         self.c.wait_volume(volume, "AVAILABLE")
@@ -2884,15 +2998,36 @@ class AttachCmd(YoCmd):
     def run(self) -> None:
         if self.args.setup:
             self.args.wait = True
-        name = standardize_name(self.args.volume_name, False, self.c.config)
+        name = standardize_name(
+            self.args.volume_name, self.args.exact_name, self.c.config
+        )
         inst = self.c.get_instance_by_name(
-            self.args.instance_name, ("RUNNING",), ()
+            self.args.instance_name,
+            ("RUNNING",),
+            (),
+            exact_name=self.args.exact_name,
         )
         vol = self.c.get_volume(name)
         do_volume_attach(self.c, self.args, vol, inst)
 
 
 def detach_volume_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--no-exact-name",
+        action="store_false",
+        dest="exact_name",
+        default=None,
+        help="follow Yo's normal rules on standardizing instance & volume names"
+        " (this is the default, but can be used to override the config file)",
+    )
+    parser.add_argument(
+        "--exact-name",
+        "-E",
+        action="store_true",
+        dest="exact_name",
+        default=None,
+        help="use the instance & volume names exactly as given",
+    )
     parser.add_argument(
         "--no-teardown",
         action="store_false",
@@ -2966,14 +3101,19 @@ class DetachCmd(YoCmd):
     def run(self) -> None:
         if self.args.all and self.args.from_instance:
             raise YoExc("--from and --all are mutually exclusive")
-        name = standardize_name(self.args.volume, False, self.c.config)
+        name = standardize_name(
+            self.args.volume, self.args.exact_name, self.c.config
+        )
         vol = self.c.get_volume(name)
         vas = self.c.attachments_by_volume()[vol.id]
         vas = [va for va in vas if va.state == "ATTACHED"]
         detach_vas = []
         if self.args.from_instance:
             inst = self.c.get_instance_by_name(
-                self.args.from_instance, ("RUNNING",), ()
+                self.args.from_instance,
+                ("RUNNING",),
+                (),
+                exact_name=self.args.exact_name,
             )
             for va in vas:
                 if va.instance_id == inst.id:
@@ -3015,7 +3155,9 @@ class VolumeDeleteCmd(YoCmd):
         detach_volume_args(parser)
 
     def run(self) -> None:
-        name = standardize_name(self.args.name, False, self.c.config)
+        name = standardize_name(
+            self.args.name, self.args.exact_name, self.c.config
+        )
         volume = self.c.get_volume(name)
         vas = self.c.attachments_by_volume()[volume.id]
         vas = [va for va in vas if va.state == "ATTACHED"]
