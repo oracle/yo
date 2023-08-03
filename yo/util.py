@@ -140,10 +140,14 @@ class YoConfig:
     def from_config_section(cls, conf: configparser.SectionProxy) -> "YoConfig":
         d = dict(**conf)
         check_args_dataclass(cls, d.keys(), "~/.oci/yo.ini \\[yo] section")
-        if "preserve_volume_on_terminate" in d:
-            d["preserve_volume_on_terminate"] = conf.getboolean(
-                "preserve_volume_on_terminate",
-            )
+        bools = [
+            "preserve_volume_on_terminate",
+            "silence_automatic_tag_warning",
+            "exact_name",
+        ]
+        for b in bools:
+            if b in d:
+                d[b] = conf.getboolean(b)
         # OCI stores email addresses as lower case. While most people write
         # their email address in lower case, it's not a guarantee. Since we use
         # email address to filter OCI resources, it's imperative that the casing
