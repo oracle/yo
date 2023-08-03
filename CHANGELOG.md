@@ -21,6 +21,10 @@ should appear here.
   it.
 - A new argument, `--no-exact-name`, allows you to override `exact_name = true`
   in your configuration on a case-by-case basis.
+- A new configuration, `resource_filtering`, is added to `yo.ini`. This allows
+  Yo to view and manage all resources in your compartment, not just the ones
+  you've created. This is not a recommended configuration, please be careful
+  when using this.
 
 Fixes:
 

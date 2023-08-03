@@ -260,13 +260,15 @@ removing a value), yo's cache becomes out-of-date in a way which it cannot
 detect. Once you've updated this configuration value, please run ``yo
 cache-clean`` to force yo to fetch the latest image list next time you run it.
 
+.. _silence_tag:
+
 ``silence_automatic_tag_warning``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(Boolean, Optional) Set this to true in order to silence a rather verbose
-warning during ``yo list``. If you haven't seen a warning mentioning this
-configuration value: you don't need to touch this configuration, or read the
-remaining explanation.
+(Boolean, Optional, Default: false) Set this to true in order to silence a
+rather verbose warning during ``yo list``. If you haven't seen a warning
+mentioning this configuration value: you don't need to touch this configuration,
+or read the remaining explanation.
 
 Yo is dedicated to managing the instances which you, an individual user,
 created. It was designed for the idea of a shared tenancy, in which multiple
@@ -293,6 +295,10 @@ this is not possible, or if you're happy with the reduced feature set entailed
 by this, then you can simply set this configuration value to ``true`` in order
 to stop the message from being printed.
 
+Another possible resolution is to fully disable Yo's resource filtering. This
+will result in Yo allowing you to view and manage all resources in your
+compartment. See :ref:`resource_filtering` for details.
+
 .. _automatic tag rule: https://docs.oracle.com/en-us/iaas/Content/Tagging/Concepts/understandingautomaticdefaulttags.htm
 
 .. _exact_name:
@@ -300,10 +306,11 @@ to stop the message from being printed.
 ``exact_name``
 ~~~~~~~~~~~~~~
 
-(Boolean, Optional) Set this to true to fully disable Yo's :ref:`instance
-naming<instance_naming>` scheme, in which it prefixes instance and block volume
-names with your username.  This allows you to create instances with any name,
-and it allows you to use Yo commands to reference those instances.
+(Boolean, Optional, Default: false) Set this to true to fully disable Yo's
+:ref:`instance naming<instance_naming>` scheme, in which it prefixes instance
+and block volume names with your username.  This allows you to create instances
+with any name, and it allows you to use Yo commands to reference those
+instances.
 
 This functionality is available on a case-by-case basis, by providing the
 argument ``--exact-name`` (or ``-E``) to any sub-command which takes an instance
@@ -320,6 +327,18 @@ This ensures that anybody else can quickly identify the owner of an instance
 just by looking at its name. However, if you do not share a compartment, or if
 you have specific naming requirements, this can be a helpful config knob, to
 keep Yo from getting in your way.
+
+.. _resource_filtering:
+
+``resource_filtering``
+~~~~~~~~~~~~~~~~~~~~~~
+
+(Boolean, Optional, Default: true) Set this to ``false`` in order to disable
+Yo's resource filtering logic. This will result in Yo allowing you to view and
+manage all resources within the configured OCI compartment, regardless of what
+account created them.
+
+See :ref:`Resource Visibility` for further discussion.
 
 Instance Profiles
 -----------------

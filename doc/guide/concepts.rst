@@ -64,6 +64,24 @@ You can avoid this behavior in two ways:
   If necessary, you can re-enable it on a case-by-case basis with
   ``--no-exact-name``.
 
+Resource Visibility
+-------------------
+
+Yo was designed to be used by teams that share compartments, and thus want to
+avoid stepping on each others' toes. So in Yo's default configuration,
+instances, block volumes, etc, are only shown if Yo knows that you created them.
+Similarly, Yo will not allow you to manage those resources which you did not
+create.
+
+However, not all people use OCI this way. Some people have their own compartment
+which is not shared with others.  In other cases, the automatic tag rules
+necessary for Yo to determine the creator are not available (see :ref:`this
+explanation <silence_tag>` for more details).
+
+Whatever the reason, you can disable this visibility restriction by setting
+``resource_filtering = false`` in your configuration file. See
+:ref:`resource_filtering` for more details.
+
 Instance Profile
 ----------------
 

@@ -888,6 +888,8 @@ class YoCtx:
     config: YoConfig
     instance_profiles: t.Mapping[str, InstanceProfile]
 
+    cache_version = 1
+
     _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 3)
     _vnics: YoCache[YoVnic] = YoCache(YoVnic, "vnics", 2)
     _images: YoCache[YoImage] = YoCache(YoImage, "images", 6)
@@ -992,6 +994,17 @@ class YoCtx:
         if os.path.isfile(cache_file):
             with open(cache_file) as f:
                 cache = json.load(f)
+        cache_version = cache.pop("cache_version", 0)
+        resource_filtering = cache.pop("resource_filtering", None)
+        if (
+            cache_version != self.cache_version
+            or resource_filtering != self.config.resource_filtering
+        ):
+            os.unlink(cache_file)
+            print(
+                "Invalidating cache due to cache version or resource filtering"
+            )
+            return
         for cache_attr in self._caches:
             yocache: YoCache[t.Any] = getattr(self, cache_attr)
             yocache.load(cache.get(yocache.name, {}))
@@ -1006,7 +1019,10 @@ class YoCtx:
         # see the old or new, but never a partial cache.
         cache_pid_file = f"{self._cache_file}.{os.getpid()}"
         cache_dir = os.path.dirname(cache_pid_file)
-        cache = {}
+        cache: t.Dict[str, t.Any] = {
+            "cache_version": self.cache_version,
+            "resource_filtering": self.config.resource_filtering,
+        }
         for cache_attr in self._caches:
             yc: YoCache[t.Any] = getattr(self, cache_attr)
             cache[yc.name] = yc.export()
@@ -1029,8 +1045,10 @@ class YoCtx:
         self._cache_file = os.path.expanduser(cache_file)
         self.load_cache()
 
-    def _match_email(self, s: t.Optional[str]) -> bool:
+    def filter_by_email(self, s: t.Optional[str]) -> bool:
         """Return true if the string matches the configured email"""
+        if not self.config.resource_filtering:
+            return True
         if not s:
             return False
         if "/" in s:
@@ -1066,6 +1084,10 @@ class YoCtx:
                         "Your tenancy administrator can resolve this by "
                         "reinstating the automatic tag rule for "
                         "Oracle-Tags.CreatedBy.\n"
+                        "You can also set 'resource_filtering = false' in "
+                        "your configuration file, which results in Yo showing "
+                        "you all resources in the compartment, regardless of "
+                        "who created them.\n"
                         "To learn more, please visit this documentation "
                         f"page: {AUTO_TAG_DOC_LINK}\n"
                         "To silence this warning, please add:\n"
@@ -1076,7 +1098,7 @@ class YoCtx:
                 email = instance.freeform_tags.get(CREATEDBY)
             yo_inst = YoInstance.from_oci(instance)
             instances.append(yo_inst)
-            if self._match_email(email):
+            if self.filter_by_email(email):
                 instances_cache.append(yo_inst)
         self._instances.set(instances_cache)
         self.save_cache()
@@ -1627,7 +1649,7 @@ class YoCtx:
         )
         for bootdev in bootdev_gen:
             bv = YoVolume.from_oci_boot(bootdev)
-            if self._match_email(bv.created_by):
+            if self.filter_by_email(bv.created_by):
                 vols.append(bv)
                 ids.add(bv.id)
         boot_attch_gen = self.oci.list_call_get_all_results_generator(
@@ -1664,7 +1686,7 @@ class YoCtx:
         )
         for blockdev in blockdev_gen:
             vol = YoVolume.from_oci_block(blockdev)
-            if self._match_email(vol.created_by):
+            if self.filter_by_email(vol.created_by):
                 vols.append(vol)
                 ids.add(vol.id)
         attch_gen = self.oci.list_call_get_all_results_generator(

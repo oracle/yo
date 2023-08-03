@@ -88,6 +88,7 @@ class YoConfig:
     image_compartment_ids: t.List[str] = dataclasses.field(default_factory=list)
     silence_automatic_tag_warning: t.Optional[bool] = None
     exact_name: t.Optional[bool] = None
+    resource_filtering: bool = True
 
     @property
     def ssh_public_key_full(self) -> str:
@@ -144,6 +145,7 @@ class YoConfig:
             "preserve_volume_on_terminate",
             "silence_automatic_tag_warning",
             "exact_name",
+            "resource_filtering",
         ]
         for b in bools:
             if b in d:
