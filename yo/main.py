@@ -3254,7 +3254,8 @@ class CacheCleanCmd(YoCmd):
     )
 
     def run(self) -> None:
-        os.unlink(self.c._cache_file)
+        if os.path.isfile(self.c._cache_file):
+            os.unlink(self.c._cache_file)
 
 
 class HelpCmd(YoCmd):
