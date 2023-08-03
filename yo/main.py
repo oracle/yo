@@ -796,6 +796,7 @@ class ListCmd(YoCmd):
             )
 
         instances = [x for x in instances if x.state != "TERMINATED"]
+        instances.sort(key=lambda i: i.time_created)
 
         # It's more efficient to bulk lookup the IPs. This will cache them so
         # that below, we don't do individual calls.
