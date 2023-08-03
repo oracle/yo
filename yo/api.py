@@ -994,17 +994,17 @@ class YoCtx:
         if os.path.isfile(cache_file):
             with open(cache_file) as f:
                 cache = json.load(f)
-        cache_version = cache.pop("cache_version", 0)
-        resource_filtering = cache.pop("resource_filtering", None)
-        if (
-            cache_version != self.cache_version
-            or resource_filtering != self.config.resource_filtering
-        ):
-            os.unlink(cache_file)
-            print(
-                "Invalidating cache due to cache version or resource filtering"
-            )
-            return
+            cache_version = cache.pop("cache_version", 0)
+            resource_filtering = cache.pop("resource_filtering", None)
+            if (
+                cache_version != self.cache_version
+                or resource_filtering != self.config.resource_filtering
+            ):
+                os.unlink(cache_file)
+                print(
+                    "Invalidating cache due to cache version or resource filtering"
+                )
+                return
         for cache_attr in self._caches:
             yocache: YoCache[t.Any] = getattr(self, cache_attr)
             yocache.load(cache.get(yocache.name, {}))
