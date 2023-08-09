@@ -340,6 +340,22 @@ account created them.
 
 See :ref:`Resource Visibility` for further discussion.
 
+``check_for_update_every``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Integer, Optional, Default: 6) This is the (minimum) number of hours between
+automatic checks for a newer version of Yo.
+
+If it has been at least this many hours since the last check, then during ``yo
+list``, a background thread will be spawned in order to check the latest version
+from PyPI. If the current version is out of date, then Yo will suggest that you
+update and provide the necessary command. Since the check is done in the
+background during an operation which generally takes a few seconds, there's
+almost no performance impact to this check.
+
+You can set this configuration to zero, in which case Yo will not perform the
+check at all.
+
 Instance Profiles
 -----------------
 
