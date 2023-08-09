@@ -1028,8 +1028,13 @@ class YoCtx:
             cache[yc.name] = yc.export()
         os.makedirs(cache_dir, exist_ok=True)
         with open(cache_pid_file, "w") as f:
-            # It seems best to reduce the permission on this file
-            os.fchmod(f.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+            # It seems best to reduce the permission on this file, so it can
+            # only be read or written by the current user (600 permissions).
+            # However Windows doesn't support fchmod(), and its chmod()
+            # implementation would only let us set the read-only flag. So we'll
+            # just skip that if fchmod() unavailable.
+            if hasattr(os, "fchmod"):
+                os.fchmod(f.fileno(), stat.S_IRUSR | stat.S_IWUSR)
             json.dump(cache, f, indent=4)
         os.rename(cache_pid_file, self._cache_file)
 
