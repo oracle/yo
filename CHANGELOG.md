@@ -5,6 +5,10 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.2.0 - Wed, Aug 9, 2023
+
+New features:
+
 - Add `yo launch --wait-ssh`, which waits for SSH to come up, but doesn't
   actually connect you to SSH.
 - Add `yo list --ip`, which adds an IP address column for `yo list`.
@@ -25,6 +29,16 @@ should appear here.
   Yo to view and manage all resources in your compartment, not just the ones
   you've created. This is not a recommended configuration, please be careful
   when using this.
+- During `yo list`, Yo will now automatically check for newer versions in the
+  background. If it finds a newer version, it will print a notice. As a default,
+  the version checks are a minimum of 6 hours apart, but this can be configured
+  with the config `check_for_update_every`. Setting the configuration to 0 will
+  disable the feature.
+
+Changes:
+
+- `yo list` now sorts your instances by creation time, rather than the default
+  (presumably undefined) ordering returned by the API.
 
 Fixes:
 
@@ -36,6 +50,9 @@ Fixes:
 - Improved error messages that occur when looking up an instance by name, so
   that the message includes the actual instance that Yo tried to search for (as
   impacted by `--exact-name`).
+- Fixed a compatibility issue with Windows due to the use of "fchmod()"
+- Fixed a silly bug in which `yo cache-clean` failed if the cache file does not
+  exist.
 
 ## 1.1.0 - Tue, July 18, 2023
 
