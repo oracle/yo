@@ -9,16 +9,16 @@ repos:
     -   id: check-yaml
     -   id: check-added-large-files
 -   repo: https://github.com/psf/black
-    rev: "23.1.0"
+    rev: "23.7.0"
     hooks:
     -   id: black
         args: [--line-length=80, --exclude=setup.py]
 -   repo: https://github.com/pycqa/flake8
-    rev: "6.0.0"
+    rev: "6.1.0"
     hooks:
     -   id: flake8
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.0.1"
+    rev: "v1.4.1"
     hooks:
     -   id: mypy
         args: [--strict, --disallow-untyped-calls]
@@ -28,7 +28,7 @@ repos:
         -   rich
         -   subc
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.9.0
+    rev: v3.10.0
     hooks:
     -   id: reorder-python-imports
 -   repo: https://github.com/netromdk/vermin
