@@ -40,6 +40,7 @@ import os.path
 import re
 import shlex
 import typing as t
+import urllib.request
 from pathlib import Path
 
 T = t.TypeVar("T")
@@ -89,6 +90,7 @@ class YoConfig:
     silence_automatic_tag_warning: t.Optional[bool] = None
     exact_name: t.Optional[bool] = None
     resource_filtering: bool = True
+    check_for_update_every: t.Optional[int] = 6
 
     @property
     def ssh_public_key_full(self) -> str:
@@ -150,6 +152,8 @@ class YoConfig:
         for b in bools:
             if b in d:
                 d[b] = conf.getboolean(b)
+        if "check_for_update_every" in d:
+            d["check_for_update_every"] = int(d["check_for_update_every"])
         # OCI stores email addresses as lower case. While most people write
         # their email address in lower case, it's not a guarantee. Since we use
         # email address to filter OCI resources, it's imperative that the casing
@@ -246,3 +250,30 @@ def removesuffix(string: str, suffix: str) -> str:
 
 def shlex_join(args: t.Iterable[str]) -> str:
     return " ".join(shlex.quote(s) for s in args)
+
+
+PYPI_URL = "https://pypi.org/simple/yo/"
+UPGRADE_COMMAND = "pip install --upgrade yo"
+
+
+def latest_yo_version() -> t.Optional[t.Tuple[int, int, int]]:
+    try:
+        with urllib.request.urlopen(PYPI_URL, timeout=5) as response:
+            html = response.read().decode("utf-8")
+        expr = re.compile(r"yo-(\d+)\.(\d+)\.(\d+)")
+        return max(
+            [
+                (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                for m in expr.finditer(html)
+            ]
+        )
+    except Exception:
+        return None
+
+
+def current_yo_version() -> t.Tuple[int, int, int]:
+    import pkg_resources
+
+    ver_str = pkg_resources.get_distribution("yo").version
+    g1, g2, g3 = ver_str.split(".")
+    return (int(g1), int(g2), int(g3))

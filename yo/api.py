@@ -38,6 +38,7 @@ Yo context module - contains the code for interacting with/hiding OCI API
 """
 import collections
 import concurrent.futures
+import contextlib
 import dataclasses
 import datetime
 import enum
@@ -50,8 +51,11 @@ from collections import defaultdict
 
 import rich.console
 
+import yo.util
 from yo.util import check_args_dataclass
+from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
+from yo.util import latest_yo_version
 from yo.util import one
 from yo.util import standardize_name
 from yo.util import YoConfig
@@ -889,6 +893,7 @@ class YoCtx:
     instance_profiles: t.Mapping[str, InstanceProfile]
 
     cache_version = 1
+    last_checked_for_update: datetime.datetime
 
     _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 3)
     _vnics: YoCache[YoVnic] = YoCache(YoVnic, "vnics", 2)
@@ -1005,6 +1010,14 @@ class YoCtx:
                     "Invalidating cache due to cache version or resource filtering"
                 )
                 return
+        if "last_checked_for_update" in cache:
+            self.last_checked_for_update = fromisoformat(
+                cache["last_checked_for_update"]
+            )
+        else:
+            self.last_checked_for_update = datetime.datetime(
+                1970, 1, 1
+            ).astimezone()
         for cache_attr in self._caches:
             yocache: YoCache[t.Any] = getattr(self, cache_attr)
             yocache.load(cache.get(yocache.name, {}))
@@ -1022,6 +1035,9 @@ class YoCtx:
         cache: t.Dict[str, t.Any] = {
             "cache_version": self.cache_version,
             "resource_filtering": self.config.resource_filtering,
+            "last_checked_for_update": toisoformat(
+                self.last_checked_for_update
+            ),
         }
         for cache_attr in self._caches:
             yc: YoCache[t.Any] = getattr(self, cache_attr)
@@ -1059,6 +1075,50 @@ class YoCtx:
         if "/" in s:
             s = s.split("/", 1)[1]
         return s == self.config.my_email
+
+    @contextlib.contextmanager
+    def maybe_check_for_updates(self) -> t.Iterator[None]:
+        """
+        A context manager which will check for updates in the background
+
+        Since we use a thread pool, it's pretty trivial to delegate the HTTP
+        request to a background thread. We can then use this context manager
+        whenever we know that we will be doing some other long task (e.g.
+        fetching instances via "yo list"). This ensures that we can do a version
+        check and notify users to update, but do so without making any command
+        run longer than it would have.
+        """
+        # Only check every N hours
+        since_last_check = now() - self.last_checked_for_update
+        hours = since_last_check.total_seconds() / 3600
+        if (
+            not self.config.check_for_update_every
+            or hours < self.config.check_for_update_every
+        ):
+            yield
+            return
+        fut = self._tpe.submit(latest_yo_version)
+        try:
+            yield
+        except BaseException:
+            fut.cancel()
+            raise
+        latest = fut.result()
+        if not latest:
+            return
+        ver = current_yo_version()
+        latest_str = ".".join(map(str, latest))
+        if ver < latest:
+            self.con.print(
+                f"Note: version {latest_str} of Yo is available, please update"
+            )
+            self.con.print("To update:")
+            self.con.print(f"   {yo.util.UPGRADE_COMMAND}")
+            self.con.print(
+                "You can check the current & latest version with 'yo version'"
+            )
+        self.last_checked_for_update = now()
+        self.save_cache()
 
     def list_instances(
         self, verbose: bool = False, show_all: bool = False

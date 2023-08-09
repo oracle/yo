@@ -95,6 +95,7 @@ from rich.live import Live
 from rich.progress import Progress
 from rich.prompt import Confirm
 
+import yo.util
 from yo.api import AttachmentType
 from yo.api import ImageLoad
 from yo.api import InstanceProfile
@@ -104,7 +105,9 @@ from yo.api import YoInstance
 from yo.api import YoShape
 from yo.api import YoVolume
 from yo.api import YoVolumeAttachment
+from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
+from yo.util import latest_yo_version
 from yo.util import shlex_join
 from yo.util import standardize_name
 from yo.util import strftime
@@ -690,6 +693,7 @@ def task_join(
 
 class YoCmd(subc.Command):
     c: YoCtx
+    es: contextlib.ExitStack
 
     @classmethod
     def setup_config(cls) -> t.Tuple[YoCtx, t.Dict[str, str]]:
@@ -700,7 +704,9 @@ class YoCmd(subc.Command):
 
     def base_run(self, args: argparse.Namespace) -> None:
         self.args = args
-        self.run()
+        self.es = contextlib.ExitStack()
+        with self.es:
+            self.run()
 
     def add_with_completer(
         self,
@@ -791,6 +797,7 @@ class ListCmd(YoCmd):
         if self.args.cached:
             instances = self.c.list_instances_cached()
         else:
+            self.es.enter_context(self.c.maybe_check_for_updates())
             instances = self.c.list_instances(
                 verbose=verbose, show_all=self.args.all
             )
@@ -2702,36 +2709,14 @@ class VersionCmd(YoCmd):
     name = "version"
     description = "show the version of yo"
 
-    URL = "https://pypi.org/simple/yo/"
-    UPGRADE_COMMAND = "pip install --upgrade yo"
-
-    def latest_version(self) -> t.Optional[t.Tuple[int, int, int]]:
-        import urllib.request
-
-        try:
-            with urllib.request.urlopen(self.URL, timeout=5) as response:
-                html = response.read().decode("utf-8")
-            expr = re.compile(r"yo-(\d+)\.(\d+)\.(\d+)")
-            return max(
-                [
-                    (int(m.group(1)), int(m.group(2)), int(m.group(3)))
-                    for m in expr.finditer(html)
-                ]
-            )
-        except Exception:
-            return None
-
     def run(self) -> None:
-        import pkg_resources
-
-        ver_str = pkg_resources.get_distribution("yo").version
-        ver = tuple(map(int, ver_str.split(".")))
-        print(f"yo {ver_str}")
+        ver = current_yo_version()
+        print(f"yo {ver[0]}.{ver[1]}.{ver[2]}")
         print(f"Documentation: {DOCUMENTATION_URL}")
         print(f"Development & issues: {REPOSITORY_URL}")
         print()
 
-        latest_ver = self.latest_version()
+        latest_ver = latest_yo_version()
         if not latest_ver:
             print("Error loading the latest version!")
             return
@@ -2740,7 +2725,7 @@ class VersionCmd(YoCmd):
             return
         print("Latest version: {}.{}.{}".format(*latest_ver))
         print("To update:")
-        print(f"  {self.UPGRADE_COMMAND}")
+        print(f"  {yo.util.UPGRADE_COMMAND}")
         print("Then verify by re-running yo version")
 
 
