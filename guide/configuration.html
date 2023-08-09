@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; yo v1.1.0 documentation</title>
+    <title>Configuration &#8212; yo v1.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -237,11 +237,11 @@ detect. Once you’ve updated this configuration value, please run <code class="
 <span class="pre">cache-clean</span></code> to force yo to fetch the latest image list next time you run it.</p>
 </section>
 <section id="silence-automatic-tag-warning">
-<h3><code class="docutils literal notranslate"><span class="pre">silence_automatic_tag_warning</span></code><a class="headerlink" href="#silence-automatic-tag-warning" title="Permalink to this heading">¶</a></h3>
-<p>(Boolean, Optional) Set this to true in order to silence a rather verbose
-warning during <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>. If you haven’t seen a warning mentioning this
-configuration value: you don’t need to touch this configuration, or read the
-remaining explanation.</p>
+<span id="silence-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">silence_automatic_tag_warning</span></code><a class="headerlink" href="#silence-automatic-tag-warning" title="Permalink to this heading">¶</a></h3>
+<p>(Boolean, Optional, Default: false) Set this to true in order to silence a
+rather verbose warning during <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>. If you haven’t seen a warning
+mentioning this configuration value: you don’t need to touch this configuration,
+or read the remaining explanation.</p>
 <p>Yo is dedicated to managing the instances which you, an individual user,
 created. It was designed for the idea of a shared tenancy, in which multiple
 users create and manage their own instances. When Yo lists instances, it filters
@@ -263,6 +263,51 @@ useful for cost tracking, which should interest your administrators. However, if
 this is not possible, or if you’re happy with the reduced feature set entailed
 by this, then you can simply set this configuration value to <code class="docutils literal notranslate"><span class="pre">true</span></code> in order
 to stop the message from being printed.</p>
+<p>Another possible resolution is to fully disable Yo’s resource filtering. This
+will result in Yo allowing you to view and manage all resources in your
+compartment. See <a class="reference internal" href="#resource-filtering"><span class="std std-ref">resource_filtering</span></a> for details.</p>
+</section>
+<section id="exact-name">
+<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">exact_name</span></code><a class="headerlink" href="#exact-name" title="Permalink to this heading">¶</a></h3>
+<p>(Boolean, Optional, Default: false) Set this to true to fully disable Yo’s
+<a class="reference internal" href="concepts.html#instance-naming"><span class="std std-ref">instance naming</span></a> scheme, in which it prefixes instance
+and block volume names with your username.  This allows you to create instances
+with any name, and it allows you to use Yo commands to reference those
+instances.</p>
+<p>This functionality is available on a case-by-case basis, by providing the
+argument <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code> (or <code class="docutils literal notranslate"><span class="pre">-E</span></code>) to any sub-command which takes an instance
+or block volume name as an argument.</p>
+<p>Should you decide to set this configuration to <code class="docutils literal notranslate"><span class="pre">true</span></code>, then you will no longer
+need to use the <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code> argument. If you’d like to return to Yo’s
+instance naming behavior on a case-by-case basis, you can use the
+<code class="docutils literal notranslate"><span class="pre">--no-exact-name</span></code> argument, which can override the configuration.</p>
+<p>If you’re working in a compartment shared with many users, it’s a nice idea to
+keep <code class="docutils literal notranslate"><span class="pre">exact_name</span> <span class="pre">=</span> <span class="pre">false</span></code> (the default), which retains Yo’s default behavior.
+This ensures that anybody else can quickly identify the owner of an instance
+just by looking at its name. However, if you do not share a compartment, or if
+you have specific naming requirements, this can be a helpful config knob, to
+keep Yo from getting in your way.</p>
+</section>
+<section id="resource-filtering">
+<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">resource_filtering</span></code><a class="headerlink" href="#resource-filtering" title="Permalink to this heading">¶</a></h3>
+<p>(Boolean, Optional, Default: true) Set this to <code class="docutils literal notranslate"><span class="pre">false</span></code> in order to disable
+Yo’s resource filtering logic. This will result in Yo allowing you to view and
+manage all resources within the configured OCI compartment, regardless of what
+account created them.</p>
+<p>See <a class="reference internal" href="concepts.html#resource-visibility"><span class="std std-ref">Resource Visibility</span></a> for further discussion.</p>
+</section>
+<section id="check-for-update-every">
+<h3><code class="docutils literal notranslate"><span class="pre">check_for_update_every</span></code><a class="headerlink" href="#check-for-update-every" title="Permalink to this heading">¶</a></h3>
+<p>(Integer, Optional, Default: 6) This is the (minimum) number of hours between
+automatic checks for a newer version of Yo.</p>
+<p>If it has been at least this many hours since the last check, then during <code class="docutils literal notranslate"><span class="pre">yo</span>
+<span class="pre">list</span></code>, a background thread will be spawned in order to check the latest version
+from PyPI. If the current version is out of date, then Yo will suggest that you
+update and provide the necessary command. Since the check is done in the
+background during an operation which generally takes a few seconds, there’s
+almost no performance impact to this check.</p>
+<p>You can set this configuration to zero, in which case Yo will not perform the
+check at all.</p>
 </section>
 </section>
 <section id="instance-profiles">
@@ -513,6 +558,32 @@ of copy/paste.</p>
 <span class="c1"># $HOME instead.</span>
 <span class="c1">#</span>
 <span class="c1"># task_dir = /tmp/tasks</span>
+
+<span class="c1"># OPTIONAL: exact_name</span>
+<span class="c1">#</span>
+<span class="c1"># Globally disables Yo&#39;s behavior regarding instance and volume naming.</span>
+<span class="c1"># Normally, yo prefixes names with your system username, and uses an automatic</span>
+<span class="c1"># incrementing number as a suffix to avoid name collisions. If this config is</span>
+<span class="c1"># set to &quot;true&quot;, then the behavior is disabled: Yo will never modify the name</span>
+<span class="c1"># you give.</span>
+<span class="c1">#</span>
+<span class="c1"># exact_name = false</span>
+
+<span class="c1"># OPTIONAL: check_for_update_every</span>
+<span class="c1">#</span>
+<span class="c1"># (Integer, default=6). The minimum number of hours between automatic checks for</span>
+<span class="c1"># a newer version of Yo.</span>
+<span class="c1">#</span>
+<span class="c1"># During each &quot;yo list&quot; operation, if it has been more than this number of hours</span>
+<span class="c1"># since the previous check, Yo will check in the background for the latest</span>
+<span class="c1"># version. If there is a newer version, then Yo will print a message about it at</span>
+<span class="c1"># the end of the operation. Since this occurs in a separate thread during an</span>
+<span class="c1"># operation which typically takes a few seconds, there&#39;s virtually no</span>
+<span class="c1"># performance impact.</span>
+<span class="c1">#</span>
+<span class="c1"># However, you can set this to 0 in order to disable these checks.</span>
+<span class="c1">#</span>
+<span class="c1"># check_for_update_every = 6</span>
 
 <span class="c1"># Any section prefixed with &quot;instances.&quot; declares an instance profile. The</span>
 <span class="c1"># instance profile DEFAULT is required, but you can make additional ones as</span>

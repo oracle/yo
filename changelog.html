@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; yo v1.1.0 documentation</title>
+    <title>Changelog &#8212; yo v1.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -37,6 +37,56 @@
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Permalink to this heading">¶</a></h2>
 <p>Any changes which are committed, but not yet present in a released version,
 should appear here.</p>
+</section>
+<section id="wed-aug-9-2023">
+<h2>1.2.0 - Wed, Aug 9, 2023<a class="headerlink" href="#wed-aug-9-2023" title="Permalink to this heading">¶</a></h2>
+<p>New features:</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span> <span class="pre">--wait-ssh</span></code>, which waits for SSH to come up, but doesn’t
+actually connect you to SSH.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--ip</span></code>, which adds an IP address column for <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>.</p></li>
+<li><p>Improved the speed of IP address lookups, when loading IPs for several
+instances at a time (e.g. <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--ip</span></code> or <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ip</span></code>).</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--all</span></code>, which prints info about all instances in the compartment,
+not just your own. Yo still is not capable of managing these instances, it is
+just an informational view.</p></li>
+<li><p>The short argument <code class="docutils literal notranslate"><span class="pre">-E</span></code> is now usable in place of <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">--exact-name</span> <span class="pre">-E</span></code> arguments are now added to the block volume management
+commands. They apply both to the name of the instance, and the block volume.</p></li>
+<li><p>A new configuration, <code class="docutils literal notranslate"><span class="pre">exact_name</span></code>, is added to the <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code>. This has the
+effect of implying <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code> on every command without you needing to type
+it.</p></li>
+<li><p>A new argument, <code class="docutils literal notranslate"><span class="pre">--no-exact-name</span></code>, allows you to override <code class="docutils literal notranslate"><span class="pre">exact_name</span> <span class="pre">=</span> <span class="pre">true</span></code>
+in your configuration on a case-by-case basis.</p></li>
+<li><p>A new configuration, <code class="docutils literal notranslate"><span class="pre">resource_filtering</span></code>, is added to <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code>. This allows
+Yo to view and manage all resources in your compartment, not just the ones
+you’ve created. This is not a recommended configuration, please be careful
+when using this.</p></li>
+<li><p>During <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>, Yo will now automatically check for newer versions in the
+background. If it finds a newer version, it will print a notice. As a default,
+the version checks are a minimum of 6 hours apart, but this can be configured
+with the config <code class="docutils literal notranslate"><span class="pre">check_for_update_every</span></code>. Setting the configuration to 0 will
+disable the feature.</p></li>
+</ul>
+<p>Changes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> now sorts your instances by creation time, rather than the default
+(presumably undefined) ordering returned by the API.</p></li>
+</ul>
+<p>Fixes:</p>
+<ul class="simple">
+<li><p>A rare issue with concurrent accesses to the Yo cache has been resolved.
+Cache updates are now atomic.</p></li>
+<li><p>Yo now refreshes the instance list prior to running the start, stop, reboot,
+terminate commands. This ensures that it is operating on the correct set of
+instances, avoiding rare but important caching bugs.</p></li>
+<li><p>Improved error messages that occur when looking up an instance by name, so
+that the message includes the actual instance that Yo tried to search for (as
+impacted by <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code>).</p></li>
+<li><p>Fixed a compatibility issue with Windows due to the use of “fchmod()”</p></li>
+<li><p>Fixed a silly bug in which <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">cache-clean</span></code> failed if the cache file does not
+exist.</p></li>
+</ul>
 </section>
 <section id="tue-july-18-2023">
 <h2>1.1.0 - Tue, July 18, 2023<a class="headerlink" href="#tue-july-18-2023" title="Permalink to this heading">¶</a></h2>

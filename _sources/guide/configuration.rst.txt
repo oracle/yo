@@ -260,13 +260,15 @@ removing a value), yo's cache becomes out-of-date in a way which it cannot
 detect. Once you've updated this configuration value, please run ``yo
 cache-clean`` to force yo to fetch the latest image list next time you run it.
 
+.. _silence_tag:
+
 ``silence_automatic_tag_warning``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(Boolean, Optional) Set this to true in order to silence a rather verbose
-warning during ``yo list``. If you haven't seen a warning mentioning this
-configuration value: you don't need to touch this configuration, or read the
-remaining explanation.
+(Boolean, Optional, Default: false) Set this to true in order to silence a
+rather verbose warning during ``yo list``. If you haven't seen a warning
+mentioning this configuration value: you don't need to touch this configuration,
+or read the remaining explanation.
 
 Yo is dedicated to managing the instances which you, an individual user,
 created. It was designed for the idea of a shared tenancy, in which multiple
@@ -293,7 +295,66 @@ this is not possible, or if you're happy with the reduced feature set entailed
 by this, then you can simply set this configuration value to ``true`` in order
 to stop the message from being printed.
 
+Another possible resolution is to fully disable Yo's resource filtering. This
+will result in Yo allowing you to view and manage all resources in your
+compartment. See :ref:`resource_filtering` for details.
+
 .. _automatic tag rule: https://docs.oracle.com/en-us/iaas/Content/Tagging/Concepts/understandingautomaticdefaulttags.htm
+
+.. _exact_name:
+
+``exact_name``
+~~~~~~~~~~~~~~
+
+(Boolean, Optional, Default: false) Set this to true to fully disable Yo's
+:ref:`instance naming<instance_naming>` scheme, in which it prefixes instance
+and block volume names with your username.  This allows you to create instances
+with any name, and it allows you to use Yo commands to reference those
+instances.
+
+This functionality is available on a case-by-case basis, by providing the
+argument ``--exact-name`` (or ``-E``) to any sub-command which takes an instance
+or block volume name as an argument.
+
+Should you decide to set this configuration to ``true``, then you will no longer
+need to use the ``--exact-name`` argument. If you'd like to return to Yo's
+instance naming behavior on a case-by-case basis, you can use the
+``--no-exact-name`` argument, which can override the configuration.
+
+If you're working in a compartment shared with many users, it's a nice idea to
+keep ``exact_name = false`` (the default), which retains Yo's default behavior.
+This ensures that anybody else can quickly identify the owner of an instance
+just by looking at its name. However, if you do not share a compartment, or if
+you have specific naming requirements, this can be a helpful config knob, to
+keep Yo from getting in your way.
+
+.. _resource_filtering:
+
+``resource_filtering``
+~~~~~~~~~~~~~~~~~~~~~~
+
+(Boolean, Optional, Default: true) Set this to ``false`` in order to disable
+Yo's resource filtering logic. This will result in Yo allowing you to view and
+manage all resources within the configured OCI compartment, regardless of what
+account created them.
+
+See :ref:`Resource Visibility` for further discussion.
+
+``check_for_update_every``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Integer, Optional, Default: 6) This is the (minimum) number of hours between
+automatic checks for a newer version of Yo.
+
+If it has been at least this many hours since the last check, then during ``yo
+list``, a background thread will be spawned in order to check the latest version
+from PyPI. If the current version is out of date, then Yo will suggest that you
+update and provide the necessary command. Since the check is done in the
+background during an operation which generally takes a few seconds, there's
+almost no performance impact to this check.
+
+You can set this configuration to zero, in which case Yo will not perform the
+check at all.
 
 Instance Profiles
 -----------------
