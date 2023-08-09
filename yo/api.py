@@ -2053,7 +2053,7 @@ class YoCtx:
             )
 
         name_to_ad_to_fut: t.Dict[
-            str, t.Dict[str, concurrent.futures.Future[YoAvail]]
+            str, t.Dict[str, t.Any]
         ] = collections.defaultdict(dict)
         name_to_fut = {}
         ads: t.Set[str] = set()
