@@ -58,6 +58,7 @@ import typing as t
 import oci.core  # noqa
 import oci.identity  # noqa
 import oci.limits  # noqa
+import rich.progress
 from oci import wait_until
 from oci.base_client import Response
 from oci.core.models import AttachBootVolumeDetails  # noqa
@@ -94,8 +95,18 @@ def wait_until_progress(
     wait_callback: t.Optional[t.Callable[[int, Response], None]] = None,
     display_name: t.Optional[str] = None,
 ) -> Response:
-    with Progress(console=ctx.con) as progress:
-        task = progress.add_task("WAIT", start=True, total=max_wait_seconds)
+    progress = Progress(
+        rich.progress.TextColumn("{task.description}"),
+        rich.progress.SpinnerColumn(),
+        rich.progress.TimeElapsedColumn(),
+        rich.progress.TextColumn("Timeout in:"),
+        rich.progress.TimeRemainingColumn(),
+        console=ctx.con,
+    )
+    with progress:
+        task = progress.add_task(
+            "WAIT", start=True, total=max_wait_seconds, finished_time=1
+        )
         start = time.time()
         last_update = start
         last_state = getattr(item.data, attr)
@@ -104,8 +115,8 @@ def wait_until_progress(
             item_str = f"{item_kind} [blue]{display_name}[/blue]"
         else:
             item_str = f"{item_kind}"
-        progress.print(f"Wait for {item_str} to enter state [purple]{state}")
-        progress.print(f"{item_str} starts in state [purple]{last_state}")
+        ctx.con.log(f"Wait for {item_str} to enter state [purple]{state}")
+        ctx.con.log(f"{item_str} starts in state [purple]{last_state}")
 
         def update(check_count: int, last_response: Response) -> None:
             nonlocal last_update, last_state
@@ -131,5 +142,5 @@ def wait_until_progress(
             wait_callback=update,
         )
         progress.advance(task, max_wait_seconds)
-    ctx.con.print(f"{item_str} has reached state [purple]{state}!")
+    ctx.con.log(f"{item_str} has reached state [purple]{state}!")
     return resp
