@@ -1009,7 +1009,7 @@ class YoCtx:
                 print(
                     "Invalidating cache due to cache version or resource filtering"
                 )
-                return
+                cache = {}
         if "last_checked_for_update" in cache:
             self.last_checked_for_update = fromisoformat(
                 cache["last_checked_for_update"]
