@@ -88,6 +88,7 @@ from functools import lru_cache
 
 import argcomplete  # type: ignore
 import rich.console
+import rich.progress
 import rich.syntax
 import rich.table
 import subc
@@ -369,8 +370,18 @@ def wait_for_ssh_access(
 ) -> bool:
     global warned_about_SSH_timeout
     last_time = time.time()
-    with Progress(console=ctx.con) as progress:
-        t = progress.add_task("Wait for SSH", total=timeout_sec)
+    progress = Progress(
+        rich.progress.TextColumn("{task.description}"),
+        rich.progress.SpinnerColumn(),
+        rich.progress.TimeElapsedColumn(),
+        rich.progress.TextColumn("Timeout in:"),
+        rich.progress.TimeRemainingColumn(),
+        console=ctx.con,
+    )
+    with progress:
+        t = progress.add_task(
+            "Wait for SSH", total=timeout_sec, finished_time=1, start=True
+        )
         while not progress.finished:
             cmd = ssh_cmd(ctx, f"{user}@{ip}", ["-q"], ["true"])
             proc = subprocess.Popen(cmd)
@@ -381,7 +392,7 @@ def wait_for_ssh_access(
                 proc.terminate()
                 proc.wait()
                 if not warned_about_SSH_timeout:
-                    progress.print(
+                    ctx.con.log(
                         "[magenta]Warning:[/magenta] SSH command timed out. "
                         "This is normal: it may happen early in the boot. "
                         "But, it can also happen if you're disconnected from "
@@ -393,8 +404,7 @@ def wait_for_ssh_access(
             progress.advance(t, new_time - last_time)
             last_time = new_time
             if rv == 0:
-                progress.print("SSH is up!")
-                progress.advance(t, timeout_sec)
+                ctx.con.log("SSH is up!")
                 return True
     return False
 
@@ -480,7 +490,7 @@ def _task_run(ctx: YoCtx, inst: YoInstance, task: YoTask) -> None:
     Run a task on an instance. This doesn't check or load dependencies.
     """
     task_dir_safe = ctx.config.task_dir_safe
-    ctx.con.print(
+    ctx.con.log(
         f"Start task [blue]{task.name}[/blue] on instance [green]{inst.name}..."
     )
     ip = ctx.get_instance_ip(inst, True)
@@ -1143,7 +1153,7 @@ class SshCmd(SingleInstanceCommand):
 
     def run_for_instance(self, inst: YoInstance) -> None:
         if not self.args.quiet:
-            self.c.con.print(f"Connecting to instance [blue]{inst.name}[/blue]")
+            self.c.con.log(f"Connecting to instance [blue]{inst.name}[/blue]")
         if self.args.start and inst.state == "STOPPED":
             self.args.wait = True
             self.c.instance_action(inst.id, "START")
@@ -1218,7 +1228,7 @@ class ScpCmd(SingleInstanceCommand):
         if not user:
             img = self.c.get_image(inst.image_id)
             user = OS_TO_USER[img.os]
-        self.c.con.print(
+        self.c.con.log(
             f"Copying to instance [blue]{inst.name}[/blue] "
             f"([green]{user}[/green]@[blue]{ip}[/blue])"
         )
@@ -1256,7 +1266,7 @@ class RemoteDesktopCommand(SingleInstanceCommand):
             if not user:
                 img = self.c.get_image(inst.image_id)
                 user = OS_TO_USER[img.os]
-            self.c.con.print(
+            self.c.con.log(
                 f"SSH Tunnel to [blue]{inst.name}[/blue] "
                 f"([green]{user}[/green]@[blue]{ip}[/blue])"
             )
@@ -1285,8 +1295,8 @@ class VncCmd(RemoteDesktopCommand):
                 self.c.config.vnc_prog.format(host=host, port=self.PORT),
                 shell=True,
             )
-            self.c.con.print("Launched your configured VNC program!")
-            self.c.con.print("Exit it to terminate the SSH tunnel.")
+            self.c.con.log("Launched your configured VNC program!")
+            self.c.con.log("Exit it to terminate the SSH tunnel.")
             vnc.wait()
 
 
@@ -1361,7 +1371,7 @@ class RsyncCmd(SingleInstanceCommand):
         rsync_args = ["rsync"]
         if self.c.config.rsync_args and not self.args.raw:
             rsync_args.extend(shlex.split(self.c.config.rsync_args))
-        self.c.con.print(
+        self.c.con.log(
             f"Rsync with instance [blue]{inst.name}[/blue] "
             f"([green]{user}[/green]@[blue]{ip}[/blue])"
         )
@@ -1389,7 +1399,7 @@ class ConsoleCmd(SingleInstanceCommand):
 
     def run_for_instance(self, inst: YoInstance) -> None:
         dn = inst.name
-        self.c.con.print(f"Connecting to instance [blue]{dn}[/blue] console")
+        self.c.con.log(f"Connecting to instance [blue]{dn}[/blue] console")
         conn = self.c.get_or_create_console(inst.id, refresh=self.args.refresh)
         args = shlex.split(conn.connection_string)
         identity = self.c.config.ssh_private_key
@@ -1413,7 +1423,7 @@ class ConsoleCmd(SingleInstanceCommand):
                 processed_args.append(val)  # pass all other args
 
         if target is None:
-            self.c.con.print(args)
+            self.c.con.log(args)
             raise YoExc(
                 "Could not understand OCI's console SSH string. This is a "
                 "yo bug, please report it on Github."
@@ -1421,9 +1431,9 @@ class ConsoleCmd(SingleInstanceCommand):
 
         cmd = ssh_cmd(self.c, target, SSH_CONSOLE_OPTIONS, processed_args)
 
-        self.c.con.print("About to execute:")
-        self.c.con.print(cmd)
-        self.c.con.print(
+        self.c.con.log("About to execute:")
+        self.c.con.log(cmd)
+        self.c.con.log(
             "[bold red]This connection will stay open for a long time.\n"
             "To exit a running SSH connection, use the escape sequence: "
             "<Return>~.\n"
@@ -1432,7 +1442,7 @@ class ConsoleCmd(SingleInstanceCommand):
         proc = subprocess.run(cmd)
         total_time = time.time() - total_time
         if proc.returncode != 0 and total_time < SSH_MINIMUM_TIME:
-            self.c.con.print(
+            self.c.con.log(
                 "\n[bold red]Note:[/bold red] It looks like your SSH session "
                 "failed quite quickly.\n"
                 "If the connection failed, yo's cache may be out of date. "
@@ -1856,13 +1866,13 @@ class LaunchCmd(YoCmd):
 
     def _maybe_warn_name(self, profile: InstanceProfile, name: str) -> str:
         if self.args.name is not None and name != self.args.name:
-            self.c.con.print(
+            self.c.con.log(
                 f"[magenta]Warning[/magenta]: display name set to {name} "
                 f"instead of {self.args.name}. If you want to have your name "
                 f"used exactly, use --exact-name."
             )
         elif self.args.name is None and name != profile.name:
-            self.c.con.print(
+            self.c.con.log(
                 f"[magenta]Warning[/magenta]: display name set to {name} "
                 f"instead of {profile.name}. If you want to have your name "
                 f"used exactly, use --exact-name and pass --name explicitly."
@@ -1947,7 +1957,7 @@ class LaunchCmd(YoCmd):
 
         image = images[0]
         dn = image.name
-        self.c.con.print(f"Using image [blue]{dn}[/blue]")
+        self.c.con.log(f"Using image [blue]{dn}[/blue]")
         return image
 
     def set_mem_cpu(
@@ -2044,7 +2054,7 @@ class LaunchCmd(YoCmd):
                 f"{image.name}: allowed Mem range (GiB) {compat.min_mem_gbs}"
                 f" - {compat.max_mem_gbs}"
             )
-        self.c.con.print(
+        self.c.con.log(
             f"Configured flex shape with [blue]{cpu} CPUs[/blue]"
             f" and [blue]{mem} GiB[/blue] memory"
         )
@@ -2091,10 +2101,10 @@ class LaunchCmd(YoCmd):
             gbs = self.args.boot_volume_size_gbs
             create_args["boot_volume_size_gbs"] = gbs
 
-        self.c.con.print(f"Launching instance [blue]{name}[/blue]")
+        self.c.con.log(f"Launching instance [blue]{name}[/blue]")
         if self.args.dry_run:
-            self.c.con.print("DRY RUN. Args below:")
-            self.c.con.print(create_args)
+            self.c.con.log("DRY RUN. Args below:")
+            self.c.con.log(create_args)
             return
         inst = self.c.launch_instance(create_args)
 
@@ -2113,8 +2123,8 @@ class LaunchCmd(YoCmd):
             # TODO: specify username in launch command?
             user = OS_TO_USER[image.os]
             if not wait_for_ssh_access(ip, user, self.c):
-                self.c.con.print("[red]Could not connect via SSH")
-                self.c.con.print("Maybe you're not connected to VPN?")
+                self.c.con.log("[red]Could not connect via SSH")
+                self.c.con.log("Maybe you're not connected to VPN?")
                 return
 
         run_all_tasks(self.c, inst, tasks)
@@ -2178,11 +2188,11 @@ class TerminateCmd(MultiInstanceCommand):
         if inst.termination_protected:
             raise YoExc(f"instance {inst.name} is termination protected")
         if self.args.dry_run:
-            progress.print(f"DRY RUN: Would terminate {inst.id}")
+            progress.log(f"DRY RUN: Would terminate {inst.id}")
             if self.should_preserve_volume():
-                progress.print("DRY RUN: would preserve root volume!")
+                progress.log("DRY RUN: would preserve root volume!")
             else:
-                progress.print("DRY RUN: would delete root volume!")
+                progress.log("DRY RUN: would delete root volume!")
             return
         self.c.terminate_instance(
             inst.id,
@@ -2254,7 +2264,7 @@ class InstanceActionCommand(MultiInstanceCommand):
         if self.force_action and self.args.force:
             action = self.force_action
         if self.args.dry_run:
-            progress.print(f"DRY RUN: Would {action} {inst.id}")
+            progress.log(f"DRY RUN: Would {action} {inst.id}")
             return
         self.do_action(inst, action)
 
@@ -2316,8 +2326,8 @@ class InstanceActionMaybeSsh(InstanceActionCommand):
         img = self.c.get_image(inst.image_id)
         user = OS_TO_USER[img.os]  # NOTE: doesn't support user specification
         if not wait_for_ssh_access(ip, user, self.c):
-            self.c.con.print("[red]Could not connect via SSH")
-            self.c.con.print("Maybe you're not connected to VPN?")
+            self.c.con.log("[red]Could not connect via SSH")
+            self.c.con.log("Maybe you're not connected to VPN?")
             return
         send_notification(self.c, f"Instance {inst.name} is connected via SSH")
         ssh_into(ip, user, ctx=self.c)
@@ -2872,7 +2882,7 @@ def do_volume_attach(
     va = ctx.wait_attachment(va, "ATTACHED")
     setup = False
     if args.setup and args.kind == "iscsi":
-        ctx.con.print("Running commands to mount iSCSI volume...")
+        ctx.con.log("Running commands to mount iSCSI volume...")
         ip = ctx.get_instance_ip(inst)
         img = ctx.get_image(inst.image_id)
         user = OS_TO_USER[img.os]
@@ -2889,7 +2899,7 @@ def do_volume_attach(
         if res.returncode == 0:
             setup = True
         else:
-            ctx.con.print("[orange]warn:[/orange] failed to setup iSCSI device")
+            ctx.con.log("[orange]warn:[/orange] failed to setup iSCSI device")
     ctx.report_attached(va, setup)
 
 
@@ -3030,7 +3040,7 @@ def do_detach_volume(
     for detach_va in detach_vas:
         if args.teardown and detach_va.attachment_type == AttachmentType.ISCSI:
             inst = ctx.get_instance_by_id(detach_va.instance_id)
-            ctx.con.print(
+            ctx.con.log(
                 f"Running commands to unmount iSCSI volume on {inst.name}..."
             )
             ip = ctx.get_instance_ip(inst)
@@ -3051,7 +3061,7 @@ def do_detach_volume(
                 raise YoExc(
                     "failed to unmount on host, your volume has not been detached"
                 )
-            ctx.con.print("Unmounted!")
+            ctx.con.log("Unmounted!")
         ctx.detach_volume(detach_va)
     for detach_va in detach_vas:
         ctx.wait_attachment(detach_va, "DETACHED")
@@ -3150,7 +3160,7 @@ class VolumeDeleteCmd(YoCmd):
         if self.args.detach:
             do_detach_volume(self.c, self.args, vas)
         self.c.delete_volume(volume)
-        self.c.con.print("Deleted!")
+        self.c.con.log("Deleted!")
 
 
 class RenameCmd(SingleInstanceCommand):
