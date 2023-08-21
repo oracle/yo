@@ -166,6 +166,13 @@ class ImageLoad(enum.Enum):
         return self.value
 
 
+def flex_list(arg: t.Union[str, t.List[str]]) -> t.List[str]:
+    if isinstance(arg, str):
+        return arg.split(",")
+    else:
+        return arg
+
+
 @dataclasses.dataclass
 class InstanceProfile:
     # NB: non-STR types here will not automatically be parsed/casted from config
@@ -194,19 +201,20 @@ class InstanceProfile:
         check_args_dataclass(
             InstanceProfile, d.keys(), f"~/.oci/yo.ini \\[{name}] section"
         )
-        size = d.get("boot_volume_size_gbs")
-        if size:
-            d["boot_volume_size_gbs"] = int(size)
-        load = d.get("load_image")
-        if load:
-            d["load_image"] = ImageLoad(load)
-        tasks = d.get("tasks")
-        if tasks and isinstance(tasks, list):
-            d["tasks"] = tasks
-        elif tasks and isinstance(tasks, str):
-            d["tasks"] = tasks.split(",")
-        else:
-            d["tasks"] = []
+        types: t.Dict[str, t.Callable[[t.Any], t.Any]] = {
+            "boot_volume_size_gbs": int,
+            "cpu": float,
+            "mem": float,
+            "load_image": ImageLoad,
+            "tasks": flex_list,
+        }
+        for field, tp in types.items():
+            if field in d:
+                val = d[field]
+                if val is None:
+                    del d[field]  # use default from dataclass
+                else:
+                    d[field] = tp(d[field])
         return InstanceProfile(**d)
 
     def validate(self, name: str) -> None:
