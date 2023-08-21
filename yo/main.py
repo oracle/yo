@@ -2003,10 +2003,13 @@ class LaunchCmd(YoCmd):
         # ENSURE MEM CONFIGURED, VERIFY SHAPE COMPAT
         if not mem:
             # mem is not configured (but cpu was), use the shape default
-            if shape.memory_options:
+            if (
+                shape.memory_options
+                and shape.memory_options.default_per_ocpu_gbs
+            ):
                 mem = shape.memory_options.default_per_ocpu_gbs * cpu
             else:
-                mem = shape.memory_in_gbs
+                mem = (shape.memory_in_gbs / shape.ocpus) * cpu
         elif shape.memory_options:
             # mem is configured, check its range
             mem_per_ocpu = mem / cpu
