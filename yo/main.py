@@ -3320,6 +3320,8 @@ def main() -> None:
         con = rich.console.Console()
         con.print(f"[bold red]error: {e.args[0]}")
         sys.exit(1)
+    except KeyboardInterrupt as e:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
