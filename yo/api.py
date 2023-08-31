@@ -1068,7 +1068,9 @@ class YoCtx:
         instance_profiles: t.Mapping[str, InstanceProfile],
         cache_file: str = "~/.cache/yo.json",
     ):
-        self.con = rich.console.Console(log_path=False)
+        # Escape hatch to disable the log timestamps
+        log_time = "YO_LOG_WITHOUT_TIME" not in os.environ
+        self.con = rich.console.Console(log_path=False, log_time=log_time)
         self.config = yo_config
         self.instance_profiles = instance_profiles
         self._cache_file = os.path.expanduser(cache_file)
