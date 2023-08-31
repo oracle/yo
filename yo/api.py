@@ -1074,15 +1074,11 @@ class YoCtx:
         self._cache_file = os.path.expanduser(cache_file)
         self.load_cache()
 
-    def filter_by_email(self, s: t.Optional[str]) -> bool:
-        """Return true if the string matches the configured email"""
+    def filter_by_creator(self, s: t.Optional[str]) -> bool:
+        """Return true if the string matches a creator tag"""
         if not self.config.resource_filtering:
             return True
-        if not s:
-            return False
-        if "/" in s:
-            s = s.split("/", 1)[1]
-        return s == self.config.my_email
+        return s and (s in self.config.all_creator_tags)
 
     @contextlib.contextmanager
     def maybe_check_for_updates(self) -> t.Iterator[None]:
@@ -1171,7 +1167,7 @@ class YoCtx:
                 email = instance.freeform_tags.get(CREATEDBY)
             yo_inst = YoInstance.from_oci(instance)
             instances.append(yo_inst)
-            if self.filter_by_email(email):
+            if self.filter_by_creator(email):
                 instances_cache.append(yo_inst)
         self._instances.set(instances_cache)
         self.save_cache()
@@ -1721,7 +1717,7 @@ class YoCtx:
         )
         for bootdev in bootdev_gen:
             bv = YoVolume.from_oci_boot(bootdev)
-            if self.filter_by_email(bv.created_by):
+            if self.filter_by_creator(bv.created_by):
                 vols.append(bv)
                 ids.add(bv.id)
         boot_attch_gen = self.oci.list_call_get_all_results_generator(
@@ -1758,7 +1754,7 @@ class YoCtx:
         )
         for blockdev in blockdev_gen:
             vol = YoVolume.from_oci_block(blockdev)
-            if self.filter_by_email(vol.created_by):
+            if self.filter_by_creator(vol.created_by):
                 vols.append(vol)
                 ids.add(vol.id)
         attch_gen = self.oci.list_call_get_all_results_generator(

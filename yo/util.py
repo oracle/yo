@@ -91,6 +91,7 @@ class YoConfig:
     exact_name: t.Optional[bool] = None
     resource_filtering: bool = True
     check_for_update_every: t.Optional[int] = 6
+    creator_tags: t.List[str] = dataclasses.field(default_factory=list)
 
     @property
     def ssh_public_key_full(self) -> str:
@@ -161,7 +162,17 @@ class YoConfig:
         d["my_email"] = d["my_email"].lower()
         opt_strlist(d, "extension_modules")
         opt_strlist(d, "image_compartment_ids")
+        opt_strlist(d, "creator_tags")
         return YoConfig(**d)
+
+    @property
+    def all_creator_tags(self) -> t.Set[str]:
+        if not hasattr(self, "_all_creator_tags"):
+            self._all_creator_tags = set(
+                [self.my_email, f"oracle/{self.my_email}", self.my_username]
+                + self.creator_tags
+            )
+        return self._all_creator_tags
 
 
 def check_args_dataclass(
