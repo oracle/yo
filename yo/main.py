@@ -1055,7 +1055,15 @@ class MultiInstanceCommand(YoCmd):
         )
         if not self.confirm("Is this ok?"):
             return
-        with Progress(console=self.c.con) as progress:
+
+        progress = Progress(
+            rich.progress.TextColumn("{task.description}"),
+            rich.progress.TaskProgressColumn(),
+            rich.progress.SpinnerColumn(),
+            rich.progress.TimeElapsedColumn(),
+            console=self.c.con,
+        )
+        with progress:
             for instance in progress.track(instances):
                 self.run_for_instance(instance, progress)
         for instance in instances:
