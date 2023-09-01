@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; yo v1.2.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <title>Configuration &#8212; yo v1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=e49d06fc"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,14 +33,14 @@
           <div class="body" role="main">
             
   <section id="configuration">
-<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h1>
+<h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h1>
 <p>yo’s configuration file should be located in the directory <code class="docutils literal notranslate"><span class="pre">~/.oci/yo.ini</span></code>. It
 uses a standard INI-style syntax (just like the OCI SDK configuration file).</p>
 <section id="global-configuration-options">
-<h2>Global Configuration Options<a class="headerlink" href="#global-configuration-options" title="Permalink to this heading">¶</a></h2>
+<h2>Global Configuration Options<a class="headerlink" href="#global-configuration-options" title="Link to this heading">¶</a></h2>
 <p>The global configuration is stored in the section <code class="docutils literal notranslate"><span class="pre">[yo]</span></code>.</p>
 <section id="instance-compartment-id">
-<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">instance_compartment_id</span></code><a class="headerlink" href="#instance-compartment-id" title="Permalink to this heading">¶</a></h3>
+<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">instance_compartment_id</span></code><a class="headerlink" href="#instance-compartment-id" title="Link to this heading">¶</a></h3>
 <p>(String, Required) The OCI compartment in which every instance is created. This
 should be an OCID identifier: eg <code class="docutils literal notranslate"><span class="pre">ocid1.compartment....</span></code></p>
 <p>If you’re not sure which compartment ID you need, then consult your team’s
@@ -54,25 +54,25 @@ that for this configuration parameter.</p>
 in the yo source code for those.</p>
 </section>
 <section id="region">
-<h3><code class="docutils literal notranslate"><span class="pre">region</span></code><a class="headerlink" href="#region" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">region</span></code><a class="headerlink" href="#region" title="Link to this heading">¶</a></h3>
 <p>(String, Required) Set the OCI region. This takes precedence over anything in
 <code class="docutils literal notranslate"><span class="pre">~/.oci/config</span></code>. It should match the <code class="docutils literal notranslate"><span class="pre">availability_domain</span></code> configs you have
 in this file, as well as the <code class="docutils literal notranslate"><span class="pre">vcn_id</span></code> config.</p>
 </section>
 <section id="vcn-id">
-<h3><code class="docutils literal notranslate"><span class="pre">vcn_id</span></code><a class="headerlink" href="#vcn-id" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">vcn_id</span></code><a class="headerlink" href="#vcn-id" title="Link to this heading">¶</a></h3>
 <p>(String, Required) The VCN (virtual cloud network) in which your instances will
 get created. This should be an OCID as well.</p>
 </section>
 <section id="subnet-id">
-<h3><code class="docutils literal notranslate"><span class="pre">subnet_id</span></code><a class="headerlink" href="#subnet-id" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">subnet_id</span></code><a class="headerlink" href="#subnet-id" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) The OCI subnet ID to which your instances will be
 connected.</p>
 <p>One of either <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> or <code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code> is required,
 with <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> being preferred if both are specified.</p>
 </section>
 <section id="subnet-compartment-id">
-<h3><code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code><a class="headerlink" href="#subnet-compartment-id" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code><a class="headerlink" href="#subnet-compartment-id" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) The OCI compartment which contains the subnets your instances
 should be created within. In OCI, the IDs of subnets change depending on which
 AD (availability domain) they’re in. So, yo has a weird approach, where it lists
@@ -81,11 +81,11 @@ every subnet in this compartment and AD, and simply picks the first one.</p>
 with <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> being preferred if both are specified.</p>
 </section>
 <section id="my-email">
-<h3><code class="docutils literal notranslate"><span class="pre">my_email</span></code><a class="headerlink" href="#my-email" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">my_email</span></code><a class="headerlink" href="#my-email" title="Link to this heading">¶</a></h3>
 <p>(String, Required) The email address you use to log into OCI.</p>
 </section>
 <section id="my-username">
-<h3><code class="docutils literal notranslate"><span class="pre">my_username</span></code><a class="headerlink" href="#my-username" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">my_username</span></code><a class="headerlink" href="#my-username" title="Link to this heading">¶</a></h3>
 <p>(String, Required) Set a username. This is just used as a unique string to
 include in the name of your instance, helping people to see that it belongs to
 you. If your organization has global username IDs, it’s best to use that.
@@ -94,7 +94,7 @@ get used as the login name for your instances; it’s just an identifier used in
 the names.</p>
 </section>
 <section id="ssh-public-key">
-<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">ssh_public_key</span></code><a class="headerlink" href="#ssh-public-key" title="Permalink to this heading">¶</a></h3>
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">ssh_public_key</span></code><a class="headerlink" href="#ssh-public-key" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) The file path to your SSH public key. If omitted, the default
 of <code class="docutils literal notranslate"><span class="pre">~/.ssh/id_rsa.pub</span></code> is used.</p>
 <p>This public key is provided to OCI when launching instances, as well as creating
@@ -123,7 +123,7 @@ the following command:</p>
 </div>
 </section>
 <section id="vnc-prog">
-<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">vnc_prog</span></code><a class="headerlink" href="#vnc-prog" title="Permalink to this heading">¶</a></h3>
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">vnc_prog</span></code><a class="headerlink" href="#vnc-prog" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired program to launch for VNC (remote desktop).
 This string will be interpreted by your shell, but first Python’s format method
 will replace the following strings:</p>
@@ -135,7 +135,7 @@ will replace the following strings:</p>
 desktop client), feel free to modify it.</p>
 </section>
 <section id="rdp-prog">
-<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">rdp_prog</span></code><a class="headerlink" href="#rdp-prog" title="Permalink to this heading">¶</a></h3>
+<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">rdp_prog</span></code><a class="headerlink" href="#rdp-prog" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired program to launch for RDP (remote desktop).
 This string will be interpreted by your shell, but first Python’s format method
 will replace the following strings:</p>
@@ -147,7 +147,7 @@ will replace the following strings:</p>
 <code class="docutils literal notranslate"><span class="pre">krdc</span> <span class="pre">rdp://{user}&#64;{host}</span></code>.</p>
 </section>
 <section id="notify-prog">
-<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">notify_prog</span></code><a class="headerlink" href="#notify-prog" title="Permalink to this heading">¶</a></h3>
+<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">notify_prog</span></code><a class="headerlink" href="#notify-prog" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired command to run in order to send notifications
 for waits. For example, when launching an instance and waiting for SSH or tasks.
 If unset (the default), notifications will not be sent. This string will first
@@ -166,7 +166,7 @@ or alternatively another tool called <code class="docutils literal notranslate">
 these out, so I can expand this documentation with instructions.</p>
 </section>
 <section id="preserve-volume-on-terminate">
-<h3><code class="docutils literal notranslate"><span class="pre">preserve_volume_on_terminate</span></code><a class="headerlink" href="#preserve-volume-on-terminate" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">preserve_volume_on_terminate</span></code><a class="headerlink" href="#preserve-volume-on-terminate" title="Link to this heading">¶</a></h3>
 <p>(Boolean, Optional) Configures yo’s default behavior on termination. When False
 (the default when not specified), the root block device will be deleted when the
 instance is terminated. Your data is not preserved in any way, and the instance
@@ -185,13 +185,13 @@ need to use some other tool to use your preserved volumes in this way.</p>
 an issue (or pull request) regarding it, to help us prioritize.</p>
 </section>
 <section id="oci-profile">
-<h3><code class="docutils literal notranslate"><span class="pre">oci_profile</span></code><a class="headerlink" href="#oci-profile" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">oci_profile</span></code><a class="headerlink" href="#oci-profile" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) If you use the OCI SDK for many different tenancies or
 setups, you may have multiple profiles in your <code class="docutils literal notranslate"><span class="pre">~/.oci/config</span></code> file. You can
 specify which profile is used by setting this. The default value is “DEFAULT”.</p>
 </section>
 <section id="ssh-args-and-ssh-interactive-args">
-<span id="ssh-args"></span><h3><code class="docutils literal notranslate"><span class="pre">ssh_args</span></code> and <code class="docutils literal notranslate"><span class="pre">ssh_interactive_args</span></code><a class="headerlink" href="#ssh-args-and-ssh-interactive-args" title="Permalink to this heading">¶</a></h3>
+<span id="ssh-args"></span><h3><code class="docutils literal notranslate"><span class="pre">ssh_args</span></code> and <code class="docutils literal notranslate"><span class="pre">ssh_interactive_args</span></code><a class="headerlink" href="#ssh-args-and-ssh-interactive-args" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) You can use these options to customize the SSH command line.
 In particular, you can set SSH options (<code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">Key=value</span></code>) specific to your Yo
 sessions. The <code class="docutils literal notranslate"><span class="pre">ssh_args</span></code> are added to <em>all</em> SSH commands, while the
@@ -201,7 +201,7 @@ common <code class="docutils literal notranslate"><span class="pre">yo</span> <s
 thoroughly.</p>
 </section>
 <section id="task-dir">
-<span id="config-task-dir"></span><h3><code class="docutils literal notranslate"><span class="pre">task_dir</span></code><a class="headerlink" href="#task-dir" title="Permalink to this heading">¶</a></h3>
+<span id="config-task-dir"></span><h3><code class="docutils literal notranslate"><span class="pre">task_dir</span></code><a class="headerlink" href="#task-dir" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set the directory in which yo <a class="reference internal" href="tasks.html#tasks-overview"><span class="std std-ref">tasks</span></a>
 are stored. This may be useful in case the default (<code class="docutils literal notranslate"><span class="pre">/tmp/tasks</span></code>) is ephemeral
 – that is, if it is deleted on reboot. This must be an absolute path, with the
@@ -215,7 +215,7 @@ name, though not recommended.</p>
 parents) if it does not exist.</p>
 </section>
 <section id="image-compartment-ids">
-<h3><code class="docutils literal notranslate"><span class="pre">image_compartment_ids</span></code><a class="headerlink" href="#image-compartment-ids" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">image_compartment_ids</span></code><a class="headerlink" href="#image-compartment-ids" title="Link to this heading">¶</a></h3>
 <p>(String List, Optional) Set a list of additional compartments from which you
 want to load images.</p>
 <p>Normally, yo lists and caches the custom images in the compartment specified by
@@ -237,7 +237,7 @@ detect. Once you’ve updated this configuration value, please run <code class="
 <span class="pre">cache-clean</span></code> to force yo to fetch the latest image list next time you run it.</p>
 </section>
 <section id="silence-automatic-tag-warning">
-<span id="silence-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">silence_automatic_tag_warning</span></code><a class="headerlink" href="#silence-automatic-tag-warning" title="Permalink to this heading">¶</a></h3>
+<span id="silence-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">silence_automatic_tag_warning</span></code><a class="headerlink" href="#silence-automatic-tag-warning" title="Link to this heading">¶</a></h3>
 <p>(Boolean, Optional, Default: false) Set this to true in order to silence a
 rather verbose warning during <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>. If you haven’t seen a warning
 mentioning this configuration value: you don’t need to touch this configuration,
@@ -268,7 +268,7 @@ will result in Yo allowing you to view and manage all resources in your
 compartment. See <a class="reference internal" href="#resource-filtering"><span class="std std-ref">resource_filtering</span></a> for details.</p>
 </section>
 <section id="exact-name">
-<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">exact_name</span></code><a class="headerlink" href="#exact-name" title="Permalink to this heading">¶</a></h3>
+<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">exact_name</span></code><a class="headerlink" href="#exact-name" title="Link to this heading">¶</a></h3>
 <p>(Boolean, Optional, Default: false) Set this to true to fully disable Yo’s
 <a class="reference internal" href="concepts.html#instance-naming"><span class="std std-ref">instance naming</span></a> scheme, in which it prefixes instance
 and block volume names with your username.  This allows you to create instances
@@ -289,7 +289,7 @@ you have specific naming requirements, this can be a helpful config knob, to
 keep Yo from getting in your way.</p>
 </section>
 <section id="resource-filtering">
-<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">resource_filtering</span></code><a class="headerlink" href="#resource-filtering" title="Permalink to this heading">¶</a></h3>
+<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">resource_filtering</span></code><a class="headerlink" href="#resource-filtering" title="Link to this heading">¶</a></h3>
 <p>(Boolean, Optional, Default: true) Set this to <code class="docutils literal notranslate"><span class="pre">false</span></code> in order to disable
 Yo’s resource filtering logic. This will result in Yo allowing you to view and
 manage all resources within the configured OCI compartment, regardless of what
@@ -297,7 +297,7 @@ account created them.</p>
 <p>See <a class="reference internal" href="concepts.html#resource-visibility"><span class="std std-ref">Resource Visibility</span></a> for further discussion.</p>
 </section>
 <section id="check-for-update-every">
-<h3><code class="docutils literal notranslate"><span class="pre">check_for_update_every</span></code><a class="headerlink" href="#check-for-update-every" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">check_for_update_every</span></code><a class="headerlink" href="#check-for-update-every" title="Link to this heading">¶</a></h3>
 <p>(Integer, Optional, Default: 6) This is the (minimum) number of hours between
 automatic checks for a newer version of Yo.</p>
 <p>If it has been at least this many hours since the last check, then during <code class="docutils literal notranslate"><span class="pre">yo</span>
@@ -309,9 +309,24 @@ almost no performance impact to this check.</p>
 <p>You can set this configuration to zero, in which case Yo will not perform the
 check at all.</p>
 </section>
+<section id="creator-tags">
+<h3><code class="docutils literal notranslate"><span class="pre">creator_tags</span></code><a class="headerlink" href="#creator-tags" title="Link to this heading">¶</a></h3>
+<p>(List of strings, Optional) This is a list of tag values which Yo will use to
+track instances (and other resources) as if they are your own.</p>
+<p>When resource filtering is enabled, Yo relies on tags which can identify who
+created a particular instance. Yo creates its own tag, but also can rely on a
+tag which the OCI tenancy may automatically create. When OCI creates these tags,
+it uses the name of your account as the tag value. Unfortunately, the name of
+your account is not predictable: it could be your email address, or something
+else. Yo makes a few guesses, but in case it guesses wrong, you can inspect your
+instances to see what they set <code class="docutils literal notranslate"><span class="pre">OracleTags.CreatedBy</span></code> to, and you can add that
+to this list.</p>
+<p>You can also use this to include other people’s instances in your list, if for
+example you would like to monitor and help a direct report with their instances.</p>
+</section>
 </section>
 <section id="instance-profiles">
-<h2>Instance Profiles<a class="headerlink" href="#instance-profiles" title="Permalink to this heading">¶</a></h2>
+<h2>Instance Profiles<a class="headerlink" href="#instance-profiles" title="Link to this heading">¶</a></h2>
 <p>There are many options which you may want to specify when launching an OCI
 instance. See, for example, the output of <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span> <span class="pre">--help</span></code>. An instance
 profile is a named group of settings which you can use when launching an
@@ -325,16 +340,16 @@ and then inherit a new profile “bigol8” from that, changing only the shape.<
 <p>It is <strong>required</strong> that you include one profile, named DEFAULT, which will be
 used if you do not specify a profile on the command line.</p>
 <section id="availability-domain">
-<h3><code class="docutils literal notranslate"><span class="pre">availability_domain</span></code><a class="headerlink" href="#availability-domain" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">availability_domain</span></code><a class="headerlink" href="#availability-domain" title="Link to this heading">¶</a></h3>
 <p>(String, Required) Which availability domain to create the instance in.</p>
 </section>
 <section id="shape">
-<h3><code class="docutils literal notranslate"><span class="pre">shape</span></code><a class="headerlink" href="#shape" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">shape</span></code><a class="headerlink" href="#shape" title="Link to this heading">¶</a></h3>
 <p>(String, Required) Which shape to use to create the instance. Don’t know which
 shape to use (or what’s available)? Try running <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">shapes</span></code>.</p>
 </section>
 <section id="os">
-<h3><code class="docutils literal notranslate"><span class="pre">os</span></code><a class="headerlink" href="#os" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">os</span></code><a class="headerlink" href="#os" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Which operating system to use to create the instance. This
 field is a combination of a name and a version, separated by a colon. For
 example, <code class="docutils literal notranslate"><span class="pre">Oracle</span> <span class="pre">Linux:8</span></code>. You can list the available operating systems with
@@ -367,7 +382,7 @@ example:</p>
 </div>
 </section>
 <section id="image">
-<h3><code class="docutils literal notranslate"><span class="pre">image</span></code><a class="headerlink" href="#image" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">image</span></code><a class="headerlink" href="#image" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) The name of a custom image to use. Yo will search for this
 image inside the same compartment that it creates your instances
 (<code class="docutils literal notranslate"><span class="pre">instance_compartment_id</span></code>).</p>
@@ -375,7 +390,7 @@ image inside the same compartment that it creates your instances
 specified. See the note directly above for more info.</p>
 </section>
 <section id="boot-volume-size-gbs">
-<h3><code class="docutils literal notranslate"><span class="pre">boot_volume_size_gbs</span></code><a class="headerlink" href="#boot-volume-size-gbs" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">boot_volume_size_gbs</span></code><a class="headerlink" href="#boot-volume-size-gbs" title="Link to this heading">¶</a></h3>
 <p>(Integer, Optional) Set the disk size in GiB.  Valid values are &gt;=50 and less
 than or equal to 16384 (although an OS image may have further limitations). If
 unset, then we just accept whatever the default OCI gives us.</p>
@@ -384,7 +399,7 @@ for the disk size. You may want to use <code class="docutils literal notranslate
 daemon to tune these things.</p>
 </section>
 <section id="name">
-<h3><code class="docutils literal notranslate"><span class="pre">name</span></code><a class="headerlink" href="#name" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">name</span></code><a class="headerlink" href="#name" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) The default name to apply to instances created with this
 profile. Default value: “vm-1”.</p>
 <ul class="simple">
@@ -398,13 +413,13 @@ if your name to be a duplicate, then “-1” is appended.</p></li>
 USERNAME-vm-1, USERNAME-vm-2, etc.</p>
 </section>
 <section id="inherit">
-<h3><code class="docutils literal notranslate"><span class="pre">inherit</span></code><a class="headerlink" href="#inherit" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">inherit</span></code><a class="headerlink" href="#inherit" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Specify the name of another instance profile to inherit from.
 All configuration values from that profile will be copied, and then any settings
 in this config section will overwrite them.</p>
 </section>
 <section id="tasks">
-<span id="config-tasks"></span><h3><code class="docutils literal notranslate"><span class="pre">tasks</span></code><a class="headerlink" href="#tasks" title="Permalink to this heading">¶</a></h3>
+<span id="config-tasks"></span><h3><code class="docutils literal notranslate"><span class="pre">tasks</span></code><a class="headerlink" href="#tasks" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Specify the name or names of tasks that you want to run on
 startup for this instance. Multiple tasks can be joined by a comma (no spaces
 are allowed).</p>
@@ -416,7 +431,7 @@ RUNNING, and for SSH to come up. This means that when you configure the
 pass <code class="docutils literal notranslate"><span class="pre">--wait</span></code> or <code class="docutils literal notranslate"><span class="pre">--ssh</span></code> at launch time.</p>
 </section>
 <section id="load-image">
-<h3><code class="docutils literal notranslate"><span class="pre">load_image</span></code><a class="headerlink" href="#load-image" title="Permalink to this heading">¶</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">load_image</span></code><a class="headerlink" href="#load-image" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Specify an image loading strategy. These strategies only
 apply if the image is specified by name. The following choices are available:</p>
 <ul class="simple">
@@ -431,7 +446,7 @@ recently created image by a given name.</p></li>
 </section>
 </section>
 <section id="command-aliases">
-<h2>Command Aliases<a class="headerlink" href="#command-aliases" title="Permalink to this heading">¶</a></h2>
+<h2>Command Aliases<a class="headerlink" href="#command-aliases" title="Link to this heading">¶</a></h2>
 <p>The optional <code class="docutils literal notranslate"><span class="pre">aliases</span></code> section allows you to specify a shortcut name for a
 command. When the <code class="docutils literal notranslate"><span class="pre">aliases</span></code> section is not provided, or when it is empty, yo
 will default to the “shortest prefix” aliasing system. Here’s an example of an
@@ -445,7 +460,7 @@ alias section:</p>
 </div>
 </section>
 <section id="sample-configuration-file">
-<h2>Sample Configuration File<a class="headerlink" href="#sample-configuration-file" title="Permalink to this heading">¶</a></h2>
+<h2>Sample Configuration File<a class="headerlink" href="#sample-configuration-file" title="Link to this heading">¶</a></h2>
 <p>This file is included in the git repository and is provided here for convenience
 of copy/paste.</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1"># These settings are global.</span>
@@ -752,7 +767,7 @@ of copy/paste.</p>
       &copy;2020-2023, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

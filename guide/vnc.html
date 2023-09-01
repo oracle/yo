@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>VNC and Remote desktop &#8212; yo v1.2.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <title>VNC and Remote desktop &#8212; yo v1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=e49d06fc"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,7 +33,7 @@
           <div class="body" role="main">
             
   <section id="vnc-and-remote-desktop">
-<h1>VNC and Remote desktop<a class="headerlink" href="#vnc-and-remote-desktop" title="Permalink to this heading">¶</a></h1>
+<h1>VNC and Remote desktop<a class="headerlink" href="#vnc-and-remote-desktop" title="Link to this heading">¶</a></h1>
 <p>In addition to providing access to your OCI instances via SSH, it’s possible to
 configure them to run a full graphical environment, which you can access over
 the VNC or RDP protocols. Yo has helper commands, <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">vnc</span></code> and <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">rdp</span></code>, which
@@ -47,9 +47,9 @@ your OCI instance.</p>
 </ol>
 <p>See below for details on each step.</p>
 <section id="server-support">
-<h2>Server Support<a class="headerlink" href="#server-support" title="Permalink to this heading">¶</a></h2>
+<h2>Server Support<a class="headerlink" href="#server-support" title="Link to this heading">¶</a></h2>
 <section id="setting-up-vnc-and-rdp-servers-on-oracle-linux">
-<h3>Setting up VNC and RDP Servers on Oracle Linux<a class="headerlink" href="#setting-up-vnc-and-rdp-servers-on-oracle-linux" title="Permalink to this heading">¶</a></h3>
+<h3>Setting up VNC and RDP Servers on Oracle Linux<a class="headerlink" href="#setting-up-vnc-and-rdp-servers-on-oracle-linux" title="Link to this heading">¶</a></h3>
 <p>For Oracle Linux 8 and above, there is an <a class="reference external" href="https://docs.oracle.com/en/learn/install-vnc-oracle-linux/">official guide</a> that demonstrates
 how to install and start a VNC server. Follow this guide, but you do not need to
 configure X509 encryption, nor do you need to configure firewall rules: Yo is
@@ -73,7 +73,7 @@ installation of your preferred server, so that there are no manual steps between
 launching your instance and connecting to it.</p>
 </section>
 <section id="using-rdp-on-windows-server">
-<h3>Using RDP on Windows Server<a class="headerlink" href="#using-rdp-on-windows-server" title="Permalink to this heading">¶</a></h3>
+<h3>Using RDP on Windows Server<a class="headerlink" href="#using-rdp-on-windows-server" title="Link to this heading">¶</a></h3>
 <p>Windows Server images come with RDP configured and ready to use. OCI provides
 you with a default username and password, which must be changed upon your first
 connection.</p>
@@ -82,7 +82,7 @@ connect with <code class="docutils literal notranslate"><span class="pre">yo</sp
 </section>
 </section>
 <section id="client-support">
-<h2>Client Support<a class="headerlink" href="#client-support" title="Permalink to this heading">¶</a></h2>
+<h2>Client Support<a class="headerlink" href="#client-support" title="Link to this heading">¶</a></h2>
 <p>Yo supports launching VNC and RDP clients via the command line. You will need to
 configure <a class="reference internal" href="configuration.html#vnc-prog"><span class="std std-ref">vnc_prog</span></a> or <a class="reference internal" href="configuration.html#rdp-prog"><span class="std std-ref">rdp_prog</span></a> in order to launch your chosen
 client. Most clients should accept a host and port on the command line.</p>
@@ -98,7 +98,7 @@ or would like to share your configuration steps, feel free to file a Github
 issue.</p>
 </section>
 <section id="connecting-with-yo">
-<h2>Connecting with Yo<a class="headerlink" href="#connecting-with-yo" title="Permalink to this heading">¶</a></h2>
+<h2>Connecting with Yo<a class="headerlink" href="#connecting-with-yo" title="Link to this heading">¶</a></h2>
 <p>Once you have configured your client and server, you can use Yo to connect:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>yo rdp $instance
 yo vnc $instance
@@ -192,7 +192,7 @@ yo vnc -T $instance
       &copy;2020-2023, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

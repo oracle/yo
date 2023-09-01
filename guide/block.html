@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Block Volume Management &#8212; yo v1.2.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <title>Block Volume Management &#8212; yo v1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=e49d06fc"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,7 +33,7 @@
           <div class="body" role="main">
             
   <section id="block-volume-management">
-<h1>Block Volume Management<a class="headerlink" href="#block-volume-management" title="Permalink to this heading">¶</a></h1>
+<h1>Block Volume Management<a class="headerlink" href="#block-volume-management" title="Link to this heading">¶</a></h1>
 <p>Yo now allows you to manage block volumes. These are useful for a variety of
 reasons, such as keeping long-term data around after you’ve terminated an
 instance, or for having a larger storage area without expanding a root device,
@@ -57,7 +57,7 @@ and instances may of course be attached to more than one volume.</p>
 For iSCSI disks, these commands can also automatically run commands which will
 connect the disk.</p>
 <section id="a-note-about-volume-names">
-<h2>A note about volume names<a class="headerlink" href="#a-note-about-volume-names" title="Permalink to this heading">¶</a></h2>
+<h2>A note about volume names<a class="headerlink" href="#a-note-about-volume-names" title="Link to this heading">¶</a></h2>
 <p>If you use yo frequently, you know that it has strong opinions about how to name
 instances. Yo is the same about block volumes as well: you should prefix them
 with your global username.</p>
@@ -72,7 +72,7 @@ threads. Thus, you should be careful to avoid duplicate names. If you do create
 a duplicate, you may need to visit the OCI Web Console to remedy the situation.</p>
 </section>
 <section id="yo-volume-create">
-<h2>yo volume-create<a class="headerlink" href="#yo-volume-create" title="Permalink to this heading">¶</a></h2>
+<h2>yo volume-create<a class="headerlink" href="#yo-volume-create" title="Link to this heading">¶</a></h2>
 <p>Creates a new, blank block volume. You need to provide at least three arguments:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> - we will use this to refer to your volume. This will get automatically
@@ -92,7 +92,7 @@ created. If you do so, you <em>must</em> use <code class="docutils literal notra
 attach it to. You can also provide the attachment arguments accepted by <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">attach</span></code>.</p>
 </section>
 <section id="yo-attach">
-<h2>yo attach<a class="headerlink" href="#yo-attach" title="Permalink to this heading">¶</a></h2>
+<h2>yo attach<a class="headerlink" href="#yo-attach" title="Link to this heading">¶</a></h2>
 <p>Given a volume, attach it to a running instance. You need to provide at least
 two things:</p>
 <ul class="simple">
@@ -113,7 +113,7 @@ best results.</p></li>
 </ul>
 </section>
 <section id="yo-detach">
-<h2>yo detach<a class="headerlink" href="#yo-detach" title="Permalink to this heading">¶</a></h2>
+<h2>yo detach<a class="headerlink" href="#yo-detach" title="Link to this heading">¶</a></h2>
 <p>Given a volume, attach it from a specific instance, or all. You should provide
 at least the volume name, as the first argument. You can specify what to detach
 by providing one of the two options:</p>
@@ -125,20 +125,20 @@ by providing one of the two options:</p>
 use <code class="docutils literal notranslate"><span class="pre">--no-teardown</span></code>.</p>
 </section>
 <section id="yo-volume-delete">
-<h2>yo volume-delete<a class="headerlink" href="#yo-volume-delete" title="Permalink to this heading">¶</a></h2>
+<h2>yo volume-delete<a class="headerlink" href="#yo-volume-delete" title="Link to this heading">¶</a></h2>
 <p>Delete a volume. Since you typically want to ensure that the volume is detached
 from all instances prior to this, yo will automatically detach each attachment,
 that is still connected, including the iSCSI commands as necessary. These can
 be controlled by <code class="docutils literal notranslate"><span class="pre">--no-detach</span></code> and <code class="docutils literal notranslate"><span class="pre">--no-teardown</span></code> respectively.</p>
 </section>
 <section id="yo-volume-list">
-<h2>yo volume-list<a class="headerlink" href="#yo-volume-list" title="Permalink to this heading">¶</a></h2>
+<h2>yo volume-list<a class="headerlink" href="#yo-volume-list" title="Link to this heading">¶</a></h2>
 <p>List all volumes. This command gives an overview of all volumes, regardless of
 whether they are attached to anything. The view includes both boot and block
 volumes.</p>
 </section>
 <section id="yo-attached">
-<h2>yo attached<a class="headerlink" href="#yo-attached" title="Permalink to this heading">¶</a></h2>
+<h2>yo attached<a class="headerlink" href="#yo-attached" title="Link to this heading">¶</a></h2>
 <p>This is the slightly more useful volume listing command, though it is also a bit
 slower. This lists each instance which has attached boot or block devices
 (which, of course, is all instances), and then shows their attached devices.
@@ -240,7 +240,7 @@ Here is an example of the output.</p>
       &copy;2020-2023, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

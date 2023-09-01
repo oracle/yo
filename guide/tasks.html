@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tasks &#8212; yo v1.2.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <title>Tasks &#8212; yo v1.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=e49d06fc"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,9 +33,9 @@
           <div class="body" role="main">
             
   <section id="tasks">
-<h1>Tasks<a class="headerlink" href="#tasks" title="Permalink to this heading">¶</a></h1>
+<h1>Tasks<a class="headerlink" href="#tasks" title="Link to this heading">¶</a></h1>
 <section id="an-overview-of-yo-tasks">
-<span id="tasks-overview"></span><h2>An Overview Of Yo Tasks<a class="headerlink" href="#an-overview-of-yo-tasks" title="Permalink to this heading">¶</a></h2>
+<span id="tasks-overview"></span><h2>An Overview Of Yo Tasks<a class="headerlink" href="#an-overview-of-yo-tasks" title="Link to this heading">¶</a></h2>
 <p>Tasks are a yo feature which enable you to run Bash scripts on your instance
 remotely, without being connected to it. The command output and exit status are
 recorded for your viewing later.</p>
@@ -78,7 +78,7 @@ write!</p></li>
 </ul>
 </section>
 <section id="creating-tasks">
-<h2>Creating Tasks<a class="headerlink" href="#creating-tasks" title="Permalink to this heading">¶</a></h2>
+<h2>Creating Tasks<a class="headerlink" href="#creating-tasks" title="Link to this heading">¶</a></h2>
 <p>Tasks are identified by their filename. Yo searches for them in a list of
 directories, using the first one it finds:</p>
 <ul class="simple">
@@ -92,7 +92,7 @@ don’t need to be marked executable.</p>
 find the script when you ask to use it.</p>
 </section>
 <section id="special-task-syntax">
-<h2>Special Task Syntax<a class="headerlink" href="#special-task-syntax" title="Permalink to this heading">¶</a></h2>
+<h2>Special Task Syntax<a class="headerlink" href="#special-task-syntax" title="Link to this heading">¶</a></h2>
 <p>While tasks are generally normal bash scripts, there are a few special bash
 functions which are available to you:</p>
 <ul class="simple">
@@ -124,7 +124,7 @@ DEPENDS_ON<span class="w"> </span><span class="nv">$TASK</span>
 </div>
 </section>
 <section id="managing-tasks">
-<h2>Managing Tasks<a class="headerlink" href="#managing-tasks" title="Permalink to this heading">¶</a></h2>
+<h2>Managing Tasks<a class="headerlink" href="#managing-tasks" title="Link to this heading">¶</a></h2>
 <p>At any time, you can view all available tasks with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">task-list</span></code>. You can get
 details about a particular task using <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">task-info</span></code>. This will essentially
 dump the script contents to stdout, along with a header giving its file
@@ -156,7 +156,7 @@ dependency into this file, and deletes it once the wait completes</p></li>
 <a class="reference internal" href="configuration.html#config-task-dir"><span class="std std-ref">task_dir</span></a> configuration option.</p>
 </section>
 <section id="running-tasks-at-launch-time">
-<h2>Running Tasks at Launch Time<a class="headerlink" href="#running-tasks-at-launch-time" title="Permalink to this heading">¶</a></h2>
+<h2>Running Tasks at Launch Time<a class="headerlink" href="#running-tasks-at-launch-time" title="Link to this heading">¶</a></h2>
 <p>With the <code class="docutils literal notranslate"><span class="pre">--task</span></code> argument to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code>, you can request that a task be
 executed at startup. This will result in your command automatically waiting for
 the instance to start, and then waiting for SSH access, so that yo can then run
@@ -180,7 +180,7 @@ and self-configures.</p>
 the profile on the command line. You can only specify _additional_ tasks to run.</p>
 </section>
 <section id="builtin-tasks">
-<h2>Builtin Tasks<a class="headerlink" href="#builtin-tasks" title="Permalink to this heading">¶</a></h2>
+<h2>Builtin Tasks<a class="headerlink" href="#builtin-tasks" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">drgn</span></code> - install drgn and (if possible) kernel debuginfo, supported on
 Oracle Linux 8 and later.</p></li>
@@ -202,7 +202,7 @@ can automatically begin using it.</p></li>
 </ul>
 </section>
 <section id="tasks-future-work">
-<h2>Tasks - Future Work<a class="headerlink" href="#tasks-future-work" title="Permalink to this heading">¶</a></h2>
+<h2>Tasks - Future Work<a class="headerlink" href="#tasks-future-work" title="Link to this heading">¶</a></h2>
 <p>Most of the work planned for tasks is now completed. However, one additional
 feature which could be nice is the ability to pass variables or file data to a
 task script. I’m currently waiting for a use case before building this feature.</p>
@@ -292,7 +292,7 @@ So one final piece of work is to resolve that and allow longer task timeouts.</p
       &copy;2020-2023, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

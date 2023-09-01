@@ -356,6 +356,24 @@ almost no performance impact to this check.
 You can set this configuration to zero, in which case Yo will not perform the
 check at all.
 
+``creator_tags``
+~~~~~~~~~~~~~~~~
+
+(List of strings, Optional) This is a list of tag values which Yo will use to
+track instances (and other resources) as if they are your own.
+
+When resource filtering is enabled, Yo relies on tags which can identify who
+created a particular instance. Yo creates its own tag, but also can rely on a
+tag which the OCI tenancy may automatically create. When OCI creates these tags,
+it uses the name of your account as the tag value. Unfortunately, the name of
+your account is not predictable: it could be your email address, or something
+else. Yo makes a few guesses, but in case it guesses wrong, you can inspect your
+instances to see what they set ``OracleTags.CreatedBy`` to, and you can add that
+to this list.
+
+You can also use this to include other people's instances in your list, if for
+example you would like to monitor and help a direct report with their instances.
+
 Instance Profiles
 -----------------
 
