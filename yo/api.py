@@ -1023,9 +1023,16 @@ class YoCtx:
                 cache["last_checked_for_update"]
             )
         else:
-            self.last_checked_for_update = datetime.datetime(
-                1970, 1, 1
-            ).astimezone()
+            # There are two cases where this may happen:
+            # 1. Upgrading Yo past the version which introduced
+            #    "last_checked_for_update".
+            # 2. The first run of Yo after installation.
+            # In either case, Yo was very likely recently updated. So it makes
+            # the most sense to set it to now(), rather than setting it to an
+            # arbitrary date in the past. What's more, setting it to an
+            # arbitrary date in the past such as Unix timestamp 0 ends up
+            # causing errors on some platforms (cough... Windows).
+            self.last_checked_for_update = now()
         for cache_attr in self._caches:
             yocache: YoCache[t.Any] = getattr(self, cache_attr)
             yocache.load(cache.get(yocache.name, {}))
