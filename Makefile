@@ -60,7 +60,7 @@ docs:
 
 .PHONY: docs-publish
 docs-publish: docs
-	@echo "Publishing docs automatically is not yet supported."
+	@scripts/publish-docs.sh
 
 .PHONY: _release_sanity_check
 _release_sanity_check:
