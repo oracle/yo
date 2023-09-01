@@ -5,6 +5,8 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.3.0 - Fri, Sept 1, 2023
+
 Changes:
 
 - The look & feel of Yo has been updated a bit. Progress bars have been removed
