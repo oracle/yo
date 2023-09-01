@@ -5,6 +5,25 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+Changes:
+
+- The look & feel of Yo has been updated a bit. Progress bars have been removed
+  in favor of spinners, since we can't accurately predict progress most of the
+  time anyway. The spinners also show the time elapsed even after completion, so
+  that you know how long Yo spent waiting for each action. Most of the printouts
+  now also include a timestamp.
+- Yo now catches Ctrl-C gracefully and exits without a traceback.
+- The `creator_tags` configuration option is added. This configuration is
+  related to how Yo tracks instances which you've created. If Yo is already
+  working for you, there's no need to care about it.
+
+Fixes:
+
+- Fixed some bugs related to parsing information in InstanceProfile.
+- Fixed a very rare bug related to the automatic update checking.
+- Fixed a bug related to the default configuration of memory for flexible CPU
+  instances.
+
 ## 1.2.0 - Wed, Aug 9, 2023
 
 New features:
