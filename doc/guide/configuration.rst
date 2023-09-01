@@ -356,8 +356,8 @@ almost no performance impact to this check.
 You can set this configuration to zero, in which case Yo will not perform the
 check at all.
 
-``resource_tags``
-~~~~~~~~~~~~~~~~~
+``creator_tags``
+~~~~~~~~~~~~~~~~
 
 (List of strings, Optional) This is a list of tag values which Yo will use to
 track instances (and other resources) as if they are your own.
