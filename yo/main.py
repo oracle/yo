@@ -3296,7 +3296,7 @@ def _extend(ctx: YoCtx) -> None:
     else:
         import pkg_resources
 
-        def entry_points(group):
+        def entry_points(group: str) -> t.Iterable["pkg_resources.EntryPoint"]:
             return pkg_resources.iter_entry_points(group)
 
     for entry_point in entry_points(group="yo.extensions.v1"):
@@ -3328,7 +3328,7 @@ def main() -> None:
         con = rich.console.Console()
         con.print(f"[bold red]error: {e.args[0]}")
         sys.exit(1)
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         sys.exit(1)
 
 

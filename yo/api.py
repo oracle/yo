@@ -1087,7 +1087,7 @@ class YoCtx:
         """Return true if the string matches a creator tag"""
         if not self.config.resource_filtering:
             return True
-        return s and (s in self.config.all_creator_tags)
+        return bool(s) and (s in self.config.all_creator_tags)
 
     @contextlib.contextmanager
     def maybe_check_for_updates(self) -> t.Iterator[None]:
