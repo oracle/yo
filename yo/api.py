@@ -1067,7 +1067,7 @@ class YoCtx:
             if hasattr(os, "fchmod"):
                 os.fchmod(f.fileno(), stat.S_IRUSR | stat.S_IWUSR)
             json.dump(cache, f, indent=4)
-        os.rename(cache_pid_file, self._cache_file)
+        os.replace(cache_pid_file, self._cache_file)
 
     def __init__(
         self,
