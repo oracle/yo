@@ -291,8 +291,8 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
 
 
 def ssh_args(
-    ctx: YoCtx,
-    interactive: bool,
+        ctx: YoCtx,
+        interactive: bool,
 ) -> t.List[str]:
     cmd = SSH_OPTIONS.copy()
     cmd += shlex.split(ctx.config.ssh_args or "")
@@ -311,10 +311,10 @@ def ssh_args(
 
 
 def ssh_cmd(
-    ctx: YoCtx,
-    target: str,
-    extra_args: t.Iterable[str] = (),
-    cmds: t.Iterable[str] = (),
+        ctx: YoCtx,
+        target: str,
+        extra_args: t.Iterable[str] = (),
+        cmds: t.Iterable[str] = (),
 ) -> t.List[str]:
     cmds = list(cmds)
     cmd = ["ssh"] + ssh_args(ctx, bool(cmds))
@@ -325,13 +325,13 @@ def ssh_cmd(
 
 
 def ssh_into(
-    ip: str,
-    user: str,
-    ctx: YoCtx,
-    extra_args: t.Iterable[str] = (),
-    cmds: t.Iterable[str] = (),
-    quiet: bool = False,
-    **kwargs: t.Any,
+        ip: str,
+        user: str,
+        ctx: YoCtx,
+        extra_args: t.Iterable[str] = (),
+        cmds: t.Iterable[str] = (),
+        quiet: bool = False,
+        **kwargs: t.Any,
 ) -> "subprocess.CompletedProcess[bytes]":
     """
     Run an SSH command with a user@ip target. Use extra_args before the
@@ -362,10 +362,10 @@ def ssh_into(
 
 
 def wait_for_ssh_access(
-    ip: str,
-    user: str,
-    ctx: YoCtx,
-    timeout_sec: int = 600,
+        ip: str,
+        user: str,
+        ctx: YoCtx,
+        timeout_sec: int = 600,
 ) -> bool:
     global warned_about_SSH_timeout
     last_time = time.time()
@@ -566,8 +566,8 @@ def run_all_tasks(ctx: YoCtx, inst: YoInstance, tasks: t.Iterable[str]) -> None:
 
 
 def task_get_status(
-    ctx: YoCtx,
-    inst: YoInstance,
+        ctx: YoCtx,
+        inst: YoInstance,
 ) -> t.Mapping[str, t.Tuple[str, t.Union[int, str]]]:
     task_dir_safe = ctx.config.task_dir_safe
     # Take care to use the escaped task dir, and use the -print0 and xargs -0
@@ -620,9 +620,9 @@ def task_get_status(
             else:
                 task_to_status[task] = ("FAIL", 0)
         elif (
-            len(stat_list) == 2
-            and stat_list[0][0] == "pid"
-            and stat_list[1][0] == "wait"
+                len(stat_list) == 2
+                and stat_list[0][0] == "pid"
+                and stat_list[1][0] == "wait"
         ):
             task_to_status[task] = ("WAITING", stat_list[1][1])
         else:
@@ -631,7 +631,7 @@ def task_get_status(
 
 
 def task_status_to_table(
-    statuses: t.Mapping[str, t.Tuple[str, t.Union[int, str]]]
+        statuses: t.Mapping[str, t.Tuple[str, t.Union[int, str]]]
 ) -> rich.table.Table:
     t = rich.table.Table(title="Task Status")
     t.add_column("Task")
@@ -652,9 +652,9 @@ def task_status_to_table(
 
 
 def task_join(
-    ctx: YoCtx,
-    inst: YoInstance,
-    wait_task: t.Optional[str] = None,
+        ctx: YoCtx,
+        inst: YoInstance,
+        wait_task: t.Optional[str] = None,
 ) -> t.Mapping[str, t.Tuple[str, t.Union[str, int]]]:
     with Live(console=ctx.con) as live:
         task_previous_status: t.Dict[str, str] = {}
@@ -678,12 +678,12 @@ def task_join(
             # until all are completed. Otherwise, we wait until just the
             # specific wait_task is completed.
             can_terminate = (wait_task is None and not any_running) or (
-                wait_task is not None
-                and status_dict[wait_task][0]
-                not in (
-                    "RUNNING",
-                    "WAITING",
-                )
+                    wait_task is not None
+                    and status_dict[wait_task][0]
+                    not in (
+                        "RUNNING",
+                        "WAITING",
+                    )
             )
             if can_terminate:
                 break
@@ -709,11 +709,11 @@ class YoCmd(subc.Command):
             self.run()
 
     def add_with_completer(
-        self,
-        parser: argparse.ArgumentParser,
-        completer: t.Callable[[], t.List[str]],
-        *args: t.Any,
-        **kwargs: t.Any,
+            self,
+            parser: argparse.ArgumentParser,
+            completer: t.Callable[[], t.List[str]],
+            *args: t.Any,
+            **kwargs: t.Any,
     ) -> argparse.Action:
         act = parser.add_argument(*args, **kwargs)
         act.completer = completer  # type: ignore
@@ -731,7 +731,7 @@ class YoCmd(subc.Command):
                 continue
             names.append(inst.name)
             if inst.name.startswith(self.c.config.my_username + "-"):
-                names.append(inst.name[len(self.c.config.my_username) + 1 :])
+                names.append(inst.name[len(self.c.config.my_username) + 1:])
         return names
 
     def complete_shape(self, **kwargs: t.Any) -> t.List[str]:
@@ -768,7 +768,7 @@ class ListCmd(YoCmd):
             "-c",
             action="store_true",
             help="avoid loading and calling OCI if possible (list may be"
-            "out of date)",
+                 "out of date)",
         )
         parser.add_argument(
             "--ip",
@@ -864,7 +864,7 @@ class SingleInstanceCommand(YoCmd):
             action="store_true",
             default=None,
             help="Do not standardize the name by prefixing it with your "
-            "system username if necessary.",
+                 "system username if necessary.",
         )
         parser.add_argument(
             "--no-exact-name",
@@ -872,8 +872,8 @@ class SingleInstanceCommand(YoCmd):
             dest="exact_name",
             default=None,
             help="Standardize the name by prefixing it with your system "
-            "username (this is the default, but can be used to override "
-            "your Yo configuration file)",
+                 "username (this is the default, but can be used to override "
+                 "your Yo configuration file)",
         )
         if self.positional_name:
             self.add_with_completer(
@@ -955,7 +955,7 @@ class MultiInstanceCommand(YoCmd):
             action="store_true",
             default=None,
             help="Do not standardize the name by prefixing it with your "
-            "system username if necessary.",
+                 "system username if necessary.",
         )
         parser.add_argument(
             "--no-exact-name",
@@ -963,8 +963,8 @@ class MultiInstanceCommand(YoCmd):
             dest="exact_name",
             default=None,
             help="Standardize the name by prefixing it with your system "
-            "username (this is the default, but can be used to override "
-            "your Yo configuration file)",
+                 "username (this is the default, but can be used to override "
+                 "your Yo configuration file)",
         )
         parser.add_argument(
             "--yes",
@@ -989,9 +989,9 @@ class MultiInstanceCommand(YoCmd):
         pass
 
     def run_for_instance(
-        self,
-        instance: YoInstance,
-        progress: Progress,
+            self,
+            instance: YoInstance,
+            progress: Progress,
     ) -> None:
         raise NotImplementedError(
             "Implement me if you don't implement run_for_all()"
@@ -1005,7 +1005,7 @@ class MultiInstanceCommand(YoCmd):
 
     def confirm(self, msg: str) -> bool:
         confirm = (
-            not self.needs_confirmation or self.args.yes or Confirm.ask(msg)
+                not self.needs_confirmation or self.args.yes or Confirm.ask(msg)
         )
         if confirm:
             if self.needs_confirmation:
@@ -1508,6 +1508,37 @@ class TaskRunCmd(SingleInstanceCommand):
             )
 
 
+class CopyIdCmd(SingleInstanceCommand):
+    name = "copy-id"
+    description = "copy an SSH public key onto an instance using ssh-copy-id"
+
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("instance_name", type=str, help="Name of the instance")
+        parser.add_argument("-i", "--identity-file", type=str, required=True,
+                            help="Specify path to the public key file")
+
+    def run_for_instance(self, instance: YoInstance) -> None:
+
+        # Firstly, we need to extract instance name and public key file path from command-line arguments
+        instance_name = instance.name
+        public_key_file_path = self.args.identity_file
+
+        # Now, construct the command
+        ssh_copy_id_cmd = [
+            "ssh-copy-id",
+            "-i",
+            public_key_file_path,
+            f"{instance_name}@{instance.id}" # Assuming IP address is stored in 'id'
+        ]
+
+        # Execution starts here
+        try:
+            subprocess.run(ssh_copy_id_cmd, check=True)
+            self.c.con.print(f"SSH public key copied to '{instance_name}' successfully.")
+        except subprocess.CalledProcessError as e:
+            self.c.con.print(f"Error copying SSH public key: {e}")
+
+
 class TaskStatusCmd(SingleInstanceCommand):
     name = "task-status"
     description = "give the status of all tasks on an instance"
@@ -1600,7 +1631,7 @@ class IpCmd(YoCmd):
             action="store_true",
             default=None,
             help="Do not standardize the name by prefixing it with your "
-            "system useranme if necessary.",
+                 "system useranme if necessary.",
         )
         parser.add_argument(
             "--no-exact-name",
@@ -1608,8 +1639,8 @@ class IpCmd(YoCmd):
             dest="exact_name",
             default=None,
             help="Standardize the name by prefixing it with your system "
-            "username (this is the default, but can be used to override "
-            "your Yo configuration file)",
+                 "username (this is the default, but can be used to override "
+                 "your Yo configuration file)",
         )
         self.add_with_completer(
             parser,
@@ -1810,9 +1841,9 @@ class LaunchCmd(YoCmd):
             action="store_true",
             default=None,
             help="When set, allows you to bypass the name rules implemented "
-            "by this program. In particular: (1) allows non-unique "
-            "instance names, and (2) allows you to use a name which is "
-            "not prefixed by your username.",
+                 "by this program. In particular: (1) allows non-unique "
+                 "instance names, and (2) allows you to use a name which is "
+                 "not prefixed by your username.",
         )
         parser.add_argument(
             "--no-exact-name",
@@ -1820,13 +1851,13 @@ class LaunchCmd(YoCmd):
             dest="exact_name",
             default=None,
             help="the opposite of --exact-name (this is the default, but can "
-            "be used to override your Yo configuration file)",
+                 "be used to override your Yo configuration file)",
         )
         parser.add_argument(
             "--dry-run",
             action="store_true",
             help="When set, don't actually create the instance, just print "
-            "what we would have done.",
+                 "what we would have done.",
         )
         parser.add_argument(
             "--profile",
@@ -1932,9 +1963,9 @@ class LaunchCmd(YoCmd):
 
         def compatible(image: YoImage) -> bool:
             return (
-                image.os == os
-                and image.os_version == ver
-                and image.compatibility.get(shape) is not None
+                    image.os == os
+                    and image.os_version == ver
+                    and image.compatibility.get(shape) is not None
             )
 
         images = self.c.list_official_images()
@@ -1951,11 +1982,11 @@ class LaunchCmd(YoCmd):
         return image
 
     def set_mem_cpu(
-        self,
-        profile: InstanceProfile,
-        image: YoImage,
-        shape: YoShape,
-        create_args: t.Dict[str, t.Any],
+            self,
+            profile: InstanceProfile,
+            image: YoImage,
+            shape: YoShape,
+            create_args: t.Dict[str, t.Any],
     ) -> None:
         """
         Set the memory and cpu of an instance, if necessary.
@@ -1968,10 +1999,10 @@ class LaunchCmd(YoCmd):
         mem = self.args.mem or profile.mem
         cpu = self.args.cpu or profile.cpu
         if (
-            not mem
-            and not cpu
-            and not shape.memory_options
-            and not shape.ocpu_options
+                not mem
+                and not cpu
+                and not shape.memory_options
+                and not shape.ocpu_options
         ):
             # Nothing is configured, and nothing should be configured.
             return
@@ -2001,8 +2032,8 @@ class LaunchCmd(YoCmd):
             # mem is configured, check its range
             mem_per_ocpu = mem / cpu
             if (
-                mem < shape.memory_options.min_gbs
-                or mem > shape.memory_options.max_gbs
+                    mem < shape.memory_options.min_gbs
+                    or mem > shape.memory_options.max_gbs
             ):
                 raise YoExc(
                     f"Memory selection {mem} is out of allowed range "
@@ -2010,8 +2041,8 @@ class LaunchCmd(YoCmd):
                     f"{shape.memory_options.max_gbs}"
                 )
             elif (
-                mem_per_ocpu < shape.memory_options.min_per_ocpu_gbs
-                or mem_per_ocpu > shape.memory_options.max_per_ocpu_gbs
+                    mem_per_ocpu < shape.memory_options.min_per_ocpu_gbs
+                    or mem_per_ocpu > shape.memory_options.max_per_ocpu_gbs
             ):
                 raise YoExc(
                     f"The mem/CPU ratio you have, {mem_per_ocpu} GiB/CPU "
@@ -2025,9 +2056,9 @@ class LaunchCmd(YoCmd):
         # CHECK IMAGE COMPATIBILITY
         compat = image.compatibility[shape.shape]
         if (
-            compat.min_ocpu
-            and compat.max_ocpu
-            and (cpu < compat.min_ocpu or cpu > compat.max_ocpu)
+                compat.min_ocpu
+                and compat.max_ocpu
+                and (cpu < compat.min_ocpu or cpu > compat.max_ocpu)
         ):
             raise YoExc(
                 f"Configured CPU {cpu} is not compatible with image "
@@ -2035,9 +2066,9 @@ class LaunchCmd(YoCmd):
                 f" - {compat.max_ocpu}"
             )
         if (
-            compat.min_mem_gbs
-            and compat.max_mem_gbs
-            and (mem < compat.min_mem_gbs or mem > compat.max_mem_gbs)
+                compat.min_mem_gbs
+                and compat.max_mem_gbs
+                and (mem < compat.min_mem_gbs or mem > compat.max_mem_gbs)
         ):
             raise YoExc(
                 f"Configured Mem {mem} is not compatible with image "
@@ -2230,8 +2261,8 @@ class InstanceActionCommand(MultiInstanceCommand):
                 "--force",
                 action="store_true",
                 help="Forcibly perform the action without notifying the OS. "
-                "This risks losing data, but it is best for handling a "
-                "machine whose OS is hung.",
+                     "This risks losing data, but it is best for handling a "
+                     "machine whose OS is hung.",
             )
         parser.add_argument(
             "--dry-run",
@@ -2798,7 +2829,7 @@ def volume_attach_args(parser: argparse.ArgumentParser) -> None:
         dest="exact_name",
         default=None,
         help="follow Yo's normal rules on standardizing instance & volume names"
-        " (this is the default, but can be used to override the config file)",
+             " (this is the default, but can be used to override the config file)",
     )
     parser.add_argument(
         "--exact-name",
@@ -2860,7 +2891,7 @@ def volume_attach_args(parser: argparse.ArgumentParser) -> None:
 
 
 def do_volume_attach(
-    ctx: YoCtx, args: argparse.Namespace, volume: YoVolume, inst: YoInstance
+        ctx: YoCtx, args: argparse.Namespace, volume: YoVolume, inst: YoInstance
 ) -> None:
     va = ctx.attach_volume(
         volume,
@@ -2922,7 +2953,7 @@ class VolumeCreateCmd(YoCmd):
             dest="inst_name",
             type=str,
             help="which instance you intend to attach to (yo will choose the"
-            "right availability domain automatically)",
+                 "right availability domain automatically)",
         )
         parser.add_argument(
             "--attach",
@@ -3004,7 +3035,7 @@ def detach_volume_args(parser: argparse.ArgumentParser) -> None:
         dest="exact_name",
         default=None,
         help="follow Yo's normal rules on standardizing instance & volume names"
-        " (this is the default, but can be used to override the config file)",
+             " (this is the default, but can be used to override the config file)",
     )
     parser.add_argument(
         "--exact-name",
@@ -3023,9 +3054,9 @@ def detach_volume_args(parser: argparse.ArgumentParser) -> None:
 
 
 def do_detach_volume(
-    ctx: YoCtx,
-    args: argparse.Namespace,
-    detach_vas: t.List[YoVolumeAttachment],
+        ctx: YoCtx,
+        args: argparse.Namespace,
+        detach_vas: t.List[YoVolumeAttachment],
 ) -> None:
     for detach_va in detach_vas:
         if args.teardown and detach_va.attachment_type == AttachmentType.ISCSI:
