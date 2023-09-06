@@ -5,6 +5,12 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.3.1 - Wed, Sept 6, 2023
+
+Fixes:
+
+- Fix `FileExistsError` on Windows.
+
 ## 1.3.0 - Fri, Sept 1, 2023
 
 Changes:
