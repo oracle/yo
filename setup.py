@@ -46,7 +46,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
-        "rich",
+        # TaskProgressColumn
+        "rich>=12.3.0",
         # Older versions of OCI SDK don't have support for things like
         # quota_names for Images. While that particular issue was resolved by an
         # version prior to 2.85.0, I think there's no reason for me not to
