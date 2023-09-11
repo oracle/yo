@@ -166,6 +166,13 @@ class ImageLoad(enum.Enum):
         return self.value
 
 
+def flex_list(arg: t.Union[str, t.List[str]]) -> t.List[str]:
+    if isinstance(arg, str):
+        return arg.split(",")
+    else:
+        return arg
+
+
 @dataclasses.dataclass
 class InstanceProfile:
     # NB: non-STR types here will not automatically be parsed/casted from config
@@ -194,19 +201,20 @@ class InstanceProfile:
         check_args_dataclass(
             InstanceProfile, d.keys(), f"~/.oci/yo.ini \\[{name}] section"
         )
-        size = d.get("boot_volume_size_gbs")
-        if size:
-            d["boot_volume_size_gbs"] = int(size)
-        load = d.get("load_image")
-        if load:
-            d["load_image"] = ImageLoad(load)
-        tasks = d.get("tasks")
-        if tasks and isinstance(tasks, list):
-            d["tasks"] = tasks
-        elif tasks and isinstance(tasks, str):
-            d["tasks"] = tasks.split(",")
-        else:
-            d["tasks"] = []
+        types: t.Dict[str, t.Callable[[t.Any], t.Any]] = {
+            "boot_volume_size_gbs": int,
+            "cpu": float,
+            "mem": float,
+            "load_image": ImageLoad,
+            "tasks": flex_list,
+        }
+        for field, tp in types.items():
+            if field in d:
+                val = d[field]
+                if val is None:
+                    del d[field]  # use default from dataclass
+                else:
+                    d[field] = tp(d[field])
         return InstanceProfile(**d)
 
     def validate(self, name: str) -> None:
@@ -1006,18 +1014,25 @@ class YoCtx:
                 or resource_filtering != self.config.resource_filtering
             ):
                 os.unlink(cache_file)
-                print(
+                self.con.log(
                     "Invalidating cache due to cache version or resource filtering"
                 )
-                return
+                cache = {}
         if "last_checked_for_update" in cache:
             self.last_checked_for_update = fromisoformat(
                 cache["last_checked_for_update"]
             )
         else:
-            self.last_checked_for_update = datetime.datetime(
-                1970, 1, 1
-            ).astimezone()
+            # There are two cases where this may happen:
+            # 1. Upgrading Yo past the version which introduced
+            #    "last_checked_for_update".
+            # 2. The first run of Yo after installation.
+            # In either case, Yo was very likely recently updated. So it makes
+            # the most sense to set it to now(), rather than setting it to an
+            # arbitrary date in the past. What's more, setting it to an
+            # arbitrary date in the past such as Unix timestamp 0 ends up
+            # causing errors on some platforms (cough... Windows).
+            self.last_checked_for_update = now()
         for cache_attr in self._caches:
             yocache: YoCache[t.Any] = getattr(self, cache_attr)
             yocache.load(cache.get(yocache.name, {}))
@@ -1052,7 +1067,7 @@ class YoCtx:
             if hasattr(os, "fchmod"):
                 os.fchmod(f.fileno(), stat.S_IRUSR | stat.S_IWUSR)
             json.dump(cache, f, indent=4)
-        os.rename(cache_pid_file, self._cache_file)
+        os.replace(cache_pid_file, self._cache_file)
 
     def __init__(
         self,
@@ -1060,21 +1075,19 @@ class YoCtx:
         instance_profiles: t.Mapping[str, InstanceProfile],
         cache_file: str = "~/.cache/yo.json",
     ):
-        self.con = rich.console.Console()
+        # Escape hatch to disable the log timestamps
+        log_time = "YO_LOG_WITHOUT_TIME" not in os.environ
+        self.con = rich.console.Console(log_path=False, log_time=log_time)
         self.config = yo_config
         self.instance_profiles = instance_profiles
         self._cache_file = os.path.expanduser(cache_file)
         self.load_cache()
 
-    def filter_by_email(self, s: t.Optional[str]) -> bool:
-        """Return true if the string matches the configured email"""
+    def filter_by_creator(self, s: t.Optional[str]) -> bool:
+        """Return true if the string matches a creator tag"""
         if not self.config.resource_filtering:
             return True
-        if not s:
-            return False
-        if "/" in s:
-            s = s.split("/", 1)[1]
-        return s == self.config.my_email
+        return bool(s) and (s in self.config.all_creator_tags)
 
     @contextlib.contextmanager
     def maybe_check_for_updates(self) -> t.Iterator[None]:
@@ -1138,7 +1151,7 @@ class YoCtx:
             )
             if not email:
                 if not warned_on_missing_tag:
-                    self.con.print(
+                    self.con.log(
                         "[red]warning:[/red] Instances in your tenancy "
                         "do not have the automatic Oracle-Tags.CreatedBy "
                         "tag - your tenancy may be older, or your tenancy "
@@ -1163,7 +1176,7 @@ class YoCtx:
                 email = instance.freeform_tags.get(CREATEDBY)
             yo_inst = YoInstance.from_oci(instance)
             instances.append(yo_inst)
-            if self.filter_by_email(email):
+            if self.filter_by_creator(email):
                 instances_cache.append(yo_inst)
         self._instances.set(instances_cache)
         self.save_cache()
@@ -1345,7 +1358,7 @@ class YoCtx:
         yovnic = self._vnics.get_by("instance_id", inst.id)
         if not yovnic:
             if not quiet:
-                self.con.print("Looking up instance IP/Vnic")
+                self.con.log("Looking up instance IP/Vnic")
             cid = self.config.instance_compartment_id
             vnic_gen = self.oci.list_call_get_all_results_generator(
                 self.compute.list_vnic_attachments,
@@ -1357,7 +1370,7 @@ class YoCtx:
             if not vnic_attachments:
                 raise YoExc("There are no attached VNICs for this instance")
             elif len(vnic_attachments) > 1:
-                self.con.print(
+                self.con.log(
                     "[red]warning:[/red] your instance has multiple attached "
                     "VNICs, which may have multiple IPs. Yo is choosing to use "
                     "first one. If you encounter issues, please mention this "
@@ -1370,7 +1383,7 @@ class YoCtx:
             self.save_cache()
         ip = yovnic.public_ip or yovnic.private_ip
         if not quiet:
-            self.con.print(f"Found instance ip [blue]{ip}")
+            self.con.log(f"Found instance ip [blue]{ip}")
         return ip
 
     def get_all_instance_ips(
@@ -1472,7 +1485,7 @@ class YoCtx:
         ] + self.config.image_compartment_ids
         images = []
         if refresh or not self._images.is_current():
-            self.con.print("Refreshing cached image list")
+            self.con.log("Refreshing cached image list")
             seen_ids = set()
             for cid in compartments:
                 img_gen = self.oci.list_call_get_all_results_generator(
@@ -1484,9 +1497,8 @@ class YoCtx:
                     if img.id not in seen_ids:
                         images.append(YoImage.from_oci(img))
                         seen_ids.add(img.id)
-            self.con.print("Loading image compatibility")
+            self.con.log("Loading image compatibility")
             list(self._tpe.map(self._load_image_compatibility, images))
-            self.con.print("Done!")
             self._images.set(images)
             self.save_cache()
         return self._images.get_all()
@@ -1559,7 +1571,7 @@ class YoCtx:
         )
         resp = self.compute.create_instance_console_connection(details)
         conn = resp.data
-        self.con.print(
+        self.con.log(
             "Created instance console connection. Waiting for it to become "
             "active."
         )
@@ -1625,7 +1637,7 @@ class YoCtx:
                 subnet.availability_domain
                 and subnet.availability_domain != profile.availability_domain
             ):
-                self.con.print(
+                self.con.log(
                     "[orange]warning: the given subnet_id has a different "
                     "availability domain than the one specified in your "
                     "instance profile. Continuing, but this may not be what "
@@ -1650,7 +1662,7 @@ class YoCtx:
         else:
             raise YoExc("Need subnet_id or subnet_compartment_id.")
         sub = YoSubnet.from_oci(subnet)
-        self.con.print(f"Using subnet [blue]{sub.name}[/blue]")
+        self.con.log(f"Using subnet [blue]{sub.name}[/blue]")
         return sub
 
     def launch_instance(self, details: t.Dict[str, t.Any]) -> YoInstance:
@@ -1714,7 +1726,7 @@ class YoCtx:
         )
         for bootdev in bootdev_gen:
             bv = YoVolume.from_oci_boot(bootdev)
-            if self.filter_by_email(bv.created_by):
+            if self.filter_by_creator(bv.created_by):
                 vols.append(bv)
                 ids.add(bv.id)
         boot_attch_gen = self.oci.list_call_get_all_results_generator(
@@ -1751,7 +1763,7 @@ class YoCtx:
         )
         for blockdev in blockdev_gen:
             vol = YoVolume.from_oci_block(blockdev)
-            if self.filter_by_email(vol.created_by):
+            if self.filter_by_creator(vol.created_by):
                 vols.append(vol)
                 ids.add(vol.id)
         attch_gen = self.oci.list_call_get_all_results_generator(
@@ -2053,7 +2065,7 @@ class YoCtx:
             )
 
         name_to_ad_to_fut: t.Dict[
-            str, t.Dict[str, concurrent.futures.Future[YoAvail]]
+            str, t.Dict[str, t.Any]
         ] = collections.defaultdict(dict)
         name_to_fut = {}
         ads: t.Set[str] = set()
