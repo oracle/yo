@@ -1513,7 +1513,7 @@ class CopyIdCmd(SingleInstanceCommand):
     description = "copy an SSH public key onto an instance using ssh-copy-id"
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument("instance_name", type=str, help="Name of the instance")
+        super().add_args(parser)
         parser.add_argument("-i", "--identity-file", type=str, required=True,
                             help="Specify path to the public key file")
 
@@ -1522,13 +1522,16 @@ class CopyIdCmd(SingleInstanceCommand):
         # Firstly, we need to extract instance name and public key file path from command-line arguments
         instance_name = instance.name
         public_key_file_path = self.args.identity_file
+        ip=self.c.get_instance_ip(instance)
+        img= self.c.get_image(instance.image_id)
+        user=OS_TO_USER(img.os)
 
         # Now, construct the command
         ssh_copy_id_cmd = [
             "ssh-copy-id",
             "-i",
             public_key_file_path,
-            f"{instance_name}@{instance.id}" # Assuming IP address is stored in 'id'
+            f"{user}@{ip}"
         ]
 
         # Execution starts here
@@ -1536,7 +1539,8 @@ class CopyIdCmd(SingleInstanceCommand):
             subprocess.run(ssh_copy_id_cmd, check=True)
             self.c.con.print(f"SSH public key copied to '{instance_name}' successfully.")
         except subprocess.CalledProcessError as e:
-            self.c.con.print(f"Error copying SSH public key: {e}")
+            self.c.con.print(f"Error copying SSH public key to '{instance_name}'!!")
+            sys.exit(1)  # Exit the program with a non-zero status code to indicate an error
 
 
 class TaskStatusCmd(SingleInstanceCommand):
