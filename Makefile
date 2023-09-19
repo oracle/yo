@@ -98,6 +98,7 @@ release: _release_sanity_check test
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@echo Confirmed
 	twine upload -r yo dist/yo-$(VERSION)*
+	twine upload -r oracle dist/yo-$(VERSION)*
 	git push origin main
 	git tag v$(VERSION)
 	git push origin v$(VERSION)
