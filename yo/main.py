@@ -720,7 +720,9 @@ class YoCmd(subc.Command):
 
     def add_with_completer(
         self,
-        parser: argparse.ArgumentParser,
+        parser: t.Union[
+            argparse.ArgumentParser, argparse._MutuallyExclusiveGroup
+        ],
         completer: t.Callable[[], t.List[str]],
         *args: t.Any,
         **kwargs: t.Any,
@@ -1805,8 +1807,9 @@ class LaunchCmd(YoCmd):
             default=None,
             help="Name to give the instance",
         )
+        grp = parser.add_mutually_exclusive_group()
         self.add_with_completer(
-            parser,
+            grp,
             self.complete_os,
             "--os",
             type=str,
@@ -1814,7 +1817,7 @@ class LaunchCmd(YoCmd):
             help="Operating system and version, separated by colon (:)",
         )
         self.add_with_completer(
-            parser,
+            grp,
             self.complete_image,
             "--image",
             type=str,
@@ -1968,12 +1971,6 @@ class LaunchCmd(YoCmd):
         Return an image ID based on the profile settings (and command line
         args if they override it).
         """
-        # The goal is to allow the command line to override the profile, but we
-        # can't allow clashing options. Instance profile is already validated to
-        # contain exactly one of image or OS, but args could contain both.
-        if self.args.image and self.args.os:
-            raise YoExc("You cannot specify both --os and --image")
-
         load_image = profile.load_image
         if self.args.load_image:
             load_image = self.args.load_image
