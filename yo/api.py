@@ -1860,6 +1860,26 @@ class YoCtx:
             ret[va.instance_id].append(va)
         return ret
 
+    def rename_volume(self, vol: YoVolume, new_name: str) -> None:
+        if vol.kind == VolumeKind.BOOT:
+            new = self.block.update_boot_volume(
+                vol.id,
+                self.oci.UpdateBootVolumeDetails(
+                    display_name=new_name,
+                ),
+            )
+            newvol = YoVolume.from_oci_boot(new.data)
+        else:
+            new = self.block.update_block_volume(
+                vol.id,
+                self.oci.UpdateVolumeDetails(
+                    display_name=new_name,
+                ),
+            )
+            newvol = YoVolume.from_oci_block(new.data)
+        self._vols.insert(newvol)
+        self.save_cache()
+
     def create_volume(self, name: str, ad: str, size_gbs: int) -> YoVolume:
         freeform_tags = {
             CREATEDBY: self.config.my_email,

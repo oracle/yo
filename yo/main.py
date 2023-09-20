@@ -3081,6 +3081,41 @@ class AttachCmd(YoCmd):
         do_volume_attach(self.c, self.args, vol, inst)
 
 
+class VolumeRename(YoCmd):
+    name = "volume-rename"
+    description = "rename a block or boot volume"
+
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
+        self.add_with_completer(
+            parser,
+            self.complete_volume,
+            "volume_name",
+            type=str,
+            help="name of volume",
+        )
+        parser.add_argument(
+            "new_name",
+            type=str,
+            help="new name for volume",
+        )
+        parser.add_argument(
+            "--exact-name",
+            "-n",
+            action="store_true",
+            help="do not try to standardize the volume names",
+        )
+
+    def run(self) -> None:
+        old_name = standardize_name(
+            self.args.volume_name, self.args.exact_name, self.c.config
+        )
+        new_name = standardize_name(
+            self.args.new_name, self.args.exact_name, self.c.config
+        )
+        volume = self.c.get_volume(old_name)
+        self.c.rename_volume(volume, new_name)
+
+
 def detach_volume_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--no-exact-name",
