@@ -403,6 +403,31 @@ used if you do not specify a profile on the command line.
 (String, Required) Which shape to use to create the instance. Don't know which
 shape to use (or what's available)? Try running ``yo shapes``.
 
+``mem``
+~~~~~~~
+
+(Integer, Optional) For flex shapes, specify the amount of memory in gigabytes
+which you would like your instance configured with. This should not be provided
+unless you are using a flex shape. This can be overridden on the command line as
+well.
+
+When ``mem`` is provided, it will be used as the total memory allocation for the
+shape (unless this is out of the supported range, in which Yo will report the
+error). If ``mem`` is omitted for a flex shape, then Yo will try to determine
+the shape's default per-cpu memory allocation, and multiply that by the number
+of CPUs configured, and use that value.
+
+``cpu``
+~~~~~~~
+
+(Integer, Optional) For flex shapes, specify the number of OCPUs to configure
+the instance with. This should not be provided unless you are using a flex
+shape. It can be overridden on the commandline.
+
+When ``cpu`` is provided, it will be used as the OCPU count, unless it is out of
+the supported range. If ``cpu`` is not provided, the shape's default OCPU amount
+is selected.
+
 ``os``
 ~~~~~~
 
