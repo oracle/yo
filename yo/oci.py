@@ -73,7 +73,9 @@ from oci.core.models import InstanceSourceViaBootVolumeDetails  # noqa
 from oci.core.models import InstanceSourceViaImageDetails  # noqa
 from oci.core.models import LaunchInstanceDetails  # noqa
 from oci.core.models import LaunchInstanceShapeConfigDetails  # noqa
+from oci.core.models import UpdateBootVolumeDetails  # noqa
 from oci.core.models import UpdateInstanceDetails  # noqa
+from oci.core.models import UpdateVolumeDetails  # noqa
 from oci.exceptions import ServiceError  # noqa
 from oci.pagination import list_call_get_all_results  # noqa
 from oci.pagination import list_call_get_all_results_generator  # noqa
