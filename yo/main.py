@@ -100,6 +100,7 @@ import yo.util
 from yo.api import AttachmentType
 from yo.api import ImageLoad
 from yo.api import InstanceProfile
+from yo.api import VolumeKind
 from yo.api import YoCtx
 from yo.api import YoImage
 from yo.api import YoInstance
@@ -1825,6 +1826,15 @@ class LaunchCmd(YoCmd):
             help="Display name of a custom image in the instance_compartment_id",
         )
         self.add_with_completer(
+            grp,
+            self.complete_volume,
+            "--volume",
+            "-V",
+            type=str,
+            default=None,
+            help="Select a boot volume to use to launch your instance",
+        )
+        self.add_with_completer(
             parser,
             self.complete_shape,
             "--shape",
@@ -2136,8 +2146,23 @@ class LaunchCmd(YoCmd):
         create_args["compartment_id"] = self.c.config.instance_compartment_id
         subnet = self.c.pick_subnet(profile)
         create_args["subnet_id"] = subnet.id
-        image = self.pick_image(profile, shape.shape)
-        create_args["image_id"] = image.id
+
+        if self.args.volume:
+            volname = standardize_name(
+                self.args.volume, self.args.exact_name, self.c.config
+            )
+            volume = self.c.get_volume(volname, kind=VolumeKind.BOOT)
+            if volume.image_id is not None:
+                image = self.c.get_image(volume.image_id)
+                user = OS_TO_USER[image.os]
+            else:
+                user = "opc"  # better than nothing
+            create_args["volume_id"] = volume.id
+            self.c.con.log(f"Using boot volume: {self.args.volume}")
+        else:
+            image = self.pick_image(profile, shape.shape)
+            create_args["image_id"] = image.id
+            user = OS_TO_USER[image.os]
 
         # Grab ssh key from the config file, NOT instance profile
         create_args["metadata"] = {
@@ -2171,8 +2196,6 @@ class LaunchCmd(YoCmd):
         # Wait for SSH to come up
         if self.args.wait_ssh:
             ip = self.c.get_instance_ip(inst)
-            # TODO: specify username in launch command?
-            user = OS_TO_USER[image.os]
             if not wait_for_ssh_access(ip, user, self.c):
                 self.c.con.log("[red]Could not connect via SSH")
                 self.c.con.log("Maybe you're not connected to VPN?")
@@ -3054,7 +3077,7 @@ class AttachCmd(YoCmd):
             (),
             exact_name=self.args.exact_name,
         )
-        vol = self.c.get_volume(name)
+        vol = self.c.get_volume(name, kind=VolumeKind.BLOCK)
         do_volume_attach(self.c, self.args, vol, inst)
 
 
@@ -3151,7 +3174,7 @@ class DetachCmd(YoCmd):
         name = standardize_name(
             self.args.volume, self.args.exact_name, self.c.config
         )
-        vol = self.c.get_volume(name)
+        vol = self.c.get_volume(name, kind=VolumeKind.BLOCK)
         vas = self.c.attachments_by_volume()[vol.id]
         vas = [va for va in vas if va.state == "ATTACHED"]
         detach_vas = []
@@ -3205,7 +3228,7 @@ class VolumeDeleteCmd(YoCmd):
         name = standardize_name(
             self.args.name, self.args.exact_name, self.c.config
         )
-        volume = self.c.get_volume(name)
+        volume = self.c.get_volume(name, kind=VolumeKind.BLOCK)
         vas = self.c.attachments_by_volume()[volume.id]
         vas = [va for va in vas if va.state == "ATTACHED"]
         if self.args.detach:

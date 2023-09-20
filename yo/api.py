@@ -1673,12 +1673,26 @@ class YoCtx:
         return sub
 
     def launch_instance(self, details: t.Dict[str, t.Any]) -> YoInstance:
+        image_id = details.pop("image_id", None)
+        volume_id = details.pop("volume_id", None)
         boot_size = details.pop("boot_volume_size_gbs", None)
-        if boot_size is not None:
+        if image_id and volume_id:
+            raise YoExc("image_id and volume_id cannot both be passed")
+        elif image_id:
+            kwargs = {"image_id": image_id}
+            if boot_size:
+                kwargs["boot_volume_size_in_gbs"] = boot_size
             details["source_details"] = self.oci.InstanceSourceViaImageDetails(
-                image_id=details.pop("image_id"),
-                boot_volume_size_in_gbs=boot_size,
+                **kwargs
             )
+        elif volume_id:
+            details[
+                "source_details"
+            ] = self.oci.InstanceSourceViaBootVolumeDetails(
+                boot_volume_id=volume_id,
+            )
+        else:
+            raise YoExc("You must pass either image_id or volume_id")
         shape_config = details.pop("shape_config", None)
         if shape_config:
             details["shape_config"] = self.oci.LaunchInstanceShapeConfigDetails(
@@ -1806,19 +1820,30 @@ class YoCtx:
         self._maybe_volume_refresh(refresh)
         return self._vas.get_all()
 
-    def get_volume(self, name: str) -> YoVolume:
+    def get_volume_by_id(self, id: str) -> YoVolume:
+        vol = self._vols.get_by_id(id)
+        if not vol:
+            self._maybe_volume_refresh(True)
+            vol = self._vols.get_by_id(id)
+            if not vol:
+                raise YoExc(f"Volume {id} does not exist!")
+        return vol
+
+    def get_volume(
+        self, name: str, kind: t.Optional[VolumeKind] = None
+    ) -> YoVolume:
         matches = []
         for vol in self.list_volumes():
             if (
-                vol.kind == VolumeKind.BLOCK
-                and (vol.name == name or vol.alt_name == name)
-                and vol.state != "TERMINATED"
-            ):
-                matches.append(vol)
+                vol.name == name or vol.alt_name == name
+            ) and vol.state != "TERMINATED":
+                if not kind or vol.kind == kind:
+                    matches.append(vol)
+        typ = f" {kind.name}" if kind else ""
         return one(
             matches,
-            f"no block volume with name {name}",
-            f"multiple block volumes with name {name}",
+            f"no{typ} volume with name {name}",
+            f"multiple{typ} volumes with name {name}",
         )
 
     def attachments_by_volume(self) -> t.Dict[str, t.List[YoVolumeAttachment]]:
