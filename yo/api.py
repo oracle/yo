@@ -422,6 +422,7 @@ class YoVolume(YoCachedWithId):
     size_in_gbs: int
     time_created: datetime.datetime
     created_by: t.Optional[str]
+    alt_name: str
 
     @classmethod
     def from_json(cls: t.Type[CI], d: t.Dict[str, t.Any]) -> CI:
@@ -434,6 +435,10 @@ class YoVolume(YoCachedWithId):
         created_by = bv.defined_tags.get("Oracle-Tags", {}).get("CreatedBy")
         if not created_by:
             created_by = bv.freeform_tags.get(CREATEDBY)
+        suffix = " (Boot Volume)"
+        alt_name = bv.display_name
+        if alt_name.endswith(suffix):
+            alt_name = alt_name[: -len(suffix)]
         return cls(
             id=bv.id,
             name=bv.display_name,
@@ -445,6 +450,7 @@ class YoVolume(YoCachedWithId):
             size_in_gbs=bv.size_in_gbs,
             time_created=bv.time_created,
             created_by=created_by,
+            alt_name=alt_name,
         )
 
     @classmethod
@@ -463,6 +469,7 @@ class YoVolume(YoCachedWithId):
             size_in_gbs=bv.size_in_gbs,
             time_created=bv.time_created,
             created_by=created_by,
+            alt_name=bv.display_name,
         )
 
 
@@ -908,7 +915,7 @@ class YoCtx:
     _images: YoCache[YoImage] = YoCache(YoImage, "images", 6)
     _consoles: YoCache[YoConsole] = YoCache(YoConsole, "consoles", 2)
     _shapes: YoCache[YoShape] = YoCache(YoShape, "shapes", 4)
-    _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 3)
+    _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 4)
     _vas: YoCache[YoVolumeAttachment] = YoCache(YoVolumeAttachment, "vas", 3)
 
     # Put all cache names from above here too so we automatically manage them
@@ -1804,7 +1811,7 @@ class YoCtx:
         for vol in self.list_volumes():
             if (
                 vol.kind == VolumeKind.BLOCK
-                and vol.name == name
+                and (vol.name == name or vol.alt_name == name)
                 and vol.state != "TERMINATED"
             ):
                 matches.append(vol)
