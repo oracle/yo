@@ -1526,6 +1526,49 @@ class TaskRunCmd(SingleInstanceCommand):
             )
 
 
+class CopyIdCmd(SingleInstanceCommand):
+    name = "copy-id"
+    description = "copy an SSH public key onto an instance using ssh-copy-id"
+
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
+        super().add_args(parser)
+        parser.add_argument(
+            "-i",
+            "--identity-file",
+            type=str,
+            required=False,
+            help="Specify path to the public key file",
+        )
+
+    def run_for_instance(self, instance: YoInstance) -> None:
+        # Firstly, we need to extract instance name and public key file path from command-line arguments
+        instance_name = instance.name
+        public_key_file_path = self.args.identity_file
+        ip = self.c.get_instance_ip(instance)
+        img = self.c.get_image(instance.image_id)
+        user = OS_TO_USER[img.os]
+
+        options = SSH_OPTIONS[:]
+        if public_key_file_path:
+            options += ["-i", public_key_file_path]
+
+        ssh_copy_id_cmd = ["ssh-copy-id"] + options + [f"{user}@{ip}"]
+
+        # Execution starts here
+        try:
+            subprocess.run(ssh_copy_id_cmd, check=True)
+            self.c.con.print(
+                f"SSH public key copied to '{instance_name}' successfully."
+            )
+        except subprocess.CalledProcessError:
+            self.c.con.print(
+                f"Error copying SSH public key to '{instance_name}'!!"
+            )
+            sys.exit(
+                1
+            )  # Exit the program with a non-zero status code to indicate an error
+
+            
 class TaskStatusCmd(SingleInstanceCommand):
     name = "task-status"
     description = "give the status of all tasks on an instance"
