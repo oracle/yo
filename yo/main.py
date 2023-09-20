@@ -1568,7 +1568,7 @@ class CopyIdCmd(SingleInstanceCommand):
                 1
             )  # Exit the program with a non-zero status code to indicate an error
 
-            
+
 class TaskStatusCmd(SingleInstanceCommand):
     name = "task-status"
     description = "give the status of all tasks on an instance"
