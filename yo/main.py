@@ -368,9 +368,10 @@ def wait_for_ssh_access(
     user: str,
     ctx: YoCtx,
     timeout_sec: int = 600,
+    ssh_warn_grace: int = 60,
 ) -> bool:
     global warned_about_SSH_timeout
-    last_time = time.time()
+    start_time = last_time = time.time()
     progress = Progress(
         rich.progress.TextColumn("{task.description}"),
         rich.progress.SpinnerColumn(),
@@ -392,7 +393,10 @@ def wait_for_ssh_access(
             except subprocess.TimeoutExpired:
                 proc.terminate()
                 proc.wait()
-                if not warned_about_SSH_timeout:
+                if (
+                    not warned_about_SSH_timeout
+                    and time.time() - start_time >= ssh_warn_grace
+                ):
                     ctx.con.log(
                         "[magenta]Warning:[/magenta] SSH command timed out. "
                         "This is normal: it may happen early in the boot. "
