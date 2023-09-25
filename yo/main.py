@@ -2047,12 +2047,17 @@ class LaunchCmd(YoCmd):
         mem = self.args.mem or profile.mem
         cpu = self.args.cpu or profile.cpu
         if (
-            not mem
-            and not cpu
+            not self.args.mem
+            and not self.args.cpu
             and not shape.memory_options
             and not shape.ocpu_options
         ):
-            # Nothing is configured, and nothing should be configured.
+            # This is very specific but very common. When the instance is not
+            # flex, and the user didn't provide mem/cpu CLI flags, we don't need
+            # to do any more. Note that in the case where the instance profile
+            # does have memory/cpu values configured, but the instance is
+            # non-flex, we don't continue: this would raise an error which is
+            # somewhat hard for a user to avoid.
             return
 
         # ENSURE CPU CONFIGURED, VERIFY SHAPE COMPAT
