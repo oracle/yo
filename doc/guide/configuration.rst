@@ -4,6 +4,8 @@ Configuration
 yo's configuration file should be located in the directory ``~/.oci/yo.ini``. It
 uses a standard INI-style syntax (just like the OCI SDK configuration file).
 
+.. _global configuration options:
+
 Global Configuration Options
 ----------------------------
 
@@ -373,6 +375,8 @@ to this list.
 
 You can also use this to include other people's instances in your list, if for
 example you would like to monitor and help a direct report with their instances.
+
+.. _instance profiles:
 
 Instance Profiles
 -----------------

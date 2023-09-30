@@ -1,3 +1,5 @@
+.. _user guide:
+
 User Guide
 ==========
 
@@ -7,7 +9,6 @@ User Guide
 
    concepts
    configuration
-   commands
    tasks
    vnc
    block

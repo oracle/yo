@@ -36,6 +36,7 @@ Contents
 
    install
    guide/index
+   cmds/index
    optional_setup
    development
 

@@ -1,9 +1,13 @@
+.. _optional features:
+
 Optional Features
 =================
 
 Once yo is configured, you're able to use its base feature set, which is
 (hopefully) described well in the Guide. However, there are a few additional
 features which are optional and require some additional setup or configuration.
+
+.. _bash completion:
 
 Bash Completion
 ---------------

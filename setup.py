@@ -54,7 +54,7 @@ setup(
         # request a relatively recent version, i.e. the latest as of this
         # writing.
         "oci>=2.85.0",
-        "subc>=0.7.0",
+        "subc>=0.8.0",
         "setuptools",
         "argcomplete",
         "dataclasses",

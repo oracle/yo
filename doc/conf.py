@@ -27,7 +27,7 @@ with open(os.path.join(os.path.dirname(__file__), "..", "setup.py")) as f:
 # ones.
 extensions = [
     "myst_parser",
-    "sphinx.ext.autosectionlabel",
+    "sphinxarg.ext",
 ]
 autodoc_typehints = "description"
 
@@ -40,6 +40,9 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+# Set an environment variable to signal if we're imported by sphinx
+os.environ["SPHINX_BUILD"] = "1"
 
 # -- Options for HTML output -------------------------------------------------
 
