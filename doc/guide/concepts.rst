@@ -64,6 +64,8 @@ You can avoid this behavior in two ways:
   If necessary, you can re-enable it on a case-by-case basis with
   ``--no-exact-name``.
 
+.. _resource visibility:
+
 Resource Visibility
 -------------------
 

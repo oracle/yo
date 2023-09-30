@@ -81,6 +81,7 @@ import shlex
 import string
 import subprocess
 import sys
+import textwrap
 import time
 import typing as t
 from configparser import ConfigParser
@@ -176,6 +177,38 @@ INITIAL_CONFIG_LINK = REPOSITORY_URL
 warned_about_SSH_timeout = False
 
 PYVER = sys.version_info[:2]
+
+COMMAND_GROUP_ORDER = [
+    "Basic Commands",
+    "Instance Management",
+    "Instance Communication & Interaction",
+    "Task Management Commands",
+    "Volume Management Commands",
+    "Informative Commands",
+    "Diagnostic Commands",
+]
+
+
+class ParagraphFormatter(argparse.HelpFormatter):
+    def _fill_text(self, text: str, width: int, indent: str) -> str:
+        # Remove existing indentation and get paragraphs
+        text = textwrap.dedent(text).strip()
+        paragraphs = [p.replace("\n", " ").strip() for p in text.split("\n\n")]
+
+        # Now indent and wrap each paragraph
+        wrapped_pars = [
+            textwrap.fill(textwrap.indent(p, indent), width) for p in paragraphs
+        ]
+
+        # And return the block of text
+        return "\n\n".join(wrapped_pars)
+
+
+def arg_choices(c: t.List[str]) -> t.Optional[t.List[str]]:
+    if os.environ.get("SPHINX_BUILD") == "1":
+        return None
+    else:
+        return c
 
 
 @dataclasses.dataclass
@@ -708,6 +741,8 @@ def task_join(
 class YoCmd(subc.Command):
     c: YoCtx
     es: contextlib.ExitStack
+    rootname = "yo"
+    help_formatter_class = ParagraphFormatter  # type: ignore
 
     @classmethod
     def setup_config(cls) -> t.Tuple[YoCtx, t.Dict[str, str]]:
@@ -787,7 +822,22 @@ def send_notification(ctx: YoCtx, msg: str) -> None:
 
 class ListCmd(YoCmd):
     name = "list"
-    description = "list instances"
+    group = "Basic Commands"
+    help = "List your OCI instances."
+    description = """
+    List your OCI instances.
+
+    Yo caches some data to speed up operations, but when you run "yo list", it
+    will always ensure you get the freshest data. You can disable this behavior
+    if you want, which will show you stale data, but it will be fast.
+
+    By default, Yo also tries to only show instances that belong to you (though,
+    please see the documentation for the config "yo.resource_filtering"). You
+    can use the "--all" argument to see all of the instances in your
+    compartment, regardless of whether Yo believes you created them. Please keep
+    in mind that you won't be able to manage those instances (e.g. yo ssh, yo
+    terminate, etc) unless you change your "yo.resource_filtering" configuration.
+    """
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -1112,7 +1162,8 @@ class MultiInstanceCommand(YoCmd):
 
 class SshCmd(SingleInstanceCommand):
     name = "ssh"
-    description = "ssh into your instance"
+    group = "Basic Commands"
+    description = "SSH into an instance."
 
     states_allowlist: t.Collection[str] = (
         "RUNNING",
@@ -1223,7 +1274,8 @@ class SshCmd(SingleInstanceCommand):
 
 class ScpCmd(SingleInstanceCommand):
     name = "scp"
-    description = "run scp replacing args with IP address"
+    group = "Instance Communication & Interaction"
+    description = "Copy files to/from an instance using the scp command"
     positional_name = False
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
@@ -1234,7 +1286,7 @@ class ScpCmd(SingleInstanceCommand):
             "scp_args",
             nargs="*",
             help=(
-                "Arguments to pass to scp (use -- to protect, `:`"
+                "Arguments to pass to scp (use -- to protect, :"
                 "gets replaced with destination host)"
             ),
         )
@@ -1311,7 +1363,8 @@ class RemoteDesktopCommand(SingleInstanceCommand):
 
 class VncCmd(RemoteDesktopCommand):
     name = "vnc"
-    description = "connect to instance over SSH-tunneled VNC"
+    group = "Instance Communication & Interaction"
+    description = "Connect to instance remote desktop using VNC."
     PORT = 5901
 
     def run_for_instance(self, inst: YoInstance) -> None:
@@ -1327,7 +1380,8 @@ class VncCmd(RemoteDesktopCommand):
 
 class RdpCmd(RemoteDesktopCommand):
     name = "rdp"
-    description = "connect to instance directly over RDP"
+    group = "Instance Communication & Interaction"
+    description = "Connect to instance remote desktop using RDP."
     PORT = 3389
 
     def run_for_instance(self, inst: YoInstance) -> None:
@@ -1363,7 +1417,8 @@ class RdpCmd(RemoteDesktopCommand):
 
 class RsyncCmd(SingleInstanceCommand):
     name = "rsync"
-    description = "run rsync replacing args with IP address"
+    group = "Instance Communication & Interaction"
+    description = "Synchronize files using the rsync command."
     positional_name = False
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
@@ -1382,7 +1437,7 @@ class RsyncCmd(SingleInstanceCommand):
             "rsync_args",
             nargs="*",
             help=(
-                "Arguments to pass to rsync (use -- to protect, `:`"
+                "Arguments to pass to rsync (use -- to protect, :"
                 "gets replaced with destination host)"
             ),
         )
@@ -1409,7 +1464,8 @@ class RsyncCmd(SingleInstanceCommand):
 
 class ConsoleCmd(SingleInstanceCommand):
     name = "console"
-    description = "ssh into an instance serial console"
+    group = "Instance Communication & Interaction"
+    description = "View an instance's serial console using an SSH connection"
 
     states_allowlist = ()
     states_denylist = ("STOPPED", "TERMINATED")
@@ -1482,7 +1538,8 @@ class ConsoleCmd(SingleInstanceCommand):
 
 class WaitCmd(SingleInstanceCommand):
     name = "wait"
-    description = "wait for an instance to enter a state"
+    group = "Instance Management"
+    description = "Wait for an instance to enter a state."
 
     states_allowlist = ()
     states_denylist = ("TERMINATED",)
@@ -1516,14 +1573,15 @@ class WaitCmd(SingleInstanceCommand):
 
 
 class TaskRunCmd(SingleInstanceCommand):
-    name = "task-run"
-    description = "run a long-running task script on an instance"
+    name = "task run"
+    group = "Task Management Commands"
+    description = "Run a long-running task script on an instance."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         super().add_args(parser)
         parser.add_argument(
             "task",
-            choices=list_tasks(),
+            choices=arg_choices(list_tasks()),
             help="name of the task to execute",
         )
         parser.add_argument(
@@ -1545,7 +1603,8 @@ class TaskRunCmd(SingleInstanceCommand):
 
 class CopyIdCmd(SingleInstanceCommand):
     name = "copy-id"
-    description = "copy an SSH public key onto an instance using ssh-copy-id"
+    group = "Instance Communication & Interaction"
+    description = "Copy an SSH public key onto an instance using ssh-copy-id."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         super().add_args(parser)
@@ -1587,8 +1646,9 @@ class CopyIdCmd(SingleInstanceCommand):
 
 
 class TaskStatusCmd(SingleInstanceCommand):
-    name = "task-status"
-    description = "give the status of all tasks on an instance"
+    name = "task status"
+    group = "Task Management Commands"
+    description = "Report the status of all tasks on an instance."
 
     def run_for_instance(self, inst: YoInstance) -> None:
         statuses = task_get_status(self.c, inst)
@@ -1596,14 +1656,15 @@ class TaskStatusCmd(SingleInstanceCommand):
 
 
 class TaskWaitCmd(SingleInstanceCommand):
-    name = "task-wait"
-    description = "wait for a task to complete on an instance"
+    name = "task wait"
+    group = "Task Management Commands"
+    description = "Wait for a task to complete on an instance."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         super().add_args(parser)
         parser.add_argument(
             "task",
-            choices=list_tasks(),
+            choices=arg_choices(list_tasks()),
             help="name of the task to execute",
         )
 
@@ -1615,8 +1676,9 @@ class TaskWaitCmd(SingleInstanceCommand):
 
 
 class TaskJoinCmd(SingleInstanceCommand):
-    name = "task-join"
-    description = "wait for all tasks to complete"
+    name = "task join"
+    group = "Task Management Commands"
+    description = "Wait for all tasks on a given instance to complete."
 
     def run_for_instance(self, inst: YoInstance) -> None:
         task_join(self.c, inst)
@@ -1624,13 +1686,14 @@ class TaskJoinCmd(SingleInstanceCommand):
 
 
 class TaskInfo(YoCmd):
-    name = "task-info"
-    description = "show the script for a given task"
+    name = "task info"
+    group = "Task Management Commands"
+    description = "Show the basic information and script contents for a task."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "task",
-            choices=list_tasks(),
+            choices=arg_choices(list_tasks()),
             help="name of task to give info on",
         )
 
@@ -1645,8 +1708,9 @@ class TaskInfo(YoCmd):
 
 
 class TaskList(YoCmd):
-    name = "task-list"
-    description = "list all tasks available"
+    name = "task list"
+    group = "Task Management Commands"
+    description = "List every task and its basic metadata"
 
     def run(self) -> None:
         t = rich.table.Table()
@@ -1666,7 +1730,15 @@ class TaskList(YoCmd):
 
 class IpCmd(YoCmd):
     name = "ip"
-    description = "print the IP address for an instance"
+    group = "Instance Communication & Interaction"
+    help = "Print the IP address for one or more instances."
+    description = """
+    Print the IP address for one or more instances.
+
+    Yo tries to avoid making you remember an instance IP. For example, you can
+    connect via SSH using "yo ssh". However, in some cases you may need to get
+    the IP address still.
+    """
 
     states_allowlist = ()
     states_denylist = ("TERMINATED",)
@@ -1724,7 +1796,24 @@ class IpCmd(YoCmd):
 
 class ImagesCmd(YoCmd):
     name = "images"
-    description = "give images"
+    group = "Informative Commands"
+    help = "List images available to use for launching an instance."
+    description = """
+    List images available to use for launching an instance.
+
+    This lists all official images as well as custom images (created by a user
+    in your tenancy). Yo searches for custom images in the compartments
+    indicated by configuration "yo.instance_compartment_id" (that is, the
+    compartment you create instances within) as well as any value from
+    "yo.image_compartment_ids".
+
+    Custom images will have a "Creator" field, while official images will have
+    this field blank. For official images, there are typically more than one
+    image for a particular "OS" and "version" combination: images get updated
+    with the latest packages regularly. It's easiest for you to simply specify
+    your desired OS and version in yo launch (or your instance profile) rather
+    than searching for an image name here.
+    """
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         self.add_with_completer(
@@ -1760,8 +1849,11 @@ class ImagesCmd(YoCmd):
             table.add_column("Name")
             table.add_column("OS")
             table.add_column("OS Ver.")
+            table.add_column("Creator")
             for img in images:
-                table.add_row(img.display_name, img.os, img.os_version)
+                table.add_row(
+                    img.display_name, img.os, img.os_version, img.created_by
+                )
             self.c.con.print(table)
             if self.args.os:
                 image = images[0]
@@ -1771,7 +1863,21 @@ class ImagesCmd(YoCmd):
 
 class CompatCmd(YoCmd):
     name = "compat"
-    description = "(beta) show a compatibility matrix of images and shapes"
+    group = "Informative Commands"
+    help = "Show a compatibility matrix of images and shapes."
+    description = """
+    Show a compatibility matrix of images and shapes.
+
+    Not all images are compatible with all shapes. In fact, the relationship can
+    be quite complex. This command exists mostly to satisfy curiosity. It
+    formats a quite large matrix of official images and shapes, where an "X" is
+    marked if the shape for that row is compatible with the image of that
+    column.
+
+    When you select OS and version, Yo will automatically select the image
+    version compatible with your shape, so you should never need to know these
+    details.
+    """
 
     def run(self) -> None:
         images = self.c.list_official_images()
@@ -1812,7 +1918,31 @@ class CompatCmd(YoCmd):
 
 class LaunchCmd(YoCmd):
     name = "launch"
-    description = "launch an instance and then ssh into it"
+    group = "Basic Commands"
+    help = "Launch an OCI instance."
+    description = """
+    Launch an OCI instance.
+
+    The instance settings (image/OS, shape, name, etc) are typically taken from
+    the instance profile in your configuration file.  However, you can override
+    these settings with command line options too.
+
+    You can run startup tasks on the instance via the "-t" option. Again, these
+    can be specified via an instance profile, so that you don't need to write
+    long commands. If you ask Yo to run a task, it will wait until the instance
+    is ready, and then connect over SSH so that it can start the tasks.
+
+    You can use "-s" to wait until the instance is ready and then use SSH to
+    connect. If you've configured "yo.notify_prog", then you can also receive a
+    desktop notification when your instance is ready. Alternatively, use "-w" to
+    wait until the instance is ready, but not connect via SSH.
+    """
+
+    def _profile_choices(self) -> t.Optional[t.List[str]]:
+        if hasattr(self, "c"):
+            return list(self.c.instance_profiles)
+        else:
+            return None  # for docs
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -1921,7 +2051,7 @@ class LaunchCmd(YoCmd):
             "-p",
             type=str,
             default="DEFAULT",
-            choices=list(self.c.instance_profiles),
+            choices=self._profile_choices(),
             help="Which profile (from your ~/.oci/yo.ini) should be used",
         )
         parser.add_argument(
@@ -1931,7 +2061,7 @@ class LaunchCmd(YoCmd):
             action="append",
             dest="tasks",
             default=[],
-            choices=list_tasks(),
+            choices=arg_choices(list_tasks()),
             help="Tasks to run once the instance is up and accessible",
         )
         parser.add_argument(
@@ -2232,7 +2362,21 @@ class LaunchCmd(YoCmd):
 
 class TerminateCmd(MultiInstanceCommand):
     name = "terminate"
-    description = "terminate OCI instances"
+    group = "Instance Management"
+    help = "Terminate one or more instances."
+    description = """
+    Terminate one or more instances.
+
+    This command offers a "--dry-run" mode for safety. It also requires that you
+    confirm the instances you terminate, or else run with "--yes" if you're
+    confident.
+
+    You can save preserve the instance's boot volume with "-p", and if you'd
+    like, you can even preserve it and specify a more useful name using "-s". In
+    the future, you can launch an instance from that boot volume using "yo
+    launch -V".
+    """
+
     action_message = "terminate"
 
     states_allowlist = ()
@@ -2409,7 +2553,9 @@ class InstanceActionCommand(MultiInstanceCommand):
 
 class StopCommand(InstanceActionCommand):
     name = "stop"
-    description = "stop (shutdown) OCI instances"
+    group = "Instance Management"
+    description = "Stop (shut down) one or more OCI instances"
+
     action_message = "stop"
     action = "SOFTSTOP"
     force_action = "STOP"
@@ -2417,8 +2563,13 @@ class StopCommand(InstanceActionCommand):
 
 
 class DiagnosticInterruptCommand(InstanceActionCommand):
-    name = "diagnostic-interrupt"
-    description = "send diagnostic interrupt (NMI) to instance (dangerous)"
+    name = "nmi"
+    alias = "diagnostic-interrupt"
+    group = "Instance Management"
+    description = """
+    Send diagnostic interrupt (NMI) to one or more instance (dangerous)
+    """
+
     action_message = "interrupt"
     action = "SENDDIAGNOSTICINTERRUPT"
 
@@ -2461,7 +2612,9 @@ class InstanceActionMaybeSsh(InstanceActionCommand):
 
 class RebootCommand(InstanceActionMaybeSsh):
     name = "reboot"
-    description = "reboot OCI instances"
+    group = "Instance Management"
+    description = "Reboot one or more OCI instances."
+
     action_message = "reboot"
     action = "SOFTRESET"
     force_action = "RESET"
@@ -2470,7 +2623,9 @@ class RebootCommand(InstanceActionMaybeSsh):
 
 class StartCommand(InstanceActionMaybeSsh):
     name = "start"
-    description = "start (boot up) OCI instances"
+    group = "Instance Management"
+    description = "Start (boot up) one or more OCI instances."
+
     action_message = "start"
     action = "START"
     target_state = "RUNNING"
@@ -2479,7 +2634,9 @@ class StartCommand(InstanceActionMaybeSsh):
 
 class ResizeCmd(InstanceActionMaybeSsh):
     name = "resize"
-    description = "resize (change shape) and reboot OCI instances"
+    group = "Instance Management"
+    description = "Resize (change shape) and reboot an OCI instance."
+
     action_message = "resize"
     action = "RESIZE"  # this is a fake action
     target_state = "RUNNING"
@@ -2507,7 +2664,8 @@ class ResizeCmd(InstanceActionMaybeSsh):
 
 class OsCmd(YoCmd):
     name = "os"
-    description = "list operating systems"
+    group = "Informative Commands"
+    description = "List official OS and version combinations."
 
     def run(self) -> None:
         images = self.c.list_official_images()
@@ -2517,7 +2675,8 @@ class OsCmd(YoCmd):
 
 class ShapesCmd(YoCmd):
     name = "shapes"
-    description = "list shapes"
+    group = "Informative Commands"
+    description = "List instance shape options."
 
     NAME_TO_FILTER: t.Dict[str, t.Callable[[YoShape], bool]] = {
         "bm": lambda s: s.shape.startswith("BM."),
@@ -2665,7 +2824,8 @@ class ShapesCmd(YoCmd):
 
 class ShapeCmd(YoCmd):
     name = "shape"
-    description = "get info about a single shape"
+    group = "Informative Commands"
+    description = "Get info about a single shape."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         self.add_with_completer(
@@ -2724,7 +2884,8 @@ class ShapeCmd(YoCmd):
 
 class LimitsCmd(YoCmd):
     name = "limits"
-    description = "show service limits"
+    group = "Informative Commands"
+    description = "Display your tenancy & region's service limits."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         self.add_with_completer(
@@ -2823,7 +2984,8 @@ class LimitsCmd(YoCmd):
 
 class DebugCmd(YoCmd):
     name = "debug"
-    description = "open up a python prompt in the context of a command"
+    group = "Diagnostic Commands"
+    description = "Open up a python prompt in the context of a command."
 
     def run(self) -> None:
         try:
@@ -2843,7 +3005,8 @@ class DebugCmd(YoCmd):
 
 class VersionCmd(YoCmd):
     name = "version"
-    description = "show the version of yo"
+    group = "Diagnostic Commands"
+    description = "Show the version of yo and check for updates."
 
     def run(self) -> None:
         ver = current_yo_version()
@@ -2866,8 +3029,9 @@ class VersionCmd(YoCmd):
 
 
 class VolumeListCmd(YoCmd):
-    name = "volume-list"
-    description = "list volumes"
+    name = "volume list"
+    group = "Volume Management Commands"
+    description = "List block & boot volumes."
 
     def run(self) -> None:
         volumes = self.c.list_volumes(refresh=True)
@@ -2892,8 +3056,10 @@ class VolumeListCmd(YoCmd):
 
 
 class AttachedCmd(YoCmd):
-    name = "attached"
-    description = "list volumes by their current instance attachment"
+    name = "volume attached"
+    alias = "attached"
+    group = "Volume Management Commands"
+    description = "List volumes by their current instance attachment."
 
     def run(self) -> None:
         vol_by_id = {vol.id: vol for vol in self.c.list_volumes(refresh=True)}
@@ -3030,8 +3196,14 @@ def do_volume_attach(
 
 
 class VolumeCreateCmd(YoCmd):
-    name = "volume-create"
-    description = "create block volume"
+    name = "volume create"
+    group = "Volume Management Commands"
+    description = "Create a block volume."
+
+    def _default_ad(self) -> t.Optional[str]:
+        if hasattr(self, "c"):
+            self.c.instance_profiles["DEFAULT"].availability_domain
+        return None
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -3047,7 +3219,7 @@ class VolumeCreateCmd(YoCmd):
         parser.add_argument(
             "--ad",
             type=str,
-            default=self.c.instance_profiles["DEFAULT"].availability_domain,
+            default=self._default_ad(),
             help="availability domain (not needed if you use --for)",
         )
         self.add_with_completer(
@@ -3097,8 +3269,10 @@ class VolumeCreateCmd(YoCmd):
 
 
 class AttachCmd(YoCmd):
-    name = "attach"
-    description = "attach a block or boot volume to an instance"
+    name = "volume attach"
+    alias = "attach"
+    group = "Volume Management Commands"
+    description = "Attach a block or boot volume to an instance."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         self.add_with_completer(
@@ -3134,8 +3308,9 @@ class AttachCmd(YoCmd):
 
 
 class VolumeRename(YoCmd):
-    name = "volume-rename"
-    description = "rename a block or boot volume"
+    name = "volume rename"
+    group = "Volume Management Commands"
+    description = "Rename a block or boot volume."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         self.add_with_completer(
@@ -3229,8 +3404,10 @@ def do_detach_volume(
 
 
 class DetachCmd(YoCmd):
-    name = "detach"
-    description = "attach a block or boot volume to an instance"
+    name = "volume detach"
+    alias = "detach"
+    group = "Volume Management Commands"
+    description = "Detach a block or boot volume from an instance."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         self.add_with_completer(
@@ -3291,8 +3468,9 @@ class DetachCmd(YoCmd):
 
 
 class VolumeDeleteCmd(YoCmd):
-    name = "volume-delete"
-    description = "delete a block or boot volume"
+    name = "volume delete"
+    group = "Volume Management Commands"
+    description = "Delete a block or boot volume."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         self.add_with_completer(
@@ -3326,7 +3504,8 @@ class VolumeDeleteCmd(YoCmd):
 
 class RenameCmd(SingleInstanceCommand):
     name = "rename"
-    description = "Give an instance a new name"
+    group = "Instance Management"
+    description = "Give an instance a new name."
     positional_name = True
 
     # This runs on any instance state
@@ -3352,7 +3531,8 @@ class RenameCmd(SingleInstanceCommand):
 
 class ProtectCmd(SingleInstanceCommand):
     name = "protect"
-    description = "Enable or disable termination protection"
+    group = "Instance Management"
+    description = "Enable or disable Yo's termination protection."
     positional_name = True
 
     # This runs on any instance state
@@ -3373,7 +3553,8 @@ class ProtectCmd(SingleInstanceCommand):
 
 class ConsoleHistoryCmd(SingleInstanceCommand):
     name = "console-history"
-    description = "Fetch and print console history"
+    group = "Instance Communication & Interaction"
+    description = "Fetch and print serial console history for an instance."
 
     def run_for_instance(self, instance: YoInstance) -> None:
         print(self.c.get_console_history(instance).decode())
@@ -3381,7 +3562,8 @@ class ConsoleHistoryCmd(SingleInstanceCommand):
 
 class MoshCmd(SingleInstanceCommand):
     name = "mosh"
-    description = "Connect to the instance via mosh"
+    group = "Instance Communication & Interaction"
+    description = "Connect to the instance via mosh."
 
     def run_for_instance(self, inst: YoInstance) -> None:
         ip = self.c.get_instance_ip(inst)
@@ -3405,10 +3587,8 @@ class MoshCmd(SingleInstanceCommand):
 
 class CacheCleanCmd(YoCmd):
     name = "cache-clean"
-    description = (
-        "Remove cached OCI objects from ~/.cache/yo.json. "
-        "This is a good first troubleshooting step."
-    )
+    group = "Diagnostic Commands"
+    description = "Clear Yo's cache -- a good first troubleshooting step."
 
     def run(self) -> None:
         if os.path.isfile(self.c._cache_file):
@@ -3417,7 +3597,8 @@ class CacheCleanCmd(YoCmd):
 
 class HelpCmd(YoCmd):
     name = "help"
-    description = "show help for yo"
+    group = "Diagnostic Commands"
+    description = "Show help for yo."
 
     def run(self) -> None:
         print(__doc__.strip())
@@ -3467,8 +3648,9 @@ def main() -> None:
         YoCmd.add_commands(
             parser,
             default="help",
-            shortest_prefix=(not aliases),
+            shortest_prefix=True,
             cmd_aliases=aliases,
+            group_order=COMMAND_GROUP_ORDER,
         )
         argcomplete.autocomplete(parser)
         ns = parser.parse_args()
@@ -3482,5 +3664,17 @@ def main() -> None:
         sys.exit(1)
 
 
+def build_parser_functions() -> None:
+    # Don't mind this function: it exists solely to enable
+    # automatic documentation generation for commands
+    g = globals()
+    trans = str.maketrans(" -", "__")
+    for cmd in YoCmd.iter_commands():
+        name = cmd.name.translate(trans)
+        g[f"cmd_{name}_args"] = cmd.simple_sub_parser
+
+
 if __name__ == "__main__":
     main()
+elif os.environ.get("SPHINX_BUILD") == "1":
+    build_parser_functions()

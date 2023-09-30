@@ -22,11 +22,11 @@ repos:
     hooks:
     -   id: mypy
         args: [--strict, --disallow-untyped-calls]
-        exclude: "(tests|doc)/.*"
+        exclude: "(tests|doc|scripts)/.*"
         additional_dependencies:
         -   types-setuptools
         -   rich
-        -   subc
+        -   subc>=0.8.0
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v3.10.0
     hooks:
