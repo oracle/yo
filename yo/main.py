@@ -69,6 +69,7 @@ To avoid this behavior, you can pass --exact-name to various subcommands, or
 set "exact_name = true" in the [yo] section of your config.
 """
 import argparse
+import base64
 import collections
 import contextlib
 import dataclasses
@@ -101,6 +102,7 @@ import yo.util
 from yo.api import AttachmentType
 from yo.api import ImageLoad
 from yo.api import InstanceProfile
+from yo.api import OS_TO_USER
 from yo.api import VolumeKind
 from yo.api import YoCtx
 from yo.api import YoImage
@@ -124,8 +126,6 @@ TASK_DIRECTORIES = [
     # This should be installed with the package
     os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/yo-tasks"),
 ]
-OS_TO_USER = collections.defaultdict(lambda: "opc")
-OS_TO_USER["Canonical Ubuntu"] = "ubuntu"
 
 T = t.TypeVar("T")
 V = t.TypeVar("V")
@@ -531,8 +531,7 @@ def _task_run(ctx: YoCtx, inst: YoInstance, task: YoTask) -> None:
         f"Start task [blue]{task.name}[/blue] on instance [green]{inst.name}..."
     )
     ip = ctx.get_instance_ip(inst, True)
-    img = ctx.get_image(inst.image_id)
-    user = OS_TO_USER[img.os]
+    user = ctx.get_ssh_user(inst)
     script_text = get_tasklib(task_dir_safe) + task.script
     commands = inspect.cleandoc(
         """
@@ -625,8 +624,7 @@ def task_get_status(
         '| xargs -0 grep -H ".*" | sort'
     )
     ip = ctx.get_instance_ip(inst, True)
-    img = ctx.get_image(inst.image_id)
-    user = OS_TO_USER[img.os]
+    user = ctx.get_ssh_user(inst)
     res = ssh_into(
         ip,
         user,
@@ -1246,8 +1244,7 @@ class SshCmd(SingleInstanceCommand):
         ip = self.c.get_instance_ip(inst, quiet=self.args.quiet)
         user = self.username
         if not user:
-            img = self.c.get_image(inst.image_id)
-            user = OS_TO_USER[img.os]
+            user = self.c.get_ssh_user(inst)
         extra_args = []
         if self.args.agent:
             extra_args.append("-A")
@@ -1303,8 +1300,7 @@ class ScpCmd(SingleInstanceCommand):
         ip = self.c.get_instance_ip(inst)
         user = self.username
         if not user:
-            img = self.c.get_image(inst.image_id)
-            user = OS_TO_USER[img.os]
+            user = self.c.get_ssh_user(inst)
         self.c.con.log(
             f"Copying to instance [blue]{inst.name}[/blue] "
             f"([green]{user}[/green]@[blue]{ip}[/blue])"
@@ -1341,8 +1337,7 @@ class RemoteDesktopCommand(SingleInstanceCommand):
         if self.args.tunnel:
             user = self.username
             if not user:
-                img = self.c.get_image(inst.image_id)
-                user = OS_TO_USER[img.os]
+                user = self.c.get_ssh_user(inst)
             self.c.con.log(
                 f"SSH Tunnel to [blue]{inst.name}[/blue] "
                 f"([green]{user}[/green]@[blue]{ip}[/blue])"
@@ -1446,8 +1441,7 @@ class RsyncCmd(SingleInstanceCommand):
         ip = self.c.get_instance_ip(inst)
         user = self.username
         if not user:
-            img = self.c.get_image(inst.image_id)
-            user = OS_TO_USER[img.os]
+            user = self.c.get_ssh_user(inst)
         rsync_args = ["rsync"]
         if self.c.config.rsync_args and not self.args.raw:
             rsync_args.extend(shlex.split(self.c.config.rsync_args))
@@ -1621,8 +1615,7 @@ class CopyIdCmd(SingleInstanceCommand):
         instance_name = instance.name
         public_key_file_path = self.args.identity_file
         ip = self.c.get_instance_ip(instance)
-        img = self.c.get_image(instance.image_id)
-        user = OS_TO_USER[img.os]
+        user = self.c.get_ssh_user(instance)
 
         options = SSH_OPTIONS[:]
         if public_key_file_path:
@@ -2071,6 +2064,13 @@ class LaunchCmd(YoCmd):
             default=None,
             help="Strategy for loading images (relevant only for --image)",
         )
+        parser.add_argument(
+            "--username",
+            "-u",
+            type=str,
+            default=None,
+            help="Custom username for logging into the instance",
+        )
 
     def _maybe_warn_name(self, profile: InstanceProfile, name: str) -> str:
         if self.args.name is not None and name != self.args.name:
@@ -2284,6 +2284,26 @@ class LaunchCmd(YoCmd):
         if self.args.wait_ssh:
             self.args.wait = True
 
+    def user_data(
+        self, image_user: str, profile: InstanceProfile
+    ) -> t.Tuple[str, t.Optional[str]]:
+        user_spec = self.args.username or profile.username
+        if not user_spec or user_spec == "$DEFAULT":
+            return image_user, None
+        elif user_spec == "$MY_USERNAME":
+            user_spec = self.c.config.my_username
+        self.c.con.log(f"Setting custom username: {user_spec}")
+        user_data_lines = [
+            "#cloud-config",
+            "system_info:",
+            "  default_user:",
+            f"    name: {user_spec}",
+        ]
+        user_data = base64.b64encode(
+            "\n".join(user_data_lines).encode()
+        ).decode()
+        return user_spec, user_data
+
     def run(self) -> None:
         profile = self.c.instance_profiles[self.args.profile]
         create_args = profile.create_arg_dict()
@@ -2317,6 +2337,11 @@ class LaunchCmd(YoCmd):
         create_args["metadata"] = {
             "ssh_authorized_keys": self.c.config.ssh_public_key_full,
         }
+
+        user, user_data = self.user_data(user, profile)
+        if user_data:
+            create_args["metadata"]["user_data"] = user_data
+        create_args["username"] = user
 
         self.set_mem_cpu(profile, image, shape, create_args)
 
@@ -2600,8 +2625,7 @@ class InstanceActionMaybeSsh(InstanceActionCommand):
         if not self.args.ssh:
             return
         ip = self.c.get_instance_ip(inst, True)
-        img = self.c.get_image(inst.image_id)
-        user = OS_TO_USER[img.os]  # NOTE: doesn't support user specification
+        user = self.c.get_ssh_user(inst)
         if not wait_for_ssh_access(ip, user, self.c):
             self.c.con.log("[red]Could not connect via SSH")
             self.c.con.log("Maybe you're not connected to VPN?")
@@ -3176,8 +3200,7 @@ def do_volume_attach(
     if args.setup and args.kind == "iscsi":
         ctx.con.log("Running commands to mount iSCSI volume...")
         ip = ctx.get_instance_ip(inst)
-        img = ctx.get_image(inst.image_id)
-        user = OS_TO_USER[img.os]
+        user = ctx.get_ssh_user(inst)
         attach, _ = ctx.get_attachment_commands(va)
         res = ssh_into(
             ip,
@@ -3380,8 +3403,7 @@ def do_detach_volume(
                 f"Running commands to unmount iSCSI volume on {inst.name}..."
             )
             ip = ctx.get_instance_ip(inst)
-            img = ctx.get_image(inst.image_id)
-            user = OS_TO_USER[img.os]
+            user = ctx.get_ssh_user(inst)
             _, detach = ctx.get_attachment_commands(detach_va)
             res = ssh_into(
                 ip,
@@ -3569,8 +3591,7 @@ class MoshCmd(SingleInstanceCommand):
         ip = self.c.get_instance_ip(inst)
         user = self.username
         if not user:
-            img = self.c.get_image(inst.image_id)
-            user = OS_TO_USER[img.os]
+            user = self.c.get_ssh_user(inst)
         # Mosh uses SSH to establish an initial connection.
         # We must be sure to specify the correct SSH key, and to do this we need
         # to use all the ssh arguments we have configured.

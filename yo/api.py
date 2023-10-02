@@ -86,7 +86,11 @@ _ISOFORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 
 TERMPROTECT = "yo-termination-protected"
 CREATEDBY = "yo-created-by"
+USERNAME = "yo-username"
 AUTO_TAG_DOC_LINK = "https://docs.oracle.com/en-us/iaas/Content/Tagging/Concepts/understandingautomaticdefaulttags.htm"
+
+OS_TO_USER = collections.defaultdict(lambda: "opc")
+OS_TO_USER["Canonical Ubuntu"] = "ubuntu"
 
 
 def fromisoformat(s: str) -> datetime.datetime:
@@ -187,6 +191,7 @@ class InstanceProfile:
     cpu: t.Optional[float] = None
     mem: t.Optional[float] = None
     load_image: ImageLoad = ImageLoad.UNIQUE
+    username: t.Optional[str] = None
 
     def create_arg_dict(self) -> t.Dict[str, t.Any]:
         return {
@@ -268,6 +273,7 @@ class YoInstance(YoCachedWithId):
     image_id: str
     termination_protected: bool
     freeform_tags: t.Dict[str, str]
+    username: t.Optional[str]  # from tag
 
     @classmethod
     def from_oci(cls, oci: "Instance") -> "YoInstance":
@@ -284,6 +290,7 @@ class YoInstance(YoCachedWithId):
             image_id=oci.image_id,
             termination_protected=term_protect,
             freeform_tags=oci.freeform_tags,
+            username=oci.freeform_tags.get(USERNAME),
         )
 
 
@@ -910,7 +917,7 @@ class YoCtx:
     cache_version = 1
     last_checked_for_update: datetime.datetime
 
-    _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 3)
+    _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 4)
     _vnics: YoCache[YoVnic] = YoCache(YoVnic, "vnics", 2)
     _images: YoCache[YoImage] = YoCache(YoImage, "images", 6)
     _consoles: YoCache[YoConsole] = YoCache(YoConsole, "consoles", 2)
@@ -1676,6 +1683,7 @@ class YoCtx:
         image_id = details.pop("image_id", None)
         volume_id = details.pop("volume_id", None)
         boot_size = details.pop("boot_volume_size_gbs", None)
+        username = details.pop("username")
         if image_id and volume_id:
             raise YoExc("image_id and volume_id cannot both be passed")
         elif image_id:
@@ -1706,6 +1714,7 @@ class YoCtx:
         # and manage the instances created by Yo.
         details["freeform_tags"] = {
             CREATEDBY: self.config.my_email,
+            USERNAME: username,
         }
         details = self.oci.LaunchInstanceDetails(**details)
         instance = YoInstance.from_oci(
@@ -2240,3 +2249,9 @@ class YoCtx:
             return r.data.username, r.data.password
         except self.oci.ServiceError:
             return None, None
+
+    def get_ssh_user(self, inst: YoInstance) -> str:
+        if inst.username:
+            return inst.username
+        img = self.get_image(inst.image_id)
+        return OS_TO_USER[img.os]
