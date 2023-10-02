@@ -68,6 +68,8 @@ with ``subnet_id`` being preferred if both are specified.
 
 (String, Required) The email address you use to log into OCI.
 
+.. _my_username:
+
 ``my_username``
 ~~~~~~~~~~~~~~~
 
@@ -544,6 +546,34 @@ apply if the image is specified by name. The following choices are available:
 - ``LATEST`` - in this mode, Yo does not expect that image names are unique. Yo
   will always load the latest list of images, and it will choose the most
   recently created image by a given name.
+
+``username``
+~~~~~~~~~~~~
+
+(String, Optional) Specify a custom username for your instance. This can be
+specified on the command line via ``--username`` or ``-u``. This will take the
+place of the preexisting default user account name, and will receive all the
+same privileges.
+
+When not specified, or when set to the special value ``$DEFAULT``, Yo will not
+make any changes to the default username. For most Oracle Linux images, this
+means that the default user will be ``opc``, though for Ubuntu images, the
+default user will be ``ubuntu``.
+
+When the special value ``$MY_USERNAME`` is specified, Yo will use your default
+username from the :ref:`my_username` field.
+
+Otherwise, the configuration value used here will be used directly as the
+username for your instance. Please take care to only provide strings which are
+valid usernames for your image's operating system. Safe usernames include ASCII
+letters, digits, and hyphens. Yo will not perform any validity checks on
+usernames, and invalid usernames could result in failed boot and connectivity
+issues.
+
+The custom username is provided as user data to OCI's Cloud-Init. Images may
+support cloud-init user data differently, so this functionality is not
+guaranteed on all images. Please test this with your intended images before
+relying on it.
 
 Command Aliases
 ---------------
