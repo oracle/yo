@@ -105,7 +105,7 @@ change the configuration value, Yo has no way to detect this and update the
 instance's authorized keys. Thus, changing the configuration value could result
 in some instances being inaccessible.
 
-At the time of writing, the Intstance Console Connection feature (i.e. ``yo
+At the time of writing, the Instance Console Connection feature (i.e. ``yo
 console`` command) is not compatible with ED25519 keys. It is recommended that
 you use 4096-bit RSA keys with Yo for the time being. You can generate one via
 the following command:
