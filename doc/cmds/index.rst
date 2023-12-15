@@ -30,10 +30,12 @@ Instance Management:
   - :ref:`yo_nmi` - Send diagnostic interrupt (NMI) to one or more instance (dangerous)
   - :ref:`yo_protect` - Enable or disable Yo's termination protection.
   - :ref:`yo_reboot` - Reboot one or more OCI instances.
+  - :ref:`yo_rebuild` - Rebuild a saved & torn down instance.
   - :ref:`yo_rename` - Give an instance a new name.
   - :ref:`yo_resize` - Resize (change shape) and reboot an OCI instance.
   - :ref:`yo_start` - Start (boot up) one or more OCI instances.
   - :ref:`yo_stop` - Stop (shut down) one or more OCI instances
+  - :ref:`yo_teardown` - Save block volume and instance metadata, then terminate.
   - :ref:`yo_terminate` - Terminate one or more instances.
   - :ref:`yo_wait` - Wait for an instance to enter a state.
 
@@ -68,6 +70,15 @@ Volume Management Commands:
   - :ref:`yo_volume_list` - List block & boot volumes.
   - :ref:`yo_volume_rename` - Rename a block or boot volume.
 
+Informative Commands:
+
+  - :ref:`yo_compat` - Show a compatibility matrix of images and shapes.
+  - :ref:`yo_images` - List images available to use for launching an instance.
+  - :ref:`yo_limits` - Display your tenancy & region's service limits.
+  - :ref:`yo_os` - List official OS and version combinations.
+  - :ref:`yo_shape` - Get info about a single shape.
+  - :ref:`yo_shapes` - List instance shape options.
+
 Diagnostic Commands:
 
   - :ref:`yo_cache_clean` - Clear Yo's cache -- a good first troubleshooting step.
@@ -87,3 +98,4 @@ Command Group Index
    cmd03
    cmd04
    cmd05
+   cmd06

@@ -34,6 +34,17 @@ yo reboot
    :prog: yo reboot
 
 
+.. _yo_rebuild:
+
+yo rebuild
+----------
+
+.. argparse::
+   :module: yo.main
+   :func: cmd_rebuild_args
+   :prog: yo rebuild
+
+
 .. _yo_rename:
 
 yo rename
@@ -76,6 +87,17 @@ yo stop
    :module: yo.main
    :func: cmd_stop_args
    :prog: yo stop
+
+
+.. _yo_teardown:
+
+yo teardown
+-----------
+
+.. argparse::
+   :module: yo.main
+   :func: cmd_teardown_args
+   :prog: yo teardown
 
 
 .. _yo_terminate:
