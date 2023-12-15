@@ -9,6 +9,17 @@ This version of Yo comes with some major improvements.
 
 New Features:
 
+- Two new instance actions are added: "teardown" and "rebuild". The teardown
+  operation terminates the instance, but preserves the boot volume, and attaches
+  some metadata to the instance so that Yo will know how to rebuild it the way
+  it was. The "rebuild" operation does exactly that.
+  - This operation might be preferred instead of "stop" and "start" in cases
+    where your tenancy is encountering service limits. Stopped instances still
+    count toward your service limits, while terminated instances do not.
+  - Please note that for now, "teardown" cannot remember what block volumes were
+    attached to your instance, and so "rebuild" will not reattach block volumes
+    (aside from the boot volume, of course). This feature could be added if
+    there is demand for it.
 - You may now specify a custom username for your instances! This can be
   specified in your instance profile configuration, or on the `yo launch`
   command line. Yo will automatically keep track of the username for each
@@ -16,7 +27,8 @@ New Features:
   existing `yo ssh` commands will work regardless of your username choice.
 - You may now specify a boot volume to launch an instance from. If you
   terminated a volume with (`--preserve-root`), then you can launch an instance
-  from the same boot volume.
+  from the same boot volume. This operation is similar to "rebuild", except that
+  you must manually specify the instance shape, name, etc.
 - There is a new command, `yo copy-id`, which wraps `ssh-copy-id`. Use it to
   copy SSH keys over to an instance. For the most part, you shouldn't need this
   because Yo passes your key in anyway, but it could be useful to add more keys.
@@ -25,6 +37,7 @@ Changes:
 
 - The default configuration of Yo now specifies the `VM.Standard.x86.Generic`
   shape with 1 CPU and 8 GiB of memory.
+- The `yo list` command no longer shows instances in `TERMINATING` state.
 - The `yo -h` help output is now organized into logical categories with
   well-written command summaries.
 - Documentation for each Yo sub-command is now automatically generated to match

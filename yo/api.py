@@ -84,9 +84,25 @@ if t.TYPE_CHECKING:
 
 _ISOFORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 
+# Tag applied to instances which prevents Yo from terminating the instance. This
+# is not an OCI feature, just a safeguard that Yo optionally provides.
 TERMPROTECT = "yo-termination-protected"
+
+# Tag applied to instances automatically at launch time by Yo, containing
+# information about who created the instance. Used to resolve situations where
+# tenancies don't have the automatic tag rule.
 CREATEDBY = "yo-created-by"
+
+# Tag applied to instances automatically at launch time by Yo, containing the
+# login username. For default usernames, this can be determined without the tag
+# (by finding the image and looking up its default username). But for custom
+# usernames, the information must be saved.
 USERNAME = "yo-username"
+
+# Tag applied to boot volumes when Yo "saves" them. It contains the instance
+# shape info, username, and previous instance name.
+SAVEDATA = "yo-savedata"
+
 AUTO_TAG_DOC_LINK = "https://docs.oracle.com/en-us/iaas/Content/Tagging/Concepts/understandingautomaticdefaulttags.htm"
 
 OS_TO_USER = collections.defaultdict(lambda: "opc")
@@ -420,6 +436,24 @@ class VolumeKind(str, enum.Enum):
 
 
 @dataclasses.dataclass
+class SavedInstanceMetadata:
+    shape: str
+    ocpu: int
+    memory_gb: int
+    username: str
+    name: str
+
+    @classmethod
+    def from_str(cls, s: str) -> "SavedInstanceMetadata":
+        if not s.startswith("1,"):
+            raise YoExc("cannot understand saved instance metadat")
+        _, shape, ocpu_str, mem_str, user, name = s.split(",", 5)
+        ocpu = int(ocpu_str)
+        mem = int(mem_str)
+        return SavedInstanceMetadata(shape, ocpu, mem, user, name)
+
+
+@dataclasses.dataclass
 class YoVolume(YoCachedWithId):
     ad: str
     state: str
@@ -430,6 +464,7 @@ class YoVolume(YoCachedWithId):
     time_created: datetime.datetime
     created_by: t.Optional[str]
     alt_name: str
+    freeform_tags: t.Dict[str, str]
 
     @classmethod
     def from_json(cls: t.Type[CI], d: t.Dict[str, t.Any]) -> CI:
@@ -458,6 +493,7 @@ class YoVolume(YoCachedWithId):
             time_created=bv.time_created,
             created_by=created_by,
             alt_name=alt_name,
+            freeform_tags=bv.freeform_tags,
         )
 
     @classmethod
@@ -477,7 +513,19 @@ class YoVolume(YoCachedWithId):
             time_created=bv.time_created,
             created_by=created_by,
             alt_name=bv.display_name,
+            freeform_tags=bv.freeform_tags,
         )
+
+    @property
+    def saved_instance_metadata(self) -> t.Optional[SavedInstanceMetadata]:
+        if not hasattr(self, "_saved_instance_metadata"):
+            if SAVEDATA not in self.freeform_tags:
+                self._saved_instance_metadata = None
+            else:
+                self._saved_instance_metadata = SavedInstanceMetadata.from_str(
+                    self.freeform_tags[SAVEDATA]
+                )
+        return self._saved_instance_metadata
 
 
 class AttachmentType(str, enum.Enum):
@@ -659,6 +707,7 @@ class YoShape(YoCachedItem):
     local_disks: int
     local_disks_total_size_in_gbs: float
     local_disk_description: str
+    is_flexible: bool
     quota_names: t.List[str]
     ocpu_options: t.Optional[ShapeOcpuOptions]
     memory_options: t.Optional[ShapeMemoryOptions]
@@ -723,6 +772,7 @@ class YoShape(YoCachedItem):
             local_disks=s.local_disks,
             local_disks_total_size_in_gbs=s.local_disks_total_size_in_gbs,
             local_disk_description=s.local_disk_description,
+            is_flexible=s.is_flexible,
             quota_names=s.quota_names,
             ocpu_options=ocpu_options,
             memory_options=memory_options,
@@ -879,6 +929,9 @@ class YoCache(t.Generic[U]):
         if refresh:
             self.last_refresh = now()
 
+    def dirty(self) -> None:
+        self.last_update = self.last_refresh = None
+
     def insert(self, new_item: U) -> None:
         self.mark_update()
         for idx, item in enumerate(self._data):
@@ -921,8 +974,8 @@ class YoCtx:
     _vnics: YoCache[YoVnic] = YoCache(YoVnic, "vnics", 2)
     _images: YoCache[YoImage] = YoCache(YoImage, "images", 6)
     _consoles: YoCache[YoConsole] = YoCache(YoConsole, "consoles", 2)
-    _shapes: YoCache[YoShape] = YoCache(YoShape, "shapes", 4)
-    _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 4)
+    _shapes: YoCache[YoShape] = YoCache(YoShape, "shapes", 5)
+    _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 5)
     _vas: YoCache[YoVolumeAttachment] = YoCache(YoVolumeAttachment, "vas", 3)
 
     # Put all cache names from above here too so we automatically manage them
@@ -1368,7 +1421,7 @@ class YoCtx:
         self.save_cache()
         return inst
 
-    def get_instance_ip(self, inst: YoInstance, quiet: bool = False) -> str:
+    def get_vnic(self, inst: YoInstance, quiet: bool = False) -> YoVnic:
         yovnic = self._vnics.get_by("instance_id", inst.id)
         if not yovnic:
             if not quiet:
@@ -1395,6 +1448,10 @@ class YoCtx:
             yovnic = YoVnic.from_oci(vnic, vnic_attachment)
             self._vnics.insert(yovnic)
             self.save_cache()
+        return yovnic
+
+    def get_instance_ip(self, inst: YoInstance, quiet: bool = False) -> str:
+        yovnic = self.get_vnic(inst, quiet)
         ip = yovnic.public_ip or yovnic.private_ip
         if not quiet:
             self.con.log(f"Found instance ip [blue]{ip}")
@@ -1643,14 +1700,11 @@ class YoCtx:
                 "should never happen, please report a bug."
             )
 
-    def pick_subnet(self, profile: InstanceProfile) -> YoSubnet:
+    def pick_subnet(self, ad: str) -> YoSubnet:
         if self.config.subnet_id:
             resp = self.vnet.get_subnet(subnet_id=self.config.subnet_id)
             subnet = resp.data
-            if (
-                subnet.availability_domain
-                and subnet.availability_domain != profile.availability_domain
-            ):
+            if subnet.availability_domain and subnet.availability_domain != ad:
                 self.con.log(
                     "[orange]warning: the given subnet_id has a different "
                     "availability domain than the one specified in your "
@@ -1668,7 +1722,7 @@ class YoCtx:
             for subnet in gen:
                 if (
                     not subnet.availability_domain
-                    or subnet.availability_domain == profile.availability_domain
+                    or subnet.availability_domain == ad
                 ):
                     break
             else:
@@ -1714,13 +1768,19 @@ class YoCtx:
         # and manage the instances created by Yo.
         details["freeform_tags"] = {
             CREATEDBY: self.config.my_email,
-            USERNAME: username,
         }
+        if username:
+            details["freeform_tags"][USERNAME] = username
         details = self.oci.LaunchInstanceDetails(**details)
         instance = YoInstance.from_oci(
             self.compute.launch_instance(details).data
         )
         self._instances.insert(instance)
+        # Launching an instance creates a vnic and a volume at least. There's no
+        # need to fetch them just yet, but we should mark them dirty so that
+        # future operations will be forced to reload.
+        self._vnics.dirty()
+        self._vols.dirty()
         self.save_cache()
         return instance
 
@@ -2255,3 +2315,87 @@ class YoCtx:
             return inst.username
         img = self.get_image(inst.image_id)
         return OS_TO_USER[img.os]
+
+    def remove_saved_metadata(self, volume: YoVolume) -> None:
+        if SAVEDATA in volume.freeform_tags:
+            freeform_tags = volume.freeform_tags
+            del freeform_tags[SAVEDATA]
+            update = self.oci.UpdateBootVolumeDetails(
+                freeform_tags=freeform_tags
+            )
+            volume = YoVolume.from_oci_boot(
+                self.block.update_boot_volume(volume.id, update).data
+            )
+            self._vols.insert(volume)
+            self.save_cache()
+
+    def save_instance(self, instance: YoInstance) -> None:
+        attachments = self.attachments_by_instance()[instance.id]
+        for atch in attachments:
+            if atch.attachment_type == AttachmentType.BOOT:
+                break
+        else:
+            raise YoExc("could not find boot volume!")
+
+        # Tag values are limited to 256 unicode characters.
+        # - version number: 1 byte
+        # - ocpu: 3 bytes max (up to 3 digits)
+        # - mem: 4 bytes max (up to 4 digits)
+        # - username: commonly limited to 32 characters
+        # - name: OCI already limits it to 128 characters
+        # This adds up to 194 bytes, and with the 5 commas, that's a maximum of
+        # 199 bytes.
+        savedata = ",".join(
+            [
+                "1",
+                instance.shape,
+                str(int(instance.ocpu)),
+                str(int(instance.memory_gb)),
+                instance.username or "",
+                instance.name,
+            ]
+        )
+        vol = self.get_volume_by_id(atch.volume_id)
+        freeform_tags = vol.freeform_tags
+        freeform_tags[SAVEDATA] = savedata
+        update = self.oci.UpdateBootVolumeDetails(freeform_tags=freeform_tags)
+        volume = YoVolume.from_oci_boot(
+            self.block.update_boot_volume(atch.volume_id, update).data
+        )
+        self._vols.insert(volume)  # cache is saved below
+        self.terminate_instance(instance.id, preserve_volume=True)
+
+    def resume_instance(self, volume: YoVolume) -> YoInstance:
+        md = volume.saved_instance_metadata
+        if not md:
+            raise YoExc("the volume has no metadata attached to it")
+
+        details: t.Dict[str, t.Any] = {
+            "compartment_id": self.config.instance_compartment_id,
+            "availability_domain": volume.ad,
+        }
+        try:
+            self.get_instance_by_name(md.name, (), (), exact_name=True)
+            raise YoExc("name collision (TODO)")
+        except YoExc:
+            pass
+        details["display_name"] = md.name
+
+        shape_obj = self.get_shape_by_name(md.shape)
+        details["shape"] = md.shape
+        if shape_obj.is_flexible:
+            details["shape_config"] = {
+                "ocpus": md.ocpu,
+                "memory_in_gbs": md.memory_gb,
+            }
+
+        if md.username:
+            details["username"] = md.username
+        details["subnet_id"] = self.pick_subnet(volume.ad).id
+        details["volume_id"] = volume.id
+        inst = self.launch_instance(details)
+
+        # Remove the savedata so that we don't continue to show it as a saved
+        # instance.
+        self.remove_saved_metadata(volume)
+        return inst

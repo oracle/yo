@@ -795,6 +795,13 @@ class YoCmd(subc.Command):
         images = self.c.list_all_images()
         return sorted(set(i.name for i in images))
 
+    def complete_saved(self, **kwargs: t.Any) -> t.List[str]:
+        names = []
+        for vol in self.c.list_volumes():
+            if vol.saved_instance_metadata:
+                names.append(vol.saved_instance_metadata.name)
+        return names
+
     def complete_volume(self, **kwargs: t.Any) -> t.List[str]:
         volumes = self.c.list_volumes(False)
         names = []
@@ -878,7 +885,9 @@ class ListCmd(YoCmd):
                 verbose=verbose, show_all=self.args.all
             )
 
-        instances = [x for x in instances if x.state != "TERMINATED"]
+        instances = [
+            x for x in instances if x.state not in ("TERMINATED", "TERMINATING")
+        ]
         instances.sort(key=lambda i: i.time_created)
 
         # It's more efficient to bulk lookup the IPs. This will cache them so
@@ -915,6 +924,24 @@ class ListCmd(YoCmd):
             ]
             if self.args.ip:
                 values.append(self.c.get_instance_ip(instance, quiet=True))
+            table.add_row(*values)
+
+        for volume in self.c.list_volumes():
+            md = volume.saved_instance_metadata
+            if not md:
+                continue
+            values = [
+                f":warning: {md.name}",
+                md.shape,
+                str(md.memory_gb),
+                str(md.ocpu),
+                "[red]SAVED[/red]",
+            ]
+            if self.args.ad:
+                values.append(volume.ad)
+            values.append("---")
+            if self.args.ip:
+                values.append("---")
             table.add_row(*values)
         self.c.con.print(table)
 
@@ -2379,9 +2406,10 @@ class LaunchCmd(YoCmd):
             create_args["shape"] = self.args.shape
         shape = self.c.get_shape_by_name(create_args["shape"])
         create_args["compartment_id"] = self.c.config.instance_compartment_id
-        subnet = self.c.pick_subnet(profile)
+        subnet = self.c.pick_subnet(profile.availability_domain)
         create_args["subnet_id"] = subnet.id
 
+        volume = None
         if self.args.volume:
             volname = standardize_name(
                 self.args.volume, self.args.exact_name, self.c.config
@@ -2423,6 +2451,12 @@ class LaunchCmd(YoCmd):
             self.c.con.log(create_args)
             return
         inst = self.c.launch_instance(create_args)
+        if volume:
+            # If we're launching from a boot volume, there may be a saved
+            # instance metadata. Clearly we didn't use that to launch the
+            # instance, but regardless, we don't want that metadata on the
+            # volume now that it has in use again. Remove it.
+            self.c.remove_saved_metadata(volume)
 
         tasks = set(profile.tasks + self.args.tasks)
         self.standardize_wait(bool(tasks))
@@ -2750,6 +2784,99 @@ class ResizeCmd(InstanceActionMaybeSsh):
 
     def do_action(self, inst: YoInstance, _: str) -> None:
         self.c.resize_instance(inst.id, self.args.shape)
+
+
+class TeardownCmd(SingleInstanceCommand):
+    name = "teardown"
+    group = "Instance Management"
+    description = "Save block volume and instance metadata, then terminate."
+
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
+        super().add_args(parser)
+        parser.add_argument(
+            "--yes",
+            "-y",
+            action="store_true",
+            help="Do not prompt for confirmation, assume yes",
+        )
+
+    def run_for_instance(self, instance: YoInstance) -> None:
+        inst_to_atch = self.c.attachments_by_instance()
+        self.c.con.print(
+            f"About to [red]TERMINATE[/red] instance [blue]{instance.name}[/blue],"
+            " preserving the boot volume so it can be later rebuilt."
+        )
+        if len(inst_to_atch[instance.id]) > 1:
+            self.c.con.print(
+                "[orange]warning:[/orange] This instance has volumes other than "
+                "the boot volume attached. Yo cannot remember these volume "
+                "attachments: if you rebuild the instance, you will need to "
+                "manually reattach the volumes."
+            )
+        if self.args.yes:
+            self.c.con.print("[red]Skipping confirmation because of --yes")
+        elif Confirm.ask("Is this ok?"):
+            self.c.con.print("[bold red]Confirmed.")
+        else:
+            self.c.con.print("Aborted!")
+            return
+        self.c.save_instance(instance)
+
+
+class RebuildCmd(YoCmd):
+    name = "rebuild"
+    group = "Instance Management"
+    description = "Rebuild a saved & torn down instance."
+
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
+        self.add_with_completer(
+            parser,
+            self.complete_saved,
+            "name",
+            type=str,
+            help="Name of instance in SAVED state",
+        )
+        parser.add_argument(
+            "--exact-name",
+            "-E",
+            action="store_true",
+            default=None,
+            help="Do not standardize the name by prefixing it with your "
+            "system username if necessary.",
+        )
+        parser.add_argument(
+            "--wait",
+            "-w",
+            action="store_true",
+            help="Wait for the instance to start running",
+        )
+        parser.add_argument(
+            "--ssh",
+            "-s",
+            action="store_true",
+            help="SSH to the instance once it is running (implies --wait)",
+        )
+
+    def run(self) -> None:
+        name = standardize_name(
+            self.args.name, self.args.exact_name, self.c.config
+        )
+        for v in self.c.list_volumes():
+            md = v.saved_instance_metadata
+            if md and md.name == name:
+                break
+        else:
+            raise YoExc(f"could not find saved instance: {name}")
+        inst = self.c.resume_instance(v)
+        if self.args.wait or self.args.ssh:
+            self.c.wait_instance_state(inst.id, "RUNNING")
+        if self.args.ssh:
+            ip = self.c.get_instance_ip(inst)
+            user = self.c.get_ssh_user(inst)
+            if not wait_for_ssh_access(ip, user, self.c):
+                self.c.con.log("[red]Could not connect via SSH")
+                self.c.con.log("Maybe you're not connected to VPN?")
+                return
 
 
 class OsCmd(YoCmd):
