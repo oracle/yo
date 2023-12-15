@@ -2061,7 +2061,7 @@ class YoCtx:
                 self.con.print(f"Attachment commands:\n[code]{cmds}[/code]")
 
     def list_limit_availability(
-        self, limits: t.Iterable[str]
+        self, limits: t.Iterable[str], service: str = "compute"
     ) -> YoAvailSummary:
         """
         Lookup limits and their currently available capacity, across ADs.
@@ -2083,14 +2083,14 @@ class YoCtx:
         results = self.oci.list_call_get_all_results(
             self.limits.list_limit_values,
             self.tenancy_id,
-            "compute",
+            service,
             limit=1000,
         ).data
         lim_set = set(limits)
 
         def load_ad_availability(name: str, ad: str, value: int) -> YoAvail:
             r = self.limits.get_resource_availability(
-                "compute",
+                service,
                 name,
                 self.config.instance_compartment_id,
                 availability_domain=ad,
@@ -2109,7 +2109,7 @@ class YoCtx:
 
         def load_region_availability(name: str, value: int) -> YoAvail:
             r = self.limits.get_resource_availability(
-                "compute",
+                service,
                 name,
                 self.config.instance_compartment_id,
             )
