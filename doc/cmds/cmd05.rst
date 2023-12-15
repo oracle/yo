@@ -1,45 +1,67 @@
-Diagnostic Commands
-===================
+Informative Commands
+====================
 
-.. _yo_cache_clean:
+.. _yo_compat:
 
-yo cache-clean
---------------
+yo compat
+---------
 
 .. argparse::
    :module: yo.main
-   :func: cmd_cache_clean_args
-   :prog: yo cache-clean
+   :func: cmd_compat_args
+   :prog: yo compat
 
 
-.. _yo_debug:
+.. _yo_images:
 
-yo debug
+yo images
+---------
+
+.. argparse::
+   :module: yo.main
+   :func: cmd_images_args
+   :prog: yo images
+
+
+.. _yo_limits:
+
+yo limits
+---------
+
+.. argparse::
+   :module: yo.main
+   :func: cmd_limits_args
+   :prog: yo limits
+
+
+.. _yo_os:
+
+yo os
+-----
+
+.. argparse::
+   :module: yo.main
+   :func: cmd_os_args
+   :prog: yo os
+
+
+.. _yo_shape:
+
+yo shape
 --------
 
 .. argparse::
    :module: yo.main
-   :func: cmd_debug_args
-   :prog: yo debug
+   :func: cmd_shape_args
+   :prog: yo shape
 
 
-.. _yo_help:
+.. _yo_shapes:
 
-yo help
--------
-
-.. argparse::
-   :module: yo.main
-   :func: cmd_help_args
-   :prog: yo help
-
-
-.. _yo_version:
-
-yo version
-----------
+yo shapes
+---------
 
 .. argparse::
    :module: yo.main
-   :func: cmd_version_args
-   :prog: yo version
+   :func: cmd_shapes_args
+   :prog: yo shapes
