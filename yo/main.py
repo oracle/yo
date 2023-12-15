@@ -86,6 +86,7 @@ import textwrap
 import time
 import typing as t
 from configparser import ConfigParser
+from fnmatch import fnmatch
 from functools import lru_cache
 
 import argcomplete  # type: ignore
@@ -1872,41 +1873,106 @@ class CompatCmd(YoCmd):
     details.
     """
 
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "--shape",
+            "-S",
+            default="*",
+            help="shape name or fnmatch(3) pattern: filters shapes in table",
+        )
+        parser.add_argument(
+            "--os",
+            default="*",
+            help="OS name or fnmatch(3) pattern: filters OS in table",
+        )
+        parser.add_argument(
+            "--image",
+            default="*",
+            help="image name or fnmatch(3) pattern to filter by image name"
+            " (only used when --image-names is specified)",
+        )
+        parser.add_argument(
+            "--image-names",
+            action="store_true",
+            help="OS name or fnmatch(3) pattern: filters OS in table",
+        )
+        parser.add_argument(
+            "--width",
+            type=int,
+            default=24,
+            help="Width of column for shape names",
+        )
+
     def run(self) -> None:
         images = self.c.list_official_images()
+        if self.args.image_names:
+            images = [i for i in images if fnmatch(i.name, self.args.image)]
+        else:
+            images = [
+                i
+                for i in images
+                if fnmatch(f"{i.os}:{i.os_version}", self.args.os)
+            ]
         images.sort(key=lambda i: i.name)
+
         shapes = self.c.list_shapes()
+        shapes = [s for s in shapes if fnmatch(s.shape, self.args.shape)]
         shapes.sort(key=lambda s: s.shape)
 
-        namelen = 16
-        spc = 3
-        for shape in shapes:
-            shape_name = shape.shape[:16]
-            shape_name = " " * (16 - len(shape_name)) + shape_name
-            compat = []
-            for image in images:
-                if shape.shape in image.compatibility:
-                    compat.append("X")
-                else:
-                    compat.append(" ")
-            print(shape_name + " " * spc + "".join(compat))
+        def style_by_image(index: int, text: str) -> str:
+            if index % 2 == 1:
+                text = f"[bold]{text}[/bold]"
+            if "aarch64" in images[index].name:
+                text = f"[blue]{text}[/blue]"
+            elif "DenseIO" in images[index].name:
+                text = f"[green]{text}[/green]"
+            return text
 
-        os_ver_count = list(
-            collections.Counter([(i.os, i.os_version) for i in images]).items()
-        )
+        namelen = self.args.width
+        spc = 2
+        for shape in shapes:
+            shape_name = shape.shape[:namelen].rjust(namelen)
+            compat = []
+            for i, image in enumerate(images):
+                char = "X" if shape.shape in image.compatibility else " "
+                char = style_by_image(i, char)
+                compat.append(char)
+            self.c.con.print(shape_name + " " * spc + "".join(compat))
+
+        if self.args.image_names:
+            os_ver_count = [(i.name, 1) for i in images]
+        else:
+            os_ver_count = list(
+                collections.Counter(
+                    [f"{i.os}:{i.os_version}" for i in images]
+                ).items()
+            )
         total = 0
-        for os_ver, count in os_ver_count:
-            text = "%s:%s" % os_ver
+
+        def residual_bar(index: int) -> str:
+            return "".join(
+                style_by_image(i, "|") for i in range(index, len(images))
+            )
+
+        for text, count in os_ver_count:
             spc_before = namelen + spc + total
-            tot_wid = namelen + spc + len(images)
-            if len(text) < spc_before + count:
-                text = " " * (spc_before + count - len(text)) + text
-            hl = " " * spc_before + "^" * count
-            hl += "│" * (tot_wid - len(hl))
-            text += "│" * (tot_wid - len(text))
-            print(hl)
-            print(text)
+            if len(text) > spc_before + count:
+                text = text[-spc_before + count :]
+            text = text.rjust(spc_before + count)
+            hl = " " * spc_before
+            for i in range(total, total + count):
+                hl += style_by_image(i, "^")
+            bar = residual_bar(total + count)
+            hl += bar
+            text += bar
+            if not self.args.image_names:
+                self.c.con.print(hl)
+            self.c.con.print(text)
             total += count
+
+        self.c.con.print(
+            "Color Legend: [blue]aarch64[/blue], [green]DenseIO[/green]"
+        )
 
 
 class LaunchCmd(YoCmd):
