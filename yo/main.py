@@ -2912,6 +2912,14 @@ class LimitsCmd(YoCmd):
     description = "Display your tenancy & region's service limits."
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "--service",
+            "-s",
+            type=str,
+            choices=["compute", "block-storage"],
+            default="compute",
+            help="which service to view limits of",
+        )
         self.add_with_completer(
             parser,
             self.complete_shape,
@@ -2928,7 +2936,9 @@ class LimitsCmd(YoCmd):
             shape = self.c.get_shape_by_name(self.args.shape)
             limit_names = shape.quota_names
 
-        limits = self.c.list_limit_availability(limit_names)
+        limits = self.c.list_limit_availability(
+            limit_names, service=self.args.service
+        )
 
         if limits.ad_limits:
             table = rich.table.Table(title="Resource Limits per-AD")
