@@ -2526,13 +2526,6 @@ class TerminateCmd(MultiInstanceCommand):
             help="Remove the root volume for this instance",
         )
         parser.add_argument(
-            "--save-volume-as",
-            "-s",
-            type=str,
-            default=None,
-            help="Renames the boot volume to something memorable (implies -p)",
-        )
-        parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Do not actually terminate the instances",
@@ -2545,8 +2538,6 @@ class TerminateCmd(MultiInstanceCommand):
         )
 
     def should_preserve_volume(self) -> bool:
-        if self.args.save_volume_as:
-            return True
         if self.args.preserve_volume is not None:
             return t.cast(bool, self.args.preserve_volume)
         if self.c.config.preserve_volume_on_terminate is not None:
@@ -2560,28 +2551,11 @@ class TerminateCmd(MultiInstanceCommand):
             raise YoExc(f"instance {inst.name} is termination protected")
         if self.args.dry_run:
             progress.log(f"DRY RUN: Would terminate {inst.id}")
-            if self.should_preserve_volume() and self.args.save_volume_as:
-                progress.log(
-                    "DRY RUN: would preserve & rename root volume to "
-                    f"{self.args.save_volume_as}"
-                )
-            elif self.should_preserve_volume():
+            if self.should_preserve_volume():
                 progress.log("DRY RUN: would preserve root volume!")
             else:
                 progress.log("DRY RUN: would delete root volume!")
             return
-        if self.args.save_volume_as:
-            for va in self.c.attachments_by_instance()[inst.id]:
-                if va.kind == VolumeKind.BOOT:
-                    break
-            else:
-                self.c.con.print(
-                    "[red]warning:[/red] could not find boot volume for instance"
-                )
-                va = None  # type: ignore
-            if va:
-                boot_vol = self.c.get_volume_by_id(va.volume_id)
-                self.c.rename_volume(boot_vol, self.args.save_volume_as)
         self.c.terminate_instance(
             inst.id,
             preserve_volume=self.should_preserve_volume(),
@@ -2606,8 +2580,6 @@ class TerminateCmd(MultiInstanceCommand):
         elif len(protected) > 1:
             namelist = ", ".join(protected)
             raise YoExc(f"instances {namelist} are termination protected")
-        if self.args.save_volume_as and len(instances) != 1:
-            raise YoExc("--save-volume-as can only be applied to one instance")
         return super().run_for_all(instances)
 
     def post_for_instance(self, inst: YoInstance) -> None:
