@@ -3591,7 +3591,7 @@ class VolumeDeleteCmd(YoCmd):
         name = standardize_name(
             self.args.name, self.args.exact_name, self.c.config
         )
-        volume = self.c.get_volume(name, kind=VolumeKind.BLOCK)
+        volume = self.c.get_volume(name)
         vas = self.c.attachments_by_volume()[volume.id]
         vas = [va for va in vas if va.state == "ATTACHED"]
         if self.args.detach:
