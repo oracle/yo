@@ -142,6 +142,7 @@ def test_ssh_one_instance(mock_ctx, mock_ssh):
     mock_ctx.get_only_instance.return_value = instance_factory()
     mock_ctx.get_image.return_value = image_factory()
     mock_ctx.get_instance_ip.return_value = "1.2.3.4"
+    mock_ctx.get_ssh_user.return_value = "opc"
     YoCmd.main("", args=["ssh"])
     mock_ssh.ssh_into.assert_called_once_with(
         "1.2.3.4",
@@ -166,6 +167,7 @@ def test_ssh_specify(mock_ctx, mock_ssh, exact_name, dash_n):
     mock_ctx.get_instance_by_name.return_value = instance_factory()
     mock_ctx.get_image.return_value = image_factory()
     mock_ctx.get_instance_ip.return_value = "1.2.3.4"
+    mock_ctx.get_ssh_user.return_value = "opc"
     args = ["ssh"]
     if dash_n:
         args.extend(["-n", "myinst"])
@@ -198,6 +200,7 @@ def test_ssh_wait(mock_ctx, mock_ssh, mock_notify, state):
     mock_ctx.get_only_instance.return_value = inst
     mock_ctx.get_image.return_value = image_factory()
     mock_ctx.get_instance_ip.return_value = "1.2.3.4"
+    mock_ctx.get_ssh_user.return_value = "opc"
     YoCmd.main("", args=["ssh", "-Aw"])
     if state != "RUNNING":
         mock_ctx.wait_instance_state.assert_called_once_with(

@@ -93,6 +93,7 @@ def instance_factory(**kwargs) -> YoInstance:
         "image_id": _random_id(),
         "termination_protected": False,
         "freeform_tags": {TERMPROTECT: "false"},
+        "username": None,
     }
     defaults.update(kwargs)
     return YoInstance(**defaults)  # type: ignore
