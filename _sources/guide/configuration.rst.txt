@@ -4,6 +4,8 @@ Configuration
 yo's configuration file should be located in the directory ``~/.oci/yo.ini``. It
 uses a standard INI-style syntax (just like the OCI SDK configuration file).
 
+.. _global configuration options:
+
 Global Configuration Options
 ----------------------------
 
@@ -66,6 +68,8 @@ with ``subnet_id`` being preferred if both are specified.
 
 (String, Required) The email address you use to log into OCI.
 
+.. _my_username:
+
 ``my_username``
 ~~~~~~~~~~~~~~~
 
@@ -105,7 +109,7 @@ change the configuration value, Yo has no way to detect this and update the
 instance's authorized keys. Thus, changing the configuration value could result
 in some instances being inaccessible.
 
-At the time of writing, the Intstance Console Connection feature (i.e. ``yo
+At the time of writing, the Instance Console Connection feature (i.e. ``yo
 console`` command) is not compatible with ED25519 keys. It is recommended that
 you use 4096-bit RSA keys with Yo for the time being. You can generate one via
 the following command:
@@ -374,6 +378,8 @@ to this list.
 You can also use this to include other people's instances in your list, if for
 example you would like to monitor and help a direct report with their instances.
 
+.. _instance profiles:
+
 Instance Profiles
 -----------------
 
@@ -402,6 +408,31 @@ used if you do not specify a profile on the command line.
 
 (String, Required) Which shape to use to create the instance. Don't know which
 shape to use (or what's available)? Try running ``yo shapes``.
+
+``mem``
+~~~~~~~
+
+(Integer, Optional) For flex shapes, specify the amount of memory in gigabytes
+which you would like your instance configured with. This should not be provided
+unless you are using a flex shape. This can be overridden on the command line as
+well.
+
+When ``mem`` is provided, it will be used as the total memory allocation for the
+shape (unless this is out of the supported range, in which Yo will report the
+error). If ``mem`` is omitted for a flex shape, then Yo will try to determine
+the shape's default per-cpu memory allocation, and multiply that by the number
+of CPUs configured, and use that value.
+
+``cpu``
+~~~~~~~
+
+(Integer, Optional) For flex shapes, specify the number of OCPUs to configure
+the instance with. This should not be provided unless you are using a flex
+shape. It can be overridden on the commandline.
+
+When ``cpu`` is provided, it will be used as the OCPU count, unless it is out of
+the supported range. If ``cpu`` is not provided, the shape's default OCPU amount
+is selected.
 
 ``os``
 ~~~~~~
@@ -515,6 +546,34 @@ apply if the image is specified by name. The following choices are available:
 - ``LATEST`` - in this mode, Yo does not expect that image names are unique. Yo
   will always load the latest list of images, and it will choose the most
   recently created image by a given name.
+
+``username``
+~~~~~~~~~~~~
+
+(String, Optional) Specify a custom username for your instance. This can be
+specified on the command line via ``--username`` or ``-u``. This will take the
+place of the preexisting default user account name, and will receive all the
+same privileges.
+
+When not specified, or when set to the special value ``$DEFAULT``, Yo will not
+make any changes to the default username. For most Oracle Linux images, this
+means that the default user will be ``opc``, though for Ubuntu images, the
+default user will be ``ubuntu``.
+
+When the special value ``$MY_USERNAME`` is specified, Yo will use your default
+username from the :ref:`my_username` field.
+
+Otherwise, the configuration value used here will be used directly as the
+username for your instance. Please take care to only provide strings which are
+valid usernames for your image's operating system. Safe usernames include ASCII
+letters, digits, and hyphens. Yo will not perform any validity checks on
+usernames, and invalid usernames could result in failed boot and connectivity
+issues.
+
+The custom username is provided as user data to OCI's Cloud-Init. Images may
+support cloud-init user data differently, so this functionality is not
+guaranteed on all images. Please test this with your intended images before
+relying on it.
 
 Command Aliases
 ---------------

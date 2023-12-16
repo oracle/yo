@@ -14,7 +14,7 @@
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Tasks" href="tasks.html" />
+    <link rel="next" title="Commands" href="cmdautogen.html" />
     <link rel="prev" title="Configuration" href="configuration.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -43,10 +43,10 @@ these aliases may stop working. For instance, <code class="docutils literal notr
 <code class="docutils literal notranslate"><span class="pre">~/.oci/yo.ini</span></code> file. This will disable the shortest-prefix aliasing, and allow
 you full control over the aliases. See the configuration documentation for more
 information.</p>
-<section id="instance-management">
-<h2>Instance Management<a class="headerlink" href="#instance-management" title="Link to this heading">¶</a></h2>
-<section id="yo-list">
-<h3>yo list<a class="headerlink" href="#yo-list" title="Link to this heading">¶</a></h3>
+<section id="md-instance-management">
+<h2>MD: Instance Management<a class="headerlink" href="#md-instance-management" title="Link to this heading">¶</a></h2>
+<section id="md-md-yo-list">
+<h3>MD: MD: yo list<a class="headerlink" href="#md-md-yo-list" title="Link to this heading">¶</a></h3>
 <p>Lists all instances which were created by me. (Defaults to a particular
 compartment which is hard-coded, but will be configurable in the future).</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo list
@@ -62,8 +62,8 @@ compartment which is hard-coded, but will be configurable in the future).</p>
 </pre></div>
 </div>
 </section>
-<section id="yo-launch">
-<h3>yo launch<a class="headerlink" href="#yo-launch" title="Link to this heading">¶</a></h3>
+<section id="md-yo-launch">
+<h3>MD: yo launch<a class="headerlink" href="#md-yo-launch" title="Link to this heading">¶</a></h3>
 <p>Launch a new instance. Optionally wait and connect to it via SSH once it is
 running.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo launch -n stepbren-vm-cmd-1 --ssh
@@ -118,8 +118,8 @@ same compartment you use for instances) to use.</p></li>
 and memory selections) cannot be customized and will use their default values.</p></li>
 </ul>
 </section>
-<section id="yo-ssh">
-<h3>yo ssh<a class="headerlink" href="#yo-ssh" title="Link to this heading">¶</a></h3>
+<section id="md-yo-ssh">
+<h3>MD: yo ssh<a class="headerlink" href="#md-yo-ssh" title="Link to this heading">¶</a></h3>
 <p>Connect to an instance via SSH. You can run it with no arguments if you only
 have one running instance. Otherwise, specify the name of the instance as the
 next argument.</p>
@@ -170,8 +170,8 @@ virt-ol8.repo
 </pre></div>
 </div>
 </section>
-<section id="yo-mosh">
-<h3>yo mosh<a class="headerlink" href="#yo-mosh" title="Link to this heading">¶</a></h3>
+<section id="md-yo-mosh">
+<h3>MD: yo mosh<a class="headerlink" href="#md-yo-mosh" title="Link to this heading">¶</a></h3>
 <p>Connect to an instance via Mosh. This is similar to SSH, but sessions are
 persistent even in the face of heavy packet loss, disconnections, high RTT, and
 more. Mosh features local echo and a slew of other niceties - but the downside
@@ -189,8 +189,8 @@ sudo dnf install -y mosh
 <p>You can even place the commands necessary to install mosh into a
 <a class="reference internal" href="tasks.html"><span class="std std-doc">Task</span></a> which can be run automatically.</p>
 </section>
-<section id="yo-console">
-<h3>yo console<a class="headerlink" href="#yo-console" title="Link to this heading">¶</a></h3>
+<section id="md-yo-console">
+<h3>MD: yo console<a class="headerlink" href="#md-yo-console" title="Link to this heading">¶</a></h3>
 <p>Connects you to the instance serial console. This is not a replacement or an
 alternative for an SSH connection: instead, it can be used for diagnostic
 purposes: emergency recovery or monitoring OS/kernel logs, or even for selecting
@@ -223,14 +223,14 @@ Host key fingerprint is SHA256:NvHnkwGWIT+nHSP93xHcb2hXcN2Ud3pEkGm+fTYHZUE
 </pre></div>
 </div>
 </section>
-<section id="yo-console-history">
-<h3>yo console-history<a class="headerlink" href="#yo-console-history" title="Link to this heading">¶</a></h3>
+<section id="md-yo-console-history">
+<h3>MD: yo console-history<a class="headerlink" href="#md-yo-console-history" title="Link to this heading">¶</a></h3>
 <p>Fetches the most recent console history, and prints it out. This way, even if
 you didn’t have a serial console connection, you can still see recent data,
 including crash log lines.</p>
 </section>
-<section id="yo-scp">
-<h3>yo scp<a class="headerlink" href="#yo-scp" title="Link to this heading">¶</a></h3>
+<section id="md-yo-scp">
+<h3>MD: yo scp<a class="headerlink" href="#md-yo-scp" title="Link to this heading">¶</a></h3>
 <p>A simple <code class="docutils literal notranslate"><span class="pre">scp</span></code> wrapper. As arguments, you may specify either files, or remote
 filename specifiers. A remote file can be specified using the instance name
 (e.g. <code class="docutils literal notranslate"><span class="pre">vm-1:dir/file.txt</span></code>), or with the instance name omitted (e.g.
@@ -245,14 +245,14 @@ hello.py                                100%  888    11.4KB/s   00:00
 <p>Wherever you specify the instance name, you can also specify a username in the
 normal way (<code class="docutils literal notranslate"><span class="pre">user&#64;instance</span></code>).</p>
 </section>
-<section id="yo-rsync">
-<h3>yo rsync<a class="headerlink" href="#yo-rsync" title="Link to this heading">¶</a></h3>
+<section id="md-yo-rsync">
+<h3>MD: yo rsync<a class="headerlink" href="#md-yo-rsync" title="Link to this heading">¶</a></h3>
 <p>An <code class="docutils literal notranslate"><span class="pre">rsync</span></code> wrapper, which is very similar to scp. Note that the <code class="docutils literal notranslate"><span class="pre">rsync_args</span></code>
 configuration argument is used by default. You can leave it empty or set some
 useful arguments.</p>
 </section>
-<section id="yo-vnc">
-<h3>yo vnc<a class="headerlink" href="#yo-vnc" title="Link to this heading">¶</a></h3>
+<section id="md-yo-vnc">
+<h3>MD: yo vnc<a class="headerlink" href="#md-yo-vnc" title="Link to this heading">¶</a></h3>
 <p>This command allows you to use the VNC protocol to access a remote desktop for
 your instance. Note that this requires instance configuration in most Linux
 cases. See <a class="reference internal" href="vnc.html"><span class="std std-doc">VNC and Remote Desktop</span></a> for setup steps.</p>
@@ -260,8 +260,8 @@ cases. See <a class="reference internal" href="vnc.html"><span class="std std-do
 <code class="docutils literal notranslate"><span class="pre">-T</span></code>.</p>
 <p>To use this, you should set the <a class="reference internal" href="configuration.html#vnc-prog"><span class="std std-ref">vnc_prog</span></a> configuration setting.</p>
 </section>
-<section id="yo-rdp">
-<h3>yo rdp<a class="headerlink" href="#yo-rdp" title="Link to this heading">¶</a></h3>
+<section id="md-yo-rdp">
+<h3>MD: yo rdp<a class="headerlink" href="#md-yo-rdp" title="Link to this heading">¶</a></h3>
 <p>This command allows you to use the RDP protocol  to access a remote desktop for
 your instance. This also requires instance configuration. See <a class="reference internal" href="vnc.html"><span class="std std-doc">VNC and Remote
 Desktop</span></a> for setup steps.</p>
@@ -270,8 +270,8 @@ Desktop</span></a> for setup steps.</p>
 which do not use SSH tunneling.</p>
 <p>To use this wrapper, you should set the <a class="reference internal" href="configuration.html#rdp-prog"><span class="std std-ref">rdp_prog</span></a> configuration setting.</p>
 </section>
-<section id="yo-terminate">
-<h3>yo terminate<a class="headerlink" href="#yo-terminate" title="Link to this heading">¶</a></h3>
+<section id="md-yo-terminate">
+<h3>MD: yo terminate<a class="headerlink" href="#md-yo-terminate" title="Link to this heading">¶</a></h3>
 <p>Terminate a single instance, or all instances created by you. Unlike the
 non-destructive ssh commands above, this command requires you either explicitly
 specify one or more names on the command line, or pass <code class="docutils literal notranslate"><span class="pre">--all</span></code> to terminate all
@@ -291,8 +291,8 @@ Working... ━━━━━━━━━━━━━━━━━━━━━━━
 </pre></div>
 </div>
 </section>
-<section id="yo-reboot-yo-stop-yo-start">
-<h3>yo reboot, yo stop, yo start<a class="headerlink" href="#yo-reboot-yo-stop-yo-start" title="Link to this heading">¶</a></h3>
+<section id="md-yo-reboot-yo-stop-yo-start">
+<h3>MD: yo reboot, yo stop, yo start<a class="headerlink" href="#md-yo-reboot-yo-stop-yo-start" title="Link to this heading">¶</a></h3>
 <p>These commands allow you to reboot, stop, or start instances. Same as <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">terminate</span></code>, there is no default argument; you must explicitly pass one or more
 instance names (or <code class="docutils literal notranslate"><span class="pre">--all</span></code>) on the command line.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">reboot</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span></code>, there is an additional argument <code class="docutils literal notranslate"><span class="pre">--force</span></code>. This allows
@@ -313,23 +313,23 @@ on the command line. Please note that unfortunately, specifying a username for
 SSH is not supported in these commands – instead you’ll need to manually run
 <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ssh</span></code> after the command completes.</p>
 </section>
-<section id="yo-resize">
-<h3>yo resize<a class="headerlink" href="#yo-resize" title="Link to this heading">¶</a></h3>
+<section id="md-yo-resize">
+<h3>MD: yo resize<a class="headerlink" href="#md-yo-resize" title="Link to this heading">¶</a></h3>
 <p>This command is similar to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">reboot</span></code>, except that you must specify a new shape
 for the instance(s). If OCI determines that the shapes are compatible, then your
 instance(s) will be shut down, and started up in a new shape. If you specify
 only one instance, you can optionally <code class="docutils literal notranslate"><span class="pre">--ssh</span></code> (though you cannot specify a
 username).</p>
 </section>
-<section id="yo-rename">
-<h3>yo rename<a class="headerlink" href="#yo-rename" title="Link to this heading">¶</a></h3>
+<section id="md-yo-rename">
+<h3>MD: yo rename<a class="headerlink" href="#md-yo-rename" title="Link to this heading">¶</a></h3>
 <p>This command allows you to alter the name of an instance:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>yo rename ol9-1 my-precious
 </pre></div>
 </div>
 </section>
-<section id="yo-protect">
-<h3>yo protect<a class="headerlink" href="#yo-protect" title="Link to this heading">¶</a></h3>
+<section id="md-yo-protect">
+<h3>MD: yo protect<a class="headerlink" href="#md-yo-protect" title="Link to this heading">¶</a></h3>
 <p>This command allows you to set or remove a tag on the instance, which signifies
 that it should not be terminated. Yo will not terminate an instance with this
 flag.</p>
@@ -344,8 +344,8 @@ running a command. But please note, termination protection is a Yo feature,
 <strong>not an OCI feature</strong>. It will prevent you from terminating the instance from
 Yo, but not from the OCI console or command line. You have been warned!</p>
 </section>
-<section id="yo-wait">
-<h3>yo wait<a class="headerlink" href="#yo-wait" title="Link to this heading">¶</a></h3>
+<section id="md-yo-wait">
+<h3>MD: yo wait<a class="headerlink" href="#md-yo-wait" title="Link to this heading">¶</a></h3>
 <p>Wait for an instance to enter a state. Typically, an instance starts in
 “PROVISIONING” state, moves to “STARTING”, and then “RUNNING”. It moves through
 other states as you interact with it. The full list of states at the time of
@@ -369,8 +369,8 @@ Instance stepbren-focal-1 has reached state RUNNING!
 The default state to wait for is RUNNING, so <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">wait</span></code> sensibly waits for the
 only active instance to become RUNNING.</p>
 </section>
-<section id="yo-ip">
-<h3>yo ip<a class="headerlink" href="#yo-ip" title="Link to this heading">¶</a></h3>
+<section id="md-yo-ip">
+<h3>MD: yo ip<a class="headerlink" href="#md-yo-ip" title="Link to this heading">¶</a></h3>
 <p>Print the IP address for an instance. If you don’t provide an instance name as
 an argument, fetch all instance IPs.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo ip focal-1
@@ -383,10 +383,10 @@ an argument, fetch all instance IPs.</p>
 </div>
 </section>
 </section>
-<section id="informational-commands">
-<h2>Informational Commands<a class="headerlink" href="#informational-commands" title="Link to this heading">¶</a></h2>
-<section id="yo-os">
-<h3>yo os<a class="headerlink" href="#yo-os" title="Link to this heading">¶</a></h3>
+<section id="md-informational-commands">
+<h2>MD Informational Commands<a class="headerlink" href="#md-informational-commands" title="Link to this heading">¶</a></h2>
+<section id="md-yo-os">
+<h3>MD: yo os<a class="headerlink" href="#md-yo-os" title="Link to this heading">¶</a></h3>
 <p>Print all operating systems available. The values here are taken directly from
 the set of official images published on OCI. Any value here is suitable for use
 in <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code> for an instance OS.</p>
@@ -400,8 +400,8 @@ Oracle Linux:8
 </pre></div>
 </div>
 </section>
-<section id="yo-images">
-<h3>yo images<a class="headerlink" href="#yo-images" title="Link to this heading">¶</a></h3>
+<section id="md-yo-images">
+<h3>MD: yo images<a class="headerlink" href="#md-yo-images" title="Link to this heading">¶</a></h3>
 <p>Lists available images. Specify an operating system as the first argument to get
 a list of only matching images. When called without OS, lists all official
 (non-custom) images. Currently, yo does not support custom images in any way. Yo
@@ -418,8 +418,8 @@ Would use image Oracle-Linux-8.3-aarch64-2021.04.06-0
 </pre></div>
 </div>
 </section>
-<section id="yo-shapes">
-<h3>yo shapes<a class="headerlink" href="#yo-shapes" title="Link to this heading">¶</a></h3>
+<section id="md-yo-shapes">
+<h3>MD: yo shapes<a class="headerlink" href="#md-yo-shapes" title="Link to this heading">¶</a></h3>
 <p>Print a table of shape names and their features (memory, disk, CPU, GPU, etc).</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo shapes
 ┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -444,8 +444,8 @@ the limits. This can help you choose an instance that you’ll actually be able
 to launch!</p></li>
 </ul>
 </section>
-<section id="yo-limits">
-<h3>yo limits<a class="headerlink" href="#yo-limits" title="Link to this heading">¶</a></h3>
+<section id="md-yo-limits">
+<h3>MD: yo limits<a class="headerlink" href="#md-yo-limits" title="Link to this heading">¶</a></h3>
 <p>Prints a series of tables which summarizes your tenancy’s resource limits.</p>
 <p>This command always prints the following:</p>
 <ul class="simple">
@@ -507,8 +507,8 @@ relevant teams to get limits increased.</p></li>
 </pre></div>
 </div>
 </section>
-<section id="yo-shape">
-<h3>yo shape<a class="headerlink" href="#yo-shape" title="Link to this heading">¶</a></h3>
+<section id="md-yo-shape">
+<h3>MD: yo shape<a class="headerlink" href="#md-yo-shape" title="Link to this heading">¶</a></h3>
 <p>Print detailed information about a particular shape.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ yo shape BM.Optimized3.36
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -529,28 +529,28 @@ relevant teams to get limits increased.</p></li>
 </pre></div>
 </div>
 </section>
-<section id="yo-task-run-task-status-task-wait-task-join-task-list-task-info">
-<h3>yo task-run, task-status, task-wait, task-join, task-list, task-info<a class="headerlink" href="#yo-task-run-task-status-task-wait-task-join-task-list-task-info" title="Link to this heading">¶</a></h3>
+<section id="md-yo-task-run-task-status-task-wait-task-join-task-list-task-info">
+<h3>MD: yo task-run, task-status, task-wait, task-join, task-list, task-info<a class="headerlink" href="#md-yo-task-run-task-status-task-wait-task-join-task-list-task-info" title="Link to this heading">¶</a></h3>
 <p>These commands allow you to manage “Tasks”, a simple way to start scripts in the
 background and configure your instance before you connect to it. See the “Tasks”
 page in the user guide for more information about them.</p>
 </section>
-<section id="yo-volume-create-volume-delete-attach-attached-detach-volume-list">
-<h3>yo volume-create, volume-delete, attach, attached, detach, volume-list<a class="headerlink" href="#yo-volume-create-volume-delete-attach-attached-detach-volume-list" title="Link to this heading">¶</a></h3>
+<section id="md-yo-volume-create-volume-delete-attach-attached-detach-volume-list">
+<h3>MD: yo volume-create, volume-delete, attach, attached, detach, volume-list<a class="headerlink" href="#md-yo-volume-create-volume-delete-attach-attached-detach-volume-list" title="Link to this heading">¶</a></h3>
 <p>These commands allow you to manage block volumes. Please see the “Block Volume
 Management” page in the guide for more information about them.</p>
 </section>
-<section id="yo-version">
-<h3>yo version<a class="headerlink" href="#yo-version" title="Link to this heading">¶</a></h3>
+<section id="md-yo-version">
+<h3>MD: yo version<a class="headerlink" href="#md-yo-version" title="Link to this heading">¶</a></h3>
 <p>Print the current version of yo, check for updates, and give the necessary
 upgrade commands.</p>
 </section>
-<section id="yo-help">
-<h3>yo help<a class="headerlink" href="#yo-help" title="Link to this heading">¶</a></h3>
+<section id="md-yo-help">
+<h3>MD: yo help<a class="headerlink" href="#md-yo-help" title="Link to this heading">¶</a></h3>
 <p>Print a help info, similar to what you would find in the Guide.</p>
 </section>
-<section id="yo-debug">
-<h3>yo debug<a class="headerlink" href="#yo-debug" title="Link to this heading">¶</a></h3>
+<section id="md-yo-debug">
+<h3>MD: yo debug<a class="headerlink" href="#md-yo-debug" title="Link to this heading">¶</a></h3>
 <p>A special command which loads yo and places you inside a Python interpreter.
 This is useful if you’re familiar with the guts of yo and want to play with some
 code.</p>
@@ -584,6 +584,7 @@ code.</p>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmdautogen.html">Commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tasks.html">Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vnc.html">VNC and Remote desktop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="block.html">Block Volume Management</a></li>
@@ -603,7 +604,7 @@ code.</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">User Guide</a><ul>
       <li>Previous: <a href="configuration.html" title="previous chapter">Configuration</a></li>
-      <li>Next: <a href="tasks.html" title="next chapter">Tasks</a></li>
+      <li>Next: <a href="cmdautogen.html" title="next chapter">Commands</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -634,7 +635,7 @@ code.</p>
       &copy;2020-2023, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

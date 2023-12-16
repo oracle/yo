@@ -5,16 +5,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; yo v1.3.1 documentation</title>
+    <title>Configuration &#8212; yo v1.4.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
-    <script src="../_static/documentation_options.js?v=40e582e5"></script>
+    <script src="../_static/documentation_options.js?v=6ac6f732"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Commands" href="commands.html" />
+    <link rel="next" title="Tasks" href="tasks.html" />
     <link rel="prev" title="Concepts" href="concepts.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -37,10 +37,10 @@
 <p>yo’s configuration file should be located in the directory <code class="docutils literal notranslate"><span class="pre">~/.oci/yo.ini</span></code>. It
 uses a standard INI-style syntax (just like the OCI SDK configuration file).</p>
 <section id="global-configuration-options">
-<h2>Global Configuration Options<a class="headerlink" href="#global-configuration-options" title="Link to this heading">¶</a></h2>
+<span id="id1"></span><h2>Global Configuration Options<a class="headerlink" href="#global-configuration-options" title="Link to this heading">¶</a></h2>
 <p>The global configuration is stored in the section <code class="docutils literal notranslate"><span class="pre">[yo]</span></code>.</p>
 <section id="instance-compartment-id">
-<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">instance_compartment_id</span></code><a class="headerlink" href="#instance-compartment-id" title="Link to this heading">¶</a></h3>
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">instance_compartment_id</span></code><a class="headerlink" href="#instance-compartment-id" title="Link to this heading">¶</a></h3>
 <p>(String, Required) The OCI compartment in which every instance is created. This
 should be an OCID identifier: eg <code class="docutils literal notranslate"><span class="pre">ocid1.compartment....</span></code></p>
 <p>If you’re not sure which compartment ID you need, then consult your team’s
@@ -85,7 +85,7 @@ with <code class="docutils literal notranslate"><span class="pre">subnet_id</spa
 <p>(String, Required) The email address you use to log into OCI.</p>
 </section>
 <section id="my-username">
-<h3><code class="docutils literal notranslate"><span class="pre">my_username</span></code><a class="headerlink" href="#my-username" title="Link to this heading">¶</a></h3>
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">my_username</span></code><a class="headerlink" href="#my-username" title="Link to this heading">¶</a></h3>
 <p>(String, Required) Set a username. This is just used as a unique string to
 include in the name of your instance, helping people to see that it belongs to
 you. If your organization has global username IDs, it’s best to use that.
@@ -94,7 +94,7 @@ get used as the login name for your instances; it’s just an identifier used in
 the names.</p>
 </section>
 <section id="ssh-public-key">
-<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">ssh_public_key</span></code><a class="headerlink" href="#ssh-public-key" title="Link to this heading">¶</a></h3>
+<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">ssh_public_key</span></code><a class="headerlink" href="#ssh-public-key" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) The file path to your SSH public key. If omitted, the default
 of <code class="docutils literal notranslate"><span class="pre">~/.ssh/id_rsa.pub</span></code> is used.</p>
 <p>This public key is provided to OCI when launching instances, as well as creating
@@ -114,7 +114,7 @@ included in your instance’s <code class="docutils literal notranslate"><span c
 change the configuration value, Yo has no way to detect this and update the
 instance’s authorized keys. Thus, changing the configuration value could result
 in some instances being inaccessible.</p>
-<p>At the time of writing, the Intstance Console Connection feature (i.e. <code class="docutils literal notranslate"><span class="pre">yo</span>
+<p>At the time of writing, the Instance Console Connection feature (i.e. <code class="docutils literal notranslate"><span class="pre">yo</span>
 <span class="pre">console</span></code> command) is not compatible with ED25519 keys. It is recommended that
 you use 4096-bit RSA keys with Yo for the time being. You can generate one via
 the following command:</p>
@@ -123,7 +123,7 @@ the following command:</p>
 </div>
 </section>
 <section id="vnc-prog">
-<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">vnc_prog</span></code><a class="headerlink" href="#vnc-prog" title="Link to this heading">¶</a></h3>
+<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">vnc_prog</span></code><a class="headerlink" href="#vnc-prog" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired program to launch for VNC (remote desktop).
 This string will be interpreted by your shell, but first Python’s format method
 will replace the following strings:</p>
@@ -135,7 +135,7 @@ will replace the following strings:</p>
 desktop client), feel free to modify it.</p>
 </section>
 <section id="rdp-prog">
-<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">rdp_prog</span></code><a class="headerlink" href="#rdp-prog" title="Link to this heading">¶</a></h3>
+<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">rdp_prog</span></code><a class="headerlink" href="#rdp-prog" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired program to launch for RDP (remote desktop).
 This string will be interpreted by your shell, but first Python’s format method
 will replace the following strings:</p>
@@ -147,7 +147,7 @@ will replace the following strings:</p>
 <code class="docutils literal notranslate"><span class="pre">krdc</span> <span class="pre">rdp://{user}&#64;{host}</span></code>.</p>
 </section>
 <section id="notify-prog">
-<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">notify_prog</span></code><a class="headerlink" href="#notify-prog" title="Link to this heading">¶</a></h3>
+<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">notify_prog</span></code><a class="headerlink" href="#notify-prog" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired command to run in order to send notifications
 for waits. For example, when launching an instance and waiting for SSH or tasks.
 If unset (the default), notifications will not be sent. This string will first
@@ -268,7 +268,7 @@ will result in Yo allowing you to view and manage all resources in your
 compartment. See <a class="reference internal" href="#resource-filtering"><span class="std std-ref">resource_filtering</span></a> for details.</p>
 </section>
 <section id="exact-name">
-<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">exact_name</span></code><a class="headerlink" href="#exact-name" title="Link to this heading">¶</a></h3>
+<span id="id8"></span><h3><code class="docutils literal notranslate"><span class="pre">exact_name</span></code><a class="headerlink" href="#exact-name" title="Link to this heading">¶</a></h3>
 <p>(Boolean, Optional, Default: false) Set this to true to fully disable Yo’s
 <a class="reference internal" href="concepts.html#instance-naming"><span class="std std-ref">instance naming</span></a> scheme, in which it prefixes instance
 and block volume names with your username.  This allows you to create instances
@@ -289,7 +289,7 @@ you have specific naming requirements, this can be a helpful config knob, to
 keep Yo from getting in your way.</p>
 </section>
 <section id="resource-filtering">
-<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">resource_filtering</span></code><a class="headerlink" href="#resource-filtering" title="Link to this heading">¶</a></h3>
+<span id="id9"></span><h3><code class="docutils literal notranslate"><span class="pre">resource_filtering</span></code><a class="headerlink" href="#resource-filtering" title="Link to this heading">¶</a></h3>
 <p>(Boolean, Optional, Default: true) Set this to <code class="docutils literal notranslate"><span class="pre">false</span></code> in order to disable
 Yo’s resource filtering logic. This will result in Yo allowing you to view and
 manage all resources within the configured OCI compartment, regardless of what
@@ -326,7 +326,7 @@ example you would like to monitor and help a direct report with their instances.
 </section>
 </section>
 <section id="instance-profiles">
-<h2>Instance Profiles<a class="headerlink" href="#instance-profiles" title="Link to this heading">¶</a></h2>
+<span id="id10"></span><h2>Instance Profiles<a class="headerlink" href="#instance-profiles" title="Link to this heading">¶</a></h2>
 <p>There are many options which you may want to specify when launching an OCI
 instance. See, for example, the output of <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span> <span class="pre">--help</span></code>. An instance
 profile is a named group of settings which you can use when launching an
@@ -347,6 +347,27 @@ used if you do not specify a profile on the command line.</p>
 <h3><code class="docutils literal notranslate"><span class="pre">shape</span></code><a class="headerlink" href="#shape" title="Link to this heading">¶</a></h3>
 <p>(String, Required) Which shape to use to create the instance. Don’t know which
 shape to use (or what’s available)? Try running <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">shapes</span></code>.</p>
+</section>
+<section id="mem">
+<h3><code class="docutils literal notranslate"><span class="pre">mem</span></code><a class="headerlink" href="#mem" title="Link to this heading">¶</a></h3>
+<p>(Integer, Optional) For flex shapes, specify the amount of memory in gigabytes
+which you would like your instance configured with. This should not be provided
+unless you are using a flex shape. This can be overridden on the command line as
+well.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">mem</span></code> is provided, it will be used as the total memory allocation for the
+shape (unless this is out of the supported range, in which Yo will report the
+error). If <code class="docutils literal notranslate"><span class="pre">mem</span></code> is omitted for a flex shape, then Yo will try to determine
+the shape’s default per-cpu memory allocation, and multiply that by the number
+of CPUs configured, and use that value.</p>
+</section>
+<section id="cpu">
+<h3><code class="docutils literal notranslate"><span class="pre">cpu</span></code><a class="headerlink" href="#cpu" title="Link to this heading">¶</a></h3>
+<p>(Integer, Optional) For flex shapes, specify the number of OCPUs to configure
+the instance with. This should not be provided unless you are using a flex
+shape. It can be overridden on the commandline.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">cpu</span></code> is provided, it will be used as the OCPU count, unless it is out of
+the supported range. If <code class="docutils literal notranslate"><span class="pre">cpu</span></code> is not provided, the shape’s default OCPU amount
+is selected.</p>
 </section>
 <section id="os">
 <h3><code class="docutils literal notranslate"><span class="pre">os</span></code><a class="headerlink" href="#os" title="Link to this heading">¶</a></h3>
@@ -443,6 +464,29 @@ name.</p></li>
 will always load the latest list of images, and it will choose the most
 recently created image by a given name.</p></li>
 </ul>
+</section>
+<section id="username">
+<h3><code class="docutils literal notranslate"><span class="pre">username</span></code><a class="headerlink" href="#username" title="Link to this heading">¶</a></h3>
+<p>(String, Optional) Specify a custom username for your instance. This can be
+specified on the command line via <code class="docutils literal notranslate"><span class="pre">--username</span></code> or <code class="docutils literal notranslate"><span class="pre">-u</span></code>. This will take the
+place of the preexisting default user account name, and will receive all the
+same privileges.</p>
+<p>When not specified, or when set to the special value <code class="docutils literal notranslate"><span class="pre">$DEFAULT</span></code>, Yo will not
+make any changes to the default username. For most Oracle Linux images, this
+means that the default user will be <code class="docutils literal notranslate"><span class="pre">opc</span></code>, though for Ubuntu images, the
+default user will be <code class="docutils literal notranslate"><span class="pre">ubuntu</span></code>.</p>
+<p>When the special value <code class="docutils literal notranslate"><span class="pre">$MY_USERNAME</span></code> is specified, Yo will use your default
+username from the <a class="reference internal" href="#my-username"><span class="std std-ref">my_username</span></a> field.</p>
+<p>Otherwise, the configuration value used here will be used directly as the
+username for your instance. Please take care to only provide strings which are
+valid usernames for your image’s operating system. Safe usernames include ASCII
+letters, digits, and hyphens. Yo will not perform any validity checks on
+usernames, and invalid usernames could result in failed boot and connectivity
+issues.</p>
+<p>The custom username is provided as user data to OCI’s Cloud-Init. Images may
+support cloud-init user data differently, so this functionality is not
+guaranteed on all images. Please test this with your intended images before
+relying on it.</p>
 </section>
 </section>
 <section id="command-aliases">
@@ -609,7 +653,11 @@ of copy/paste.</p>
 <span class="na">availability_domain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VkEH:US-ASHBURN-AD-3</span>
 
 <span class="c1"># REQUIRED: set the shape for this instance</span>
-<span class="na">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VM.Standard.E2.2</span>
+<span class="na">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VM.Standard.x86.Generic</span>
+
+<span class="c1"># For flex shapes, this is required: set memory and CPU:</span>
+<span class="na">mem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">16</span>
+<span class="na">cpu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
 
 <span class="c1"># REQUIRED: set the OS for this instance (OS:version)</span>
 <span class="c1"># Want to see what OS options are available? Run `yo os`.</span>
@@ -716,13 +764,13 @@ of copy/paste.</p>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Concepts</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="commands.html">Commands</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tasks.html">Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vnc.html">VNC and Remote desktop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="block.html">Block Volume Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../cmds/index.html">Commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../optional_setup.html">Optional Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
 </ul>
@@ -736,7 +784,7 @@ of copy/paste.</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">User Guide</a><ul>
       <li>Previous: <a href="concepts.html" title="previous chapter">Concepts</a></li>
-      <li>Next: <a href="commands.html" title="next chapter">Commands</a></li>
+      <li>Next: <a href="tasks.html" title="next chapter">Tasks</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -767,7 +815,7 @@ of copy/paste.</p>
       &copy;2020-2023, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

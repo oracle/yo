@@ -11,9 +11,9 @@ You may instead create an `[aliases]` configuration section in your
 you full control over the aliases. See the configuration documentation for more
 information.
 
-## Instance Management
+## MD: Instance Management
 
-### yo list
+### MD: MD: yo list
 
 Lists all instances which were created by me. (Defaults to a particular
 compartment which is hard-coded, but will be configurable in the future).
@@ -29,7 +29,7 @@ compartment which is hard-coded, but will be configurable in the future).
     │ stepbren-vm-cmd │ VM.Standard.E2.2 │ 16  │ 2   │ TERMINATING │ 2020-10-15 14:15:58 │
     └─────────────────┴──────────────────┴─────┴─────┴─────────────┴─────────────────────┘
 
-### yo launch
+### MD: yo launch
 
 Launch a new instance. Optionally wait and connect to it via SSH once it is
 running.
@@ -80,7 +80,7 @@ Accepts args:
 * `--shape` - specify the shape to use. Currently, flex shapes (with custom OCPU
   and memory selections) cannot be customized and will use their default values.
 
-### yo ssh
+### MD: yo ssh
 
 Connect to an instance via SSH. You can run it with no arguments if you only
 have one running instance. Otherwise, specify the name of the instance as the
@@ -132,7 +132,7 @@ conventionally signals the end of option processing.
     uek-ol8.repo
     virt-ol8.repo
 
-### yo mosh
+### MD: yo mosh
 
 Connect to an instance via Mosh. This is similar to SSH, but sessions are
 persistent even in the face of heavy packet loss, disconnections, high RTT, and
@@ -151,7 +151,7 @@ in EPEL, and can be installed by the following commands:
 You can even place the commands necessary to install mosh into a
 [Task](tasks.rst) which can be run automatically.
 
-### yo console
+### MD: yo console
 
 Connects you to the instance serial console. This is not a replacement or an
 alternative for an SSH connection: instead, it can be used for diagnostic
@@ -185,13 +185,13 @@ service. You must use an RSA key: see {ref}`ssh_public_key` for details.
     Host key fingerprint is SHA256:NvHnkwGWIT+nHSP93xHcb2hXcN2Ud3pEkGm+fTYHZUE
     ...
 
-### yo console-history
+### MD: yo console-history
 
 Fetches the most recent console history, and prints it out. This way, even if
 you didn't have a serial console connection, you can still see recent data,
 including crash log lines.
 
-### yo scp
+### MD: yo scp
 
 A simple `scp` wrapper. As arguments, you may specify either files, or remote
 filename specifiers. A remote file can be specified using the instance name
@@ -208,14 +208,14 @@ Wherever you specify the instance name, you can also specify a username in the
 normal way (`user@instance`).
 
 
-### yo rsync
+### MD: yo rsync
 
 An `rsync` wrapper, which is very similar to scp. Note that the `rsync_args`
 configuration argument is used by default. You can leave it empty or set some
 useful arguments.
 
 
-### yo vnc
+### MD: yo vnc
 
 This command allows you to use the VNC protocol to access a remote desktop for
 your instance. Note that this requires instance configuration in most Linux
@@ -226,7 +226,7 @@ By default, this uses an SSH tunnel, which can be disabled with `--no-tunnel` or
 
 To use this, you should set the {ref}`vnc_prog` configuration setting.
 
-### yo rdp
+### MD: yo rdp
 
 This command allows you to use the RDP protocol  to access a remote desktop for
 your instance. This also requires instance configuration. See [VNC and Remote
@@ -238,7 +238,7 @@ which do not use SSH tunneling.
 
 To use this wrapper, you should set the {ref}`rdp_prog` configuration setting.
 
-### yo terminate
+### MD: yo terminate
 
 Terminate a single instance, or all instances created by you. Unlike the
 non-destructive ssh commands above, this command requires you either explicitly
@@ -259,7 +259,7 @@ unless you use `--yes`
     Working... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
 
-### yo reboot, yo stop, yo start
+### MD: yo reboot, yo stop, yo start
 
 These commands allow you to reboot, stop, or start instances. Same as `yo
 terminate`, there is no default argument; you must explicitly pass one or more
@@ -283,7 +283,7 @@ on the command line. Please note that unfortunately, specifying a username for
 SSH is not supported in these commands -- instead you'll need to manually run
 `yo ssh` after the command completes.
 
-### yo resize
+### MD: yo resize
 
 This command is similar to `yo reboot`, except that you must specify a new shape
 for the instance(s). If OCI determines that the shapes are compatible, then your
@@ -291,13 +291,13 @@ instance(s) will be shut down, and started up in a new shape. If you specify
 only one instance, you can optionally `--ssh` (though you cannot specify a
 username).
 
-### yo rename
+### MD: yo rename
 
 This command allows you to alter the name of an instance:
 
     yo rename ol9-1 my-precious
 
-### yo protect
+### MD: yo protect
 
 This command allows you to set or remove a tag on the instance, which signifies
 that it should not be terminated. Yo will not terminate an instance with this
@@ -313,7 +313,7 @@ running a command. But please note, termination protection is a Yo feature,
 **not an OCI feature**. It will prevent you from terminating the instance from
 Yo, but not from the OCI console or command line. You have been warned!
 
-### yo wait
+### MD: yo wait
 
 Wait for an instance to enter a state. Typically, an instance starts in
 "PROVISIONING" state, moves to "STARTING", and then "RUNNING". It moves through
@@ -339,7 +339,7 @@ The default state to wait for is RUNNING, so `yo wait` sensibly waits for the
 only active instance to become RUNNING.
 
 
-### yo ip
+### MD: yo ip
 
 Print the IP address for an instance. If you don't provide an instance name as
 an argument, fetch all instance IPs.
@@ -352,9 +352,9 @@ an argument, fetch all instance IPs.
     └──────────────────┴─────────────────┘
 
 
-## Informational Commands
+## MD Informational Commands
 
-### yo os
+### MD: yo os
 
 Print all operating systems available. The values here are taken directly from
 the set of official images published on OCI. Any value here is suitable for use
@@ -368,7 +368,7 @@ in `yo.ini` for an instance OS.
     Oracle Linux:8
     ...
 
-### yo images
+### MD: yo images
 
 Lists available images. Specify an operating system as the first argument to get
 a list of only matching images. When called without OS, lists all official
@@ -385,7 +385,7 @@ is also completely untested on non-Linux operating systems.
     - Oracle-Linux-8.2-2020.09.23-0 - Oracle Linux - 8
     Would use image Oracle-Linux-8.3-aarch64-2021.04.06-0
 
-### yo shapes
+### MD: yo shapes
 
 Print a table of shape names and their features (memory, disk, CPU, GPU, etc).
 
@@ -410,7 +410,7 @@ You can specify the kind of information you'd like to see:
   the limits. This can help you choose an instance that you'll actually be able
   to launch!
 
-### yo limits
+### MD: yo limits
 
 Prints a series of tables which summarizes your tenancy's resource limits.
 
@@ -474,7 +474,7 @@ $ yo limits -S BM.Standard.A1.160
 └──────────────────────┴───────┴───────────────────────────────────────────────────────────────┘
 ```
 
-### yo shape
+### MD: yo shape
 
 Print detailed information about a particular shape.
 
@@ -495,27 +495,27 @@ Print detailed information about a particular shape.
     │ Total Disk (GiB) │ 3840.0                                   │
     └──────────────────┴──────────────────────────────────────────┘
 
-### yo task-run, task-status, task-wait, task-join, task-list, task-info
+### MD: yo task-run, task-status, task-wait, task-join, task-list, task-info
 
 These commands allow you to manage "Tasks", a simple way to start scripts in the
 background and configure your instance before you connect to it. See the "Tasks"
 page in the user guide for more information about them.
 
-### yo volume-create, volume-delete, attach, attached, detach, volume-list
+### MD: yo volume-create, volume-delete, attach, attached, detach, volume-list
 
 These commands allow you to manage block volumes. Please see the "Block Volume
 Management" page in the guide for more information about them.
 
-### yo version
+### MD: yo version
 
 Print the current version of yo, check for updates, and give the necessary
 upgrade commands.
 
-### yo help
+### MD: yo help
 
 Print a help info, similar to what you would find in the Guide.
 
-### yo debug
+### MD: yo debug
 
 A special command which loads yo and places you inside a Python interpreter.
 This is useful if you're familiar with the guts of yo and want to play with some

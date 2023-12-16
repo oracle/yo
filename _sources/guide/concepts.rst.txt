@@ -64,6 +64,8 @@ You can avoid this behavior in two ways:
   If necessary, you can re-enable it on a case-by-case basis with
   ``--no-exact-name``.
 
+.. _resource visibility:
+
 Resource Visibility
 -------------------
 
@@ -96,3 +98,36 @@ a profile via the following command:
 
 If you don't specify ``-p``, you'll use the "DEFAULT" profile instead. See the
 :ref:`Instance Profiles` configuration section for more information.
+
+Instance States & Saved Instances
+---------------------------------
+
+Instances in OCI are always in a state. Common instance states include:
+
+- PROVISIONING
+- STARTING
+- RUNNING
+- STOPPING
+- STOPPED
+- TERMINATING
+- TERMINATED
+
+Most states are self-explanatory. A newly launched instance starts in
+PROVISIONING, then moves to STARTING, and then enters RUNNING. If an instance is
+stopped, it moves through STOPPING to STOPPED, and starting it will return it to
+STARTING, followed by RUNNING. Finally, terminating an instance causes it to
+enter TERMINATING, followed by TERMINATED.
+
+Instances in the STOPPED state have special rules regarding `billing`_. Thus,
+stopping an instance may be advantageous, as it may pause billing for the
+instance. However, STOPPED instances still count toward service limits. Thus, Yo
+implements an additional option, which is expressed to the user as an additional
+instance state: "SAVED".
+
+Instances in the SAVED state are really just saved boot volumes -- they do not
+appear in the OCI console as instances. Yo attaches a small amount of metadata
+to the instances, which allows it to recreate the instance with the same name
+and shape. The ``yo teardown`` command is used to make an instance SAVED, and
+``yo rebuild`` is used to recreate the instance (returning it to RUNNING).
+
+.. _billing: https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/resource-billing-stopped-instances.htm
