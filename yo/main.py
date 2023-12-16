@@ -2195,6 +2195,9 @@ class LaunchCmd(YoCmd):
         names = set(
             inst.name for inst in all_instances if inst.state != "TERMINATED"
         )
+        for vol in self.c.list_volumes():
+            if vol.saved_instance_metadata:
+                names.add(vol.saved_instance_metadata.name)
         if name not in names:
             return self._maybe_warn_name(profile, name)
         stem = name
