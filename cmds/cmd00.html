@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Basic Commands &#8212; yo v1.4.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=6ac6f732"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../_static/yo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Instance Management" href="cmd01.html" />
+    <link rel="prev" title="Commands" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="basic-commands">
+<h1>Basic Commands<a class="headerlink" href="#basic-commands" title="Link to this heading">¶</a></h1>
+<section id="yo-launch">
+<span id="id1"></span><h2>yo launch<a class="headerlink" href="#yo-launch" title="Link to this heading">¶</a></h2>
+<p><blockquote>
+<div><p>Launch an OCI instance.</p>
+<p>The instance settings (image/OS, shape, name, etc) are typically taken from
+the instance profile in your configuration file.  However, you can override
+these settings with command line options too.</p>
+<p>You can run startup tasks on the instance via the “-t” option. Again, these
+can be specified via an instance profile, so that you don’t need to write
+long commands. If you ask Yo to run a task, it will wait until the instance
+is ready, and then connect over SSH so that it can start the tasks.</p>
+<p>You can use “-s” to wait until the instance is ready and then use SSH to
+connect. If you’ve configured “yo.notify_prog”, then you can also receive a
+desktop notification when your instance is ready. Alternatively, use “-w” to
+wait until the instance is ready, but not connect via SSH.</p>
+</div></blockquote>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">launch</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">os</span> <span class="n">OS</span> <span class="o">|</span> <span class="o">--</span><span class="n">image</span> <span class="n">IMAGE</span> <span class="o">|</span> <span class="o">--</span><span class="n">volume</span> <span class="n">VOLUME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shape</span> <span class="n">SHAPE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">boot</span><span class="o">-</span><span class="n">volume</span><span class="o">-</span><span class="n">size</span><span class="o">-</span><span class="n">gbs</span> <span class="n">BOOT_VOLUME_SIZE_GBS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">mem</span> <span class="n">MEM</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cpu</span> <span class="n">CPU</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="o">-</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">profile</span> <span class="n">PROFILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">task</span> <span class="n">TASKS</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">load</span><span class="o">-</span><span class="n">image</span> <span class="p">{</span><span class="n">UNIQUE</span><span class="p">,</span><span class="n">LATEST</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">username</span> <span class="n">USERNAME</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name to give the instance</p>
+</dd>
+<dt><kbd>--os</kbd></dt>
+<dd><p>Operating system and version, separated by colon (:)</p>
+</dd>
+<dt><kbd>--image</kbd></dt>
+<dd><p>Display name of a custom image in the instance_compartment_id</p>
+</dd>
+<dt><kbd>--volume, -V</kbd></dt>
+<dd><p>Select a boot volume to use to launch your instance</p>
+</dd>
+<dt><kbd>--shape, -S</kbd></dt>
+<dd><p>Specify the shape to use</p>
+</dd>
+<dt><kbd>--boot-volume-size-gbs</kbd></dt>
+<dd><p>Specify the size of the boot volume (unit is GiB)</p>
+</dd>
+<dt><kbd>--mem</kbd></dt>
+<dd><p>Specify the amount of memory (unit is GiB)</p>
+</dd>
+<dt><kbd>--cpu</kbd></dt>
+<dd><p>Specify the amount of CPUs</p>
+</dd>
+<dt><kbd>--wait, -w</kbd></dt>
+<dd><p>Wait for the instance to start running</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--wait-ssh</kbd></dt>
+<dd><p>Wait for the instance to be reachable via SSH (implies –wait)</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--ssh, -s</kbd></dt>
+<dd><p>SSH to the instance once it is running (implies –wait-ssh)</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>When set, allows you to bypass the name rules implemented by this program. In particular: (1) allows non-unique instance names, and (2) allows you to use a name which is not prefixed by your username.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>the opposite of –exact-name (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>When set, don’t actually create the instance, just print what we would have done.</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--profile, -p</kbd></dt>
+<dd><p>Which profile (from your ~/.oci/yo.ini) should be used</p>
+<p>Default: “DEFAULT”</p>
+</dd>
+<dt><kbd>--task, -t</kbd></dt>
+<dd><p>Tasks to run once the instance is up and accessible</p>
+<p>Default: []</p>
+</dd>
+<dt><kbd>--load-image</kbd></dt>
+<dd><p>Possible choices: UNIQUE, LATEST</p>
+<p>Strategy for loading images (relevant only for –image)</p>
+</dd>
+<dt><kbd>--username, -u</kbd></dt>
+<dd><p>Custom username for logging into the instance</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-list">
+<span id="id2"></span><h2>yo list<a class="headerlink" href="#yo-list" title="Link to this heading">¶</a></h2>
+<p><blockquote>
+<div><p>List your OCI instances.</p>
+<p>Yo caches some data to speed up operations, but when you run “yo list”, it
+will always ensure you get the freshest data. You can disable this behavior
+if you want, which will show you stale data, but it will be fast.</p>
+<p>By default, Yo also tries to only show instances that belong to you (though,
+please see the documentation for the config “yo.resource_filtering”). You
+can use the “–all” argument to see all of the instances in your
+compartment, regardless of whether Yo believes you created them. Please keep
+in mind that you won’t be able to manage those instances (e.g. yo ssh, yo
+terminate, etc) unless you change your “yo.resource_filtering” configuration.</p>
+</div></blockquote>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="nb">list</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cached</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ip</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ad</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--cached, -c</kbd></dt>
+<dd><p>avoid loading and calling OCI if possible (list may beout of date)</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--ip, -i</kbd></dt>
+<dd><p>include IP addresses (this may require calling the API)</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--ad</kbd></dt>
+<dd><p>display the availability domain column</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--all, -a</kbd></dt>
+<dd><p>display all instances in the compartment (not just yours)</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-ssh">
+<span id="id3"></span><h2>yo ssh<a class="headerlink" href="#yo-ssh" title="Link to this heading">¶</a></h2>
+<p><p>SSH into an instance.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">ssh</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">agent</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="o">-</span><span class="n">args</span> <span class="n">SSH_ARGS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">start</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">quiet</span><span class="p">]</span> <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span> <span class="p">[</span><span class="n">cmds</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>cmds</kbd></dt>
+<dd><p>Execute the listed commands rather than a login shell</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--wait, -w</kbd></dt>
+<dd><p>Wait for SSH access</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--agent, -A</kbd></dt>
+<dd><p>Forward SSH agent</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--ssh-args</kbd></dt>
+<dd><p>Arguments to pass to ssh</p>
+<p>Default: “”</p>
+</dd>
+<dt><kbd>--start, -s</kbd></dt>
+<dd><p>Start the instance if not already started and then ssh (implies –wait)</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--quiet, -q</kbd></dt>
+<dd><p>Reduce the informative output</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/yo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="../index.html">yo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Commands</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#overview">Overview</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#command-group-index">Command Group Index</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../optional_setup.html">Optional Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Commands</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Commands</a></li>
+      <li>Next: <a href="cmd01.html" title="next chapter">Instance Management</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020-2023, Oracle and/or its affiliates.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/cmds/cmd00.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

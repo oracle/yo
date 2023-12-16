@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Instance Management &#8212; yo v1.3.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=40e582e5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../_static/yo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Instance Communication &amp; Interaction" href="cmd02.html" />
+    <link rel="prev" title="Basic Commands" href="cmd00.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="instance-management">
+<h1>Instance Management<a class="headerlink" href="#instance-management" title="Link to this heading">¶</a></h1>
+<section id="yo-nmi">
+<span id="id1"></span><h2>yo nmi<a class="headerlink" href="#yo-nmi" title="Link to this heading">¶</a></h2>
+<p><blockquote>
+<div><p>Send diagnostic interrupt (NMI) to one or more instance (dangerous)</p>
+</div></blockquote>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">nmi</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span>
+              <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>instances</kbd></dt>
+<dd><p>Instance names to interrupt</p>
+<p>Default: []</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--all</kbd></dt>
+<dd><p>Interrupt all of my instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--yes, -y</kbd></dt>
+<dd><p>Do not prompt for confirmation, assume yes</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>Do not actually interrupt the instances</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-protect">
+<span id="id2"></span><h2>yo protect<a class="headerlink" href="#yo-protect" title="Link to this heading">¶</a></h2>
+<p><p>Enable or disable Yo’s termination protection.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">protect</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span>
+                  <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span> <span class="p">{</span><span class="n">on</span><span class="p">,</span><span class="n">off</span><span class="p">}</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>setting</kbd></dt>
+<dd><p>Possible choices: on, off</p>
+<p>whether termination protection is on or off</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-reboot">
+<span id="id3"></span><h2>yo reboot<a class="headerlink" href="#yo-reboot" title="Link to this heading">¶</a></h2>
+<p><p>Reboot one or more OCI instances.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">reboot</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">force</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>instances</kbd></dt>
+<dd><p>Instance names to reboot</p>
+<p>Default: []</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--all</kbd></dt>
+<dd><p>Reboot all of my instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--yes, -y</kbd></dt>
+<dd><p>Do not prompt for confirmation, assume yes</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--force</kbd></dt>
+<dd><p>Forcibly perform the action without notifying the OS. This risks losing data, but it is best for handling a machine whose OS is hung.</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>Do not actually reboot the instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--wait, -w</kbd></dt>
+<dd><p>Wait for instance state RUNNING</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--ssh, -s</kbd></dt>
+<dd><p>SSH to the instance once it is running (implies –wait)</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-rename">
+<span id="id4"></span><h2>yo rename<a class="headerlink" href="#yo-rename" title="Link to this heading">¶</a></h2>
+<p><p>Give an instance a new name.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">rename</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span> <span class="n">new_name</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>new_name</kbd></dt>
+<dd><p>new name for instance</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-resize">
+<span id="id5"></span><h2>yo resize<a class="headerlink" href="#yo-resize" title="Link to this heading">¶</a></h2>
+<p><p>Resize (change shape) and reboot an OCI instance.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">resize</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shape</span> <span class="n">SHAPE</span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>instances</kbd></dt>
+<dd><p>Instance names to resize</p>
+<p>Default: []</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--all</kbd></dt>
+<dd><p>Resize all of my instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--yes, -y</kbd></dt>
+<dd><p>Do not prompt for confirmation, assume yes</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>Do not actually resize the instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--wait, -w</kbd></dt>
+<dd><p>Wait for instance state RUNNING</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--ssh, -s</kbd></dt>
+<dd><p>SSH to the instance once it is running (implies –wait)</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--shape, -S</kbd></dt>
+<dd><p>Instance shape to select (REQUIRED)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-start">
+<span id="id6"></span><h2>yo start<a class="headerlink" href="#yo-start" title="Link to this heading">¶</a></h2>
+<p><p>Start (boot up) one or more OCI instances.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">start</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span>
+                <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>instances</kbd></dt>
+<dd><p>Instance names to start</p>
+<p>Default: []</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--all</kbd></dt>
+<dd><p>Start all of my instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--yes, -y</kbd></dt>
+<dd><p>Do not prompt for confirmation, assume yes</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>Do not actually start the instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--wait, -w</kbd></dt>
+<dd><p>Wait for instance state RUNNING</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--ssh, -s</kbd></dt>
+<dd><p>SSH to the instance once it is running (implies –wait)</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-stop">
+<span id="id7"></span><h2>yo stop<a class="headerlink" href="#yo-stop" title="Link to this heading">¶</a></h2>
+<p><p>Stop (shut down) one or more OCI instances</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">stop</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">force</span><span class="p">]</span>
+               <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span>
+               <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>instances</kbd></dt>
+<dd><p>Instance names to stop</p>
+<p>Default: []</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--all</kbd></dt>
+<dd><p>Stop all of my instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--yes, -y</kbd></dt>
+<dd><p>Do not prompt for confirmation, assume yes</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--force</kbd></dt>
+<dd><p>Forcibly perform the action without notifying the OS. This risks losing data, but it is best for handling a machine whose OS is hung.</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>Do not actually stop the instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--wait, -w</kbd></dt>
+<dd><p>Wait for instance state STOPPED</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-terminate">
+<span id="id8"></span><h2>yo terminate<a class="headerlink" href="#yo-terminate" title="Link to this heading">¶</a></h2>
+<p><blockquote>
+<div><p>Terminate one or more instances.</p>
+<p>This command offers a “–dry-run” mode for safety. It also requires that you
+confirm the instances you terminate, or else run with “–yes” if you’re
+confident.</p>
+<p>You can save preserve the instance’s boot volume with “-p”, and if you’d
+like, you can even preserve it and specify a more useful name using “-s”. In
+the future, you can launch an instance from that boot volume using “yo
+launch -V”.</p>
+</div></blockquote>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">terminate</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span>
+                    <span class="p">[</span><span class="o">--</span><span class="n">preserve</span><span class="o">-</span><span class="n">volume</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">preserve</span><span class="o">-</span><span class="n">volume</span><span class="p">]</span>
+                    <span class="p">[</span><span class="o">--</span><span class="n">save</span><span class="o">-</span><span class="n">volume</span><span class="o">-</span><span class="k">as</span> <span class="n">SAVE_VOLUME_AS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span>
+                    <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>instances</kbd></dt>
+<dd><p>Instance names to terminate</p>
+<p>Default: []</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--all</kbd></dt>
+<dd><p>Terminate all of my instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--yes, -y</kbd></dt>
+<dd><p>Do not prompt for confirmation, assume yes</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--preserve-volume, -p</kbd></dt>
+<dd><p>Do not remove the root volume for this instance</p>
+</dd>
+<dt><kbd>--no-preserve-volume, -P</kbd></dt>
+<dd><p>Remove the root volume for this instance</p>
+</dd>
+<dt><kbd>--save-volume-as, -s</kbd></dt>
+<dd><p>Renames the boot volume to something memorable (implies -p)</p>
+</dd>
+<dt><kbd>--dry-run</kbd></dt>
+<dd><p>Do not actually terminate the instances</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--wait, -w</kbd></dt>
+<dd><p>Wait for instance state TERMINATED</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-wait">
+<span id="id9"></span><h2>yo wait<a class="headerlink" href="#yo-wait" title="Link to this heading">¶</a></h2>
+<p><p>Wait for an instance to enter a state.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">wait</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">state</span> <span class="n">STATE</span><span class="p">]</span>
+               <span class="p">[</span><span class="o">--</span><span class="n">timeout</span> <span class="n">TIMEOUT</span><span class="p">]</span>
+               <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--state, -s</kbd></dt>
+<dd><p>State to wait for the instance to enter</p>
+<p>Default: “RUNNING”</p>
+</dd>
+<dt><kbd>--timeout</kbd></dt>
+<dd><p>How long to wait (in seconds)</p>
+<p>Default: 600</p>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/yo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="../index.html">yo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="cmdautogen.html">Commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vnc.html">VNC and Remote desktop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="block.html">Block Volume Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../optional_setup.html">Optional Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User Guide</a><ul>
+  <li><a href="cmdautogen.html">Commands</a><ul>
+      <li>Previous: <a href="cmd00.html" title="previous chapter">Basic Commands</a></li>
+      <li>Next: <a href="cmd02.html" title="next chapter">Instance Communication &amp; Interaction</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020-2023, Oracle and/or its affiliates.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/guide/cmd01.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

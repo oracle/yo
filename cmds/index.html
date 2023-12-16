@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Commands &#8212; yo v1.4.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=6ac6f732"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../_static/yo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Basic Commands" href="cmd00.html" />
+    <link rel="prev" title="Troubleshooting" href="../guide/troubleshooting.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="commands">
+<h1>Commands<a class="headerlink" href="#commands" title="Link to this heading">¶</a></h1>
+<p>Yo has an extensive list of commands. This section organizes and presents the
+full listing and arguments for each command.</p>
+<p>When invoking a command, the normal way is <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">[sub-command]</span></code>. However, Yo
+also allows you to use the shortest unambiguous prefix as a shortcut for a
+particular command-name. For example, <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">la</span></code> could be used as shorthand for
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code>. However, as commands are added, these aliases may stop working.
+For example, once upon a time, <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">li</span></code> could be used as a shorthand for <code class="docutils literal notranslate"><span class="pre">yo</span>
+<span class="pre">list</span></code>. But in version 0.23.0 of Yo, the <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">limits</span></code> command was added, and
+the shorthand no longer worked.</p>
+<p>So, you may instead create an <code class="docutils literal notranslate"><span class="pre">[aliases]</span></code> section in your <code class="docutils literal notranslate"><span class="pre">~/.oci/yo.ini</span></code>
+file. This will disable the shortest-prefix aliasing, and allow you full control
+over the aliases. See the configuration documentation for more information.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>Basic Commands:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="cmd00.html#yo-launch"><span class="std std-ref">yo launch</span></a> - Launch an OCI instance.</p></li>
+<li><p><a class="reference internal" href="cmd00.html#yo-list"><span class="std std-ref">yo list</span></a> - List your OCI instances.</p></li>
+<li><p><a class="reference internal" href="cmd00.html#yo-ssh"><span class="std std-ref">yo ssh</span></a> - SSH into an instance.</p></li>
+</ul>
+</div></blockquote>
+<p>Instance Management:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="cmd01.html#yo-nmi"><span class="std std-ref">yo nmi</span></a> - Send diagnostic interrupt (NMI) to one or more instance (dangerous)</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-protect"><span class="std std-ref">yo protect</span></a> - Enable or disable Yo’s termination protection.</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-reboot"><span class="std std-ref">yo reboot</span></a> - Reboot one or more OCI instances.</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-rebuild"><span class="std std-ref">yo rebuild</span></a> - Rebuild a saved &amp; torn down instance.</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-rename"><span class="std std-ref">yo rename</span></a> - Give an instance a new name.</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-resize"><span class="std std-ref">yo resize</span></a> - Resize (change shape) and reboot an OCI instance.</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-start"><span class="std std-ref">yo start</span></a> - Start (boot up) one or more OCI instances.</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-stop"><span class="std std-ref">yo stop</span></a> - Stop (shut down) one or more OCI instances</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-teardown"><span class="std std-ref">yo teardown</span></a> - Save block volume and instance metadata, then terminate.</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-terminate"><span class="std std-ref">yo terminate</span></a> - Terminate one or more instances.</p></li>
+<li><p><a class="reference internal" href="cmd01.html#yo-wait"><span class="std std-ref">yo wait</span></a> - Wait for an instance to enter a state.</p></li>
+</ul>
+</div></blockquote>
+<p>Instance Communication &amp; Interaction:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="cmd02.html#yo-console"><span class="std std-ref">yo console</span></a> - View an instance’s serial console using an SSH connection</p></li>
+<li><p><a class="reference internal" href="cmd02.html#yo-console-history"><span class="std std-ref">yo console-history</span></a> - Fetch and print serial console history for an instance.</p></li>
+<li><p><a class="reference internal" href="cmd02.html#yo-copy-id"><span class="std std-ref">yo copy-id</span></a> - Copy an SSH public key onto an instance using ssh-copy-id.</p></li>
+<li><p><a class="reference internal" href="cmd02.html#yo-ip"><span class="std std-ref">yo ip</span></a> - Print the IP address for one or more instances.</p></li>
+<li><p><a class="reference internal" href="cmd02.html#yo-mosh"><span class="std std-ref">yo mosh</span></a> - Connect to the instance via mosh.</p></li>
+<li><p><a class="reference internal" href="cmd02.html#yo-rdp"><span class="std std-ref">yo rdp</span></a> - Connect to instance remote desktop using RDP.</p></li>
+<li><p><a class="reference internal" href="cmd02.html#yo-rsync"><span class="std std-ref">yo rsync</span></a> - Synchronize files using the rsync command.</p></li>
+<li><p><a class="reference internal" href="cmd02.html#yo-scp"><span class="std std-ref">yo scp</span></a> - Copy files to/from an instance using the scp command</p></li>
+<li><p><a class="reference internal" href="cmd02.html#yo-vnc"><span class="std std-ref">yo vnc</span></a> - Connect to instance remote desktop using VNC.</p></li>
+</ul>
+</div></blockquote>
+<p>Task Management Commands:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="cmd03.html#yo-task-info"><span class="std std-ref">yo task info</span></a> - Show the basic information and script contents for a task.</p></li>
+<li><p><a class="reference internal" href="cmd03.html#yo-task-join"><span class="std std-ref">yo task join</span></a> - Wait for all tasks on a given instance to complete.</p></li>
+<li><p><a class="reference internal" href="cmd03.html#yo-task-list"><span class="std std-ref">yo task list</span></a> - List every task and its basic metadata</p></li>
+<li><p><a class="reference internal" href="cmd03.html#yo-task-run"><span class="std std-ref">yo task run</span></a> - Run a long-running task script on an instance.</p></li>
+<li><p><a class="reference internal" href="cmd03.html#yo-task-status"><span class="std std-ref">yo task status</span></a> - Report the status of all tasks on an instance.</p></li>
+<li><p><a class="reference internal" href="cmd03.html#yo-task-wait"><span class="std std-ref">yo task wait</span></a> - Wait for a task to complete on an instance.</p></li>
+</ul>
+</div></blockquote>
+<p>Volume Management Commands:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="cmd04.html#yo-volume-attach"><span class="std std-ref">yo volume attach</span></a> - Attach a block or boot volume to an instance.</p></li>
+<li><p><a class="reference internal" href="cmd04.html#yo-volume-attached"><span class="std std-ref">yo volume attached</span></a> - List volumes by their current instance attachment.</p></li>
+<li><p><a class="reference internal" href="cmd04.html#yo-volume-create"><span class="std std-ref">yo volume create</span></a> - Create a block volume.</p></li>
+<li><p><a class="reference internal" href="cmd04.html#yo-volume-delete"><span class="std std-ref">yo volume delete</span></a> - Delete a block or boot volume.</p></li>
+<li><p><a class="reference internal" href="cmd04.html#yo-volume-detach"><span class="std std-ref">yo volume detach</span></a> - Detach a block or boot volume from an instance.</p></li>
+<li><p><a class="reference internal" href="cmd04.html#yo-volume-list"><span class="std std-ref">yo volume list</span></a> - List block &amp; boot volumes.</p></li>
+<li><p><a class="reference internal" href="cmd04.html#yo-volume-rename"><span class="std std-ref">yo volume rename</span></a> - Rename a block or boot volume.</p></li>
+</ul>
+</div></blockquote>
+<p>Informative Commands:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="cmd05.html#yo-compat"><span class="std std-ref">yo compat</span></a> - Show a compatibility matrix of images and shapes.</p></li>
+<li><p><a class="reference internal" href="cmd05.html#yo-images"><span class="std std-ref">yo images</span></a> - List images available to use for launching an instance.</p></li>
+<li><p><a class="reference internal" href="cmd05.html#yo-limits"><span class="std std-ref">yo limits</span></a> - Display your tenancy &amp; region’s service limits.</p></li>
+<li><p><a class="reference internal" href="cmd05.html#yo-os"><span class="std std-ref">yo os</span></a> - List official OS and version combinations.</p></li>
+<li><p><a class="reference internal" href="cmd05.html#yo-shape"><span class="std std-ref">yo shape</span></a> - Get info about a single shape.</p></li>
+<li><p><a class="reference internal" href="cmd05.html#yo-shapes"><span class="std std-ref">yo shapes</span></a> - List instance shape options.</p></li>
+</ul>
+</div></blockquote>
+<p>Diagnostic Commands:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="cmd06.html#yo-cache-clean"><span class="std std-ref">yo cache-clean</span></a> - Clear Yo’s cache – a good first troubleshooting step.</p></li>
+<li><p><a class="reference internal" href="cmd06.html#yo-debug"><span class="std std-ref">yo debug</span></a> - Open up a python prompt in the context of a command.</p></li>
+<li><p><a class="reference internal" href="cmd06.html#yo-help"><span class="std std-ref">yo help</span></a> - Show help for yo.</p></li>
+<li><p><a class="reference internal" href="cmd06.html#yo-version"><span class="std std-ref">yo version</span></a> - Show the version of yo and check for updates.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="command-group-index">
+<h2>Command Group Index<a class="headerlink" href="#command-group-index" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cmd00.html">Basic Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmd01.html">Instance Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmd02.html">Instance Communication &amp; Interaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmd03.html">Task Management Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmd04.html">Volume Management Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmd05.html">Informative Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmd06.html">Diagnostic Commands</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/yo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="../index.html">yo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#command-group-index">Command Group Index</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../optional_setup.html">Optional Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../guide/troubleshooting.html" title="previous chapter">Troubleshooting</a></li>
+      <li>Next: <a href="cmd00.html" title="next chapter">Basic Commands</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020-2023, Oracle and/or its affiliates.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/cmds/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

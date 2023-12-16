@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Instance Communication &amp; Interaction &#8212; yo v1.3.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=40e582e5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../_static/yo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Task Management Commands" href="cmd03.html" />
+    <link rel="prev" title="Instance Management" href="cmd01.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="instance-communication-interaction">
+<h1>Instance Communication &amp; Interaction<a class="headerlink" href="#instance-communication-interaction" title="Link to this heading">¶</a></h1>
+<section id="yo-console">
+<span id="id1"></span><h2>yo console<a class="headerlink" href="#yo-console" title="Link to this heading">¶</a></h2>
+<p><p>View an instance’s serial console using an SSH connection</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">console</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">refresh</span><span class="p">]</span>
+                  <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--refresh</kbd></dt>
+<dd><p>refresh the local cache of serial consoles for this instance</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-console-history">
+<span id="id2"></span><h2>yo console-history<a class="headerlink" href="#yo-console-history" title="Link to this heading">¶</a></h2>
+<p><p>Fetch and print serial console history for an instance.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">console</span><span class="o">-</span><span class="n">history</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span>
+                          <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-copy-id">
+<span id="id3"></span><h2>yo copy-id<a class="headerlink" href="#yo-copy-id" title="Link to this heading">¶</a></h2>
+<p><p>Copy an SSH public key onto an instance using ssh-copy-id.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">copy</span><span class="o">-</span><span class="nb">id</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span>
+                  <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">IDENTITY_FILE</span><span class="p">]</span>
+                  <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>-i, --identity-file</kbd></dt>
+<dd><p>Specify path to the public key file</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-ip">
+<span id="id4"></span><h2>yo ip<a class="headerlink" href="#yo-ip" title="Link to this heading">¶</a></h2>
+<p><blockquote>
+<div><p>Print the IP address for one or more instances.</p>
+<p>Yo tries to avoid making you remember an instance IP. For example, you can
+connect via SSH using “yo ssh”. However, in some cases you may need to get
+the IP address still.</p>
+</div></blockquote>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">ip</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>instances</kbd></dt>
+<dd><p>Instance names to fetch IP for (if empty, fetch all)</p>
+<p>Default: []</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system useranme if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-mosh">
+<span id="id5"></span><h2>yo mosh<a class="headerlink" href="#yo-mosh" title="Link to this heading">¶</a></h2>
+<p><p>Connect to the instance via mosh.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">mosh</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-rdp">
+<span id="id6"></span><h2>yo rdp<a class="headerlink" href="#yo-rdp" title="Link to this heading">¶</a></h2>
+<p><p>Connect to instance remote desktop using RDP.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">rdp</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">tunnel</span><span class="p">]</span>
+              <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--no-tunnel, -T</kbd></dt>
+<dd><p>Don’t tunnel the connection over SSH</p>
+<p>Default: True</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-rsync">
+<span id="id7"></span><h2>yo rsync<a class="headerlink" href="#yo-rsync" title="Link to this heading">¶</a></h2>
+<p><p>Synchronize files using the rsync command.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">rsync</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">raw</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">rsync_args</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>rsync_args</kbd></dt>
+<dd><p>Arguments to pass to rsync (use – to protect, :gets replaced with destination host)</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--raw</kbd></dt>
+<dd><p>Do not use the rsync_args stored in the config, only use the ones provided on the command line.</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-scp">
+<span id="id8"></span><h2>yo scp<a class="headerlink" href="#yo-scp" title="Link to this heading">¶</a></h2>
+<p><p>Copy files to/from an instance using the scp command</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">scp</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="n">scp_args</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>scp_args</kbd></dt>
+<dd><p>Arguments to pass to scp (use – to protect, :gets replaced with destination host)</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="yo-vnc">
+<span id="id9"></span><h2>yo vnc<a class="headerlink" href="#yo-vnc" title="Link to this heading">¶</a></h2>
+<p><p>Connect to instance remote desktop using VNC.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">vnc</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">tunnel</span><span class="p">]</span>
+              <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>name_pos</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>--name, -n</kbd></dt>
+<dd><p>Name of the instance to filter by</p>
+</dd>
+<dt><kbd>--exact-name, -E</kbd></dt>
+<dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
+</dd>
+<dt><kbd>--no-exact-name</kbd></dt>
+<dd><p>Standardize the name by prefixing it with your system username (this is the default, but can be used to override your Yo configuration file)</p>
+</dd>
+<dt><kbd>--no-tunnel, -T</kbd></dt>
+<dd><p>Don’t tunnel the connection over SSH</p>
+<p>Default: True</p>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/yo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="../index.html">yo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="cmdautogen.html">Commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vnc.html">VNC and Remote desktop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="block.html">Block Volume Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../optional_setup.html">Optional Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User Guide</a><ul>
+  <li><a href="cmdautogen.html">Commands</a><ul>
+      <li>Previous: <a href="cmd01.html" title="previous chapter">Instance Management</a></li>
+      <li>Next: <a href="cmd03.html" title="next chapter">Task Management Commands</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020-2023, Oracle and/or its affiliates.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/guide/cmd02.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
