@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.4.0 - Fri, Dec 15, 2023
+
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
