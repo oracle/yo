@@ -2765,6 +2765,8 @@ class TeardownCmd(SingleInstanceCommand):
     name = "teardown"
     group = "Instance Management"
     description = "Save block volume and instance metadata, then terminate."
+    states_allowlist: t.Collection[str] = ()
+    states_denylist: t.Collection[str] = ("TERMINATED", "TERMINATING")
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         super().add_args(parser)
