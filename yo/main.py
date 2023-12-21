@@ -2778,6 +2778,8 @@ class TeardownCmd(SingleInstanceCommand):
         )
 
     def run_for_instance(self, instance: YoInstance) -> None:
+        if instance.termination_protected:
+            raise YoExc(f"Instance {instance.name} is termination protected")
         inst_to_atch = self.c.attachments_by_instance()
         self.c.con.print(
             f"About to [red]TERMINATE[/red] instance [blue]{instance.name}[/blue],"
