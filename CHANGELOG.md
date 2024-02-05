@@ -2,10 +2,26 @@
 
 ## Unreleased
 
-## 1.4.0 - Fri, Dec 15, 2023
-
 Any changes which are committed, but not yet present in a released version,
 should appear here.
+
+## 1.5.0 - Mon, Feb 2, 2024
+
+This is a very tiny release with just three changes.
+
+New Features:
+
+- The "yo attach" and "yo detach" commands now work with boot volumes.
+
+Fixes:
+
+- Allow "yo teardown" operation to occur in states other than RUNNING.
+  Specifically, it should be possible to teardown STOPPED instances. The
+  operation isn't permitted in TERMINATED or TERMINATING states.
+- Respect the termination protection option for "yo teardown". Previously, "yo
+  teardown" would happily terminate a protected instance.
+
+## 1.4.0 - Fri, Dec 15, 2023
 
 This version of Yo comes with some major improvements.
 
