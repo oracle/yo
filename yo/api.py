@@ -1838,11 +1838,17 @@ class YoCtx:
             self.config.instance_compartment_id
         )
 
+        # On the thread pool, start requesting boot volumes and attachments for
+        # each availability domain. Unfortunately this can't be done in one
+        # call.
         futures = [
             self._tpe.submit(self._list_bootdevs_atchs, ad.name)
             for ad in ad_resp.data
         ]
 
+        # Now fetch the standard block volumes. We filter the volumes
+        # themselves, and create a set of volume IDs which we care about. With
+        # that set, we can filter the volume attachments.
         vols = []
         attchs = []
         ids = set()
@@ -1856,20 +1862,32 @@ class YoCtx:
             if self.filter_by_creator(vol.created_by):
                 vols.append(vol)
                 ids.add(vol.id)
+
+        # Now, we can start the request for volume attachments
         attch_gen = self.oci.list_call_get_all_results_generator(
             self.compute.list_volume_attachments,
             "record",
             compartment_id=self.config.instance_compartment_id,
         )
+
+        # Before we filter the returned volume attachments, we need to retrieve
+        # the boot volume list. The boot volume list contains boot volume
+        # attachments, but boot volumes may also be attached as data volumes. In
+        # order to properly display those attachments, we must add the boot
+        # volume IDs to the set which we use to filter attachments.
+        for fut in concurrent.futures.as_completed(futures):
+            bootvols, bootattchs = fut.result()
+            vols.extend(bootvols)
+            ids.update(bv.id for bv in bootvols)
+            attchs.extend(bootattchs)
+
+        # Now grab the attachments and filter them by the set of volume IDs we
+        # care about.
         for attch in attch_gen:
             va = YoVolumeAttachment.from_oci_block(attch)
             if va.volume_id in ids:
                 attchs.append(va)
 
-        for fut in concurrent.futures.as_completed(futures):
-            bootvols, bootattchs = fut.result()
-            vols.extend(bootvols)
-            attchs.extend(bootattchs)
         self._vols.set(vols)
         self._vas.set(attchs)
         self.save_cache()
@@ -1988,18 +2006,11 @@ class YoCtx:
         ro: bool = False,
         shared: bool = False,
     ) -> YoVolumeAttachment:
-        if vol.kind == VolumeKind.BOOT:
-            response = self.compute.attach_boot_volume(
-                self.oci.AttachBootVolumeDetails(
-                    instance_id=inst_id,
-                    volume_id=vol.id,
-                    display_name="yo boot volume attachment",
-                )
-            )
-            bva = YoVolumeAttachment.from_oci_boot(response.data)
-            self._vas.insert(bva)
-            self.save_cache()
-            return bva
+        # This function is for attaching volumes as "data volumes". Boot
+        # volumes can actually attach and detach just fine as data volumes, you
+        # just supply their ID like you would a block volume ID. Of course, this
+        # doesn't make them bootable. For that sort of surgery, Yo isn't very
+        # well suited.
         if not kind:
             kind = "service_determined"
         kind_to_details_cls = {
@@ -2024,11 +2035,7 @@ class YoCtx:
         return va
 
     def detach_volume(self, va: YoVolumeAttachment) -> YoVolumeAttachment:
-        if va.kind == VolumeKind.BLOCK:
-            self.compute.detach_volume(va.id)
-        else:
-            self.compute.detach_boot_volume(va.id)
-
+        self.compute.detach_volume(va.id)
         # Normally the API returns an updated item, but in this case
         # it does not. Let's fake it so that the cache doesn't contain a volume
         # which is still available.
