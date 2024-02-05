@@ -17,5 +17,6 @@ echo "Preparing gh-pages commit at $TMPDIR"
 git clone git@github.com:oracle/yo --depth 1 --branch gh-pages "$TMPDIR"
 cd "$TMPDIR"
 cp -rT "$YO_DIR/.tox/docs_out/" .
-git commit -a -m "Automatic documentation update"
+git add .
+git commit -m "Automatic documentation update"
 git push origin HEAD
