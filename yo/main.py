@@ -3508,7 +3508,7 @@ class AttachCmd(YoCmd):
             (),
             exact_name=self.args.exact_name,
         )
-        vol = self.c.get_volume(name, kind=VolumeKind.BLOCK)
+        vol = self.c.get_volume(name)
         do_volume_attach(self.c, self.args, vol, inst)
 
 
@@ -3642,7 +3642,7 @@ class DetachCmd(YoCmd):
         name = standardize_name(
             self.args.volume, self.args.exact_name, self.c.config
         )
-        vol = self.c.get_volume(name, kind=VolumeKind.BLOCK)
+        vol = self.c.get_volume(name)
         vas = self.c.attachments_by_volume()[vol.id]
         vas = [va for va in vas if va.state == "ATTACHED"]
         detach_vas = []
