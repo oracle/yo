@@ -5,7 +5,7 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
-## 1.5.0 - Mon, Feb 2, 2024
+## 1.5.0 - Mon, Feb 5, 2024
 
 This is a very tiny release with just three changes.
 
