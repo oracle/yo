@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; yo v1.4.0 documentation</title>
+    <title>Changelog &#8212; yo v1.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
-    <script src="_static/documentation_options.js?v=6ac6f732"></script>
+    <script src="_static/documentation_options.js?v=1b13bd6b"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="_static/yo.png"/>
@@ -35,11 +35,27 @@
 <h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">¶</a></h1>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">¶</a></h2>
+<p>Any changes which are committed, but not yet present in a released version,
+should appear here.</p>
+</section>
+<section id="mon-feb-2-2024">
+<h2>1.5.0 - Mon, Feb 2, 2024<a class="headerlink" href="#mon-feb-2-2024" title="Link to this heading">¶</a></h2>
+<p>This is a very tiny release with just three changes.</p>
+<p>New Features:</p>
+<ul class="simple">
+<li><p>The “yo attach” and “yo detach” commands now work with boot volumes.</p></li>
+</ul>
+<p>Fixes:</p>
+<ul class="simple">
+<li><p>Allow “yo teardown” operation to occur in states other than RUNNING.
+Specifically, it should be possible to teardown STOPPED instances. The
+operation isn’t permitted in TERMINATED or TERMINATING states.</p></li>
+<li><p>Respect the termination protection option for “yo teardown”. Previously, “yo
+teardown” would happily terminate a protected instance.</p></li>
+</ul>
 </section>
 <section id="fri-dec-15-2023">
 <h2>1.4.0 - Fri, Dec 15, 2023<a class="headerlink" href="#fri-dec-15-2023" title="Link to this heading">¶</a></h2>
-<p>Any changes which are committed, but not yet present in a released version,
-should appear here.</p>
 <p>This version of Yo comes with some major improvements.</p>
 <p>New Features:</p>
 <ul class="simple">
