@@ -2639,7 +2639,11 @@ class InstanceActionCommand(MultiInstanceCommand):
         self.do_action(inst, action)
 
     def post_for_instance(self, inst: YoInstance) -> None:
-        if self.args.wait and self.target_state and not self.args.dry_run:
+        if (
+            getattr(self.args, "wait", False)
+            and self.target_state
+            and not self.args.dry_run
+        ):
             inst = self.c.wait_instance_state(
                 inst.id,
                 self.target_state,
