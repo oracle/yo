@@ -64,8 +64,8 @@ docs-publish: docs
 
 .PHONY: _release_sanity_check
 _release_sanity_check:
-	@if [ ! $$(git symbolic-ref -q HEAD) = "refs/heads/main"  ]; then \
-	    echo error: You must be on main to release a new version.; \
+	@if [ "$$(git log --pretty='%s' -1)" != "Release v$(VERSION)" ]; then \
+	    echo error: tip commit must be \"Release v$(VERSION)\"; \
 	    exit 1; \
 	fi
 	@if [ ! -z "$$(git status --porcelain)" ]; then \
@@ -87,9 +87,16 @@ _release_sanity_check:
 	    exit 1; \
 	fi
 
+.PHONY: prerelease
+prerelease: _release_sanity_check test
+	@echo "Safe to release $(VERSION)"
 
 .PHONY: release
 release: _release_sanity_check test
+	@if [ ! $$(git symbolic-ref -q HEAD) = "refs/heads/main"  ]; then \
+	    echo error: You must be on main to release a new version.; \
+	    exit 1; \
+	fi
 	$(PYTHON) setup.py sdist
 	$(PYTHON) setup.py bdist_wheel
 	@echo "Built the following artifacts for yo $(VERSION):"
