@@ -2092,6 +2092,12 @@ class LaunchCmd(YoCmd):
             help="Specify the amount of CPUs",
         )
         parser.add_argument(
+            "--ad",
+            type=str,
+            default=None,
+            help="Specify the availability domain (overrides instance profile)",
+        )
+        parser.add_argument(
             "--wait",
             "-w",
             action="store_true",
@@ -2403,6 +2409,9 @@ class LaunchCmd(YoCmd):
     def run(self) -> None:
         profile = self.c.instance_profiles[self.args.profile]
         create_args = profile.create_arg_dict()
+
+        if self.args.ad:
+            create_args["availability_domain"] = self.args.ad
 
         if self.args.shape is not None:
             # override configured shape from "create_arg_dict()"
