@@ -5,6 +5,15 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.5.1 - Tue, Apr 9, 2024
+
+Another tiny release, which I configure a "bugfix release".
+
+Fixes:
+
+- Fixed a crash with `yo nmi`
+- Added `--ad` option to `yo launch` which was a bit of an oversight
+
 ## 1.5.0 - Mon, Feb 5, 2024
 
 This is a very tiny release with just three changes.
