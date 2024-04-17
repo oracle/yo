@@ -11,6 +11,8 @@ New Features:
   - Columns may be specified as a list in the config file (`list_columns`)
   - An alternative list may be specified via `yo list -C a,b,c`
   - Columns can be added to the end of the table with `yo list -x Column`
+- The `yo list` command includes a new column, `ResourceType`, which corresponds
+  to the value of the `Oracle-Recommended-Tags.ResourceType` tag.
 
 ## 1.5.1 - Tue, Apr 9, 2024
 

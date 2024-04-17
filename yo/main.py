@@ -877,6 +877,12 @@ class ListCmd(YoCmd):
             "AD": (lambda i: i.ad, lambda v, m: v.ad),
             "Created": (lambda i: strftime(i.time_created), None),
             "IP": (self._ip_column, None),
+            "ResourceType": (
+                lambda i: i.defined_tags.get("Oracle-Recommended-Tags", {}).get(
+                    "ResourceType", ""
+                ),
+                None,
+            ),
         }
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
