@@ -289,6 +289,7 @@ class YoInstance(YoCachedWithId):
     image_id: str
     termination_protected: bool
     freeform_tags: t.Dict[str, str]
+    defined_tags: t.Dict[str, t.Dict[str, str]]
     username: t.Optional[str]  # from tag
 
     @classmethod
@@ -306,6 +307,7 @@ class YoInstance(YoCachedWithId):
             image_id=oci.image_id,
             termination_protected=term_protect,
             freeform_tags=oci.freeform_tags,
+            defined_tags=oci.defined_tags,
             username=oci.freeform_tags.get(USERNAME),
         )
 
@@ -970,7 +972,7 @@ class YoCtx:
     cache_version = 1
     last_checked_for_update: datetime.datetime
 
-    _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 4)
+    _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 5)
     _vnics: YoCache[YoVnic] = YoCache(YoVnic, "vnics", 2)
     _images: YoCache[YoImage] = YoCache(YoImage, "images", 6)
     _consoles: YoCache[YoConsole] = YoCache(YoConsole, "consoles", 2)
