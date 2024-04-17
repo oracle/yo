@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; yo v1.5.0 documentation</title>
+    <title>Changelog &#8212; yo v1.5.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
-    <script src="_static/documentation_options.js?v=1b13bd6b"></script>
+    <script src="_static/documentation_options.js?v=bf6b3972"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="_static/yo.png"/>
@@ -37,6 +37,25 @@
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">¶</a></h2>
 <p>Any changes which are committed, but not yet present in a released version,
 should appear here.</p>
+<p>New Features:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> command now has a completely configurable table.</p>
+<ul>
+<li><p>Columns may be specified as a list in the config file (<code class="docutils literal notranslate"><span class="pre">list_columns</span></code>)</p></li>
+<li><p>An alternative list may be specified via <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">-C</span> <span class="pre">a,b,c</span></code></p></li>
+<li><p>Columns can be added to the end of the table with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">-x</span> <span class="pre">Column</span></code></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="tue-apr-9-2024">
+<h2>1.5.1 - Tue, Apr 9, 2024<a class="headerlink" href="#tue-apr-9-2024" title="Link to this heading">¶</a></h2>
+<p>Another tiny release, which I configure a “bugfix release”.</p>
+<p>Fixes:</p>
+<ul class="simple">
+<li><p>Fixed a crash with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">nmi</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">--ad</span></code> option to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> which was a bit of an oversight</p></li>
+</ul>
 </section>
 <section id="mon-feb-5-2024">
 <h2>1.5.0 - Mon, Feb 5, 2024<a class="headerlink" href="#mon-feb-5-2024" title="Link to this heading">¶</a></h2>
