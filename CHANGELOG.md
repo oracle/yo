@@ -5,6 +5,8 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.6.0 - Wed, Apr 17, 2024
+
 New Features:
 
 - The `yo list` command now has a completely configurable table.
