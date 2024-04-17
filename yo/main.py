@@ -104,6 +104,7 @@ from yo.api import AttachmentType
 from yo.api import ImageLoad
 from yo.api import InstanceProfile
 from yo.api import OS_TO_USER
+from yo.api import SavedInstanceMetadata
 from yo.api import VolumeKind
 from yo.api import YoCtx
 from yo.api import YoImage
@@ -845,6 +846,39 @@ class ListCmd(YoCmd):
     terminate, etc) unless you change your "yo.resource_filtering" configuration.
     """
 
+    def _ip_column(self, i: YoInstance) -> str:
+        # It's more efficient to bulk lookup the IPs.
+        if not getattr(self, "_fetched_ips", False):
+            self.c.get_all_instance_ips(self.instances)
+            self._fetched_ips = True
+        return self.c.get_instance_ip(i, quiet=True)
+
+    def _name_column(self, i: YoInstance) -> str:
+        if i.termination_protected:
+            return f":lock: {i.name}"
+        else:
+            return i.name
+
+    Column = t.Tuple[
+        t.Callable[[YoInstance], str],
+        t.Optional[t.Callable[[YoVolume, SavedInstanceMetadata], str]],
+    ]
+
+    def columns(self) -> t.Dict[str, Column]:
+        return {
+            "Name": (self._name_column, lambda v, m: f":warning: {m.name}"),
+            "Shape": (lambda i: i.shape, lambda v, m: m.shape),
+            "CPU": (lambda i: str(int(i.ocpu)), lambda v, m: str(m.ocpu)),
+            "Mem": (
+                lambda i: str(int(i.memory_gb)),
+                lambda v, m: str(m.memory_gb),
+            ),
+            "State": (lambda i: i.state, lambda v, m: "[red]SAVED[/red]"),
+            "AD": (lambda i: i.ad, lambda v, m: v.ad),
+            "Created": (lambda i: strftime(i.time_created), None),
+            "IP": (self._ip_column, None),
+        }
+
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--cached",
@@ -854,15 +888,29 @@ class ListCmd(YoCmd):
             "out of date)",
         )
         parser.add_argument(
+            "--columns",
+            "-C",
+            type=str,
+            help="specify all columns in the table",
+        )
+        parser.add_argument(
+            "--extra-column",
+            "-x",
+            action="append",
+            choices=list(self.columns().keys()),
+            default=[],
+            help="add a column to the table",
+        )
+        parser.add_argument(
             "--ip",
             "-i",
             action="store_true",
-            help="include IP addresses (this may require calling the API)",
+            help="include IP addresses column (alias for: -x IP)",
         )
         parser.add_argument(
             "--ad",
             action="store_true",
-            help="display the availability domain column",
+            help="display the availability domain column (alias for: -x AD)",
         )
         parser.add_argument(
             "--all",
@@ -870,6 +918,23 @@ class ListCmd(YoCmd):
             action="store_true",
             help="display all instances in the compartment (not just yours)",
         )
+
+    def get_columns(self) -> t.List[t.Tuple[str, Column]]:
+        names_str = self.args.columns or self.c.config.list_columns
+        names = list(s.strip() for s in names_str.split(","))
+        if self.args.ip:
+            self.args.extra_column.append("IP")
+        if self.args.ad:
+            self.args.extra_column.append("AD")
+        names += self.args.extra_column
+
+        col_defs = self.columns()
+        ret = []
+        for name in names:
+            if name not in col_defs:
+                raise YoExc(f"column {name} has no implementation!")
+            ret.append((name, col_defs[name]))
+        return ret
 
     def run(self) -> None:
         verbose = not self.c.config.silence_automatic_tag_warning
@@ -890,58 +955,30 @@ class ListCmd(YoCmd):
         ]
         instances.sort(key=lambda i: i.time_created)
 
-        # It's more efficient to bulk lookup the IPs. This will cache them so
-        # that below, we don't do individual calls.
-        if self.args.ip:
-            self.c.get_all_instance_ips(instances)
+        # Store instances to as a class variable so column functions could
+        # access them as necessary.
+        self.instances = instances
 
+        columns = self.get_columns()
         table = rich.table.Table()
-        table.add_column("Name")
-        table.add_column("Shape")
-        table.add_column("Mem")
-        table.add_column("CPU")
-        table.add_column("State")
-        if self.args.ad:
-            table.add_column("AD")
-        table.add_column("Created")
-        if self.args.ip:
-            table.add_column("IP")
+        for name, _ in columns:
+            table.add_column(name)
         for instance in instances:
-            name = instance.name
-            if instance.termination_protected:
-                name = ":lock:" + name
-            values = [
-                name,
-                instance.shape,
-                str(int(instance.memory_gb)),
-                str(int(instance.ocpu)),
-                instance.state,
-            ]
-            if self.args.ad:
-                values.append(instance.ad)
-            values += [
-                strftime(instance.time_created),
-            ]
-            if self.args.ip:
-                values.append(self.c.get_instance_ip(instance, quiet=True))
+            values = []
+            for name, (inst_fn, _) in columns:
+                values.append(inst_fn(instance))
             table.add_row(*values)
 
         for volume in self.c.list_volumes():
             md = volume.saved_instance_metadata
             if not md:
                 continue
-            values = [
-                f":warning: {md.name}",
-                md.shape,
-                str(md.memory_gb),
-                str(md.ocpu),
-                "[red]SAVED[/red]",
-            ]
-            if self.args.ad:
-                values.append(volume.ad)
-            values.append("---")
-            if self.args.ip:
-                values.append("---")
+            values = []
+            for _, (_, saved_fn) in columns:
+                if saved_fn:
+                    values.append(saved_fn(volume, md))
+                else:
+                    values.append("---")
             table.add_row(*values)
         self.c.con.print(table)
 

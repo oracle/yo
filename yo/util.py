@@ -92,6 +92,7 @@ class YoConfig:
     resource_filtering: bool = True
     check_for_update_every: t.Optional[int] = 6
     creator_tags: t.List[str] = dataclasses.field(default_factory=list)
+    list_columns: str = "Name,Shape,Mem,CPU,State,Created"
 
     @property
     def ssh_public_key_full(self) -> str:
