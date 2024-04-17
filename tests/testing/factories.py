@@ -92,10 +92,14 @@ def instance_factory(**kwargs) -> YoInstance:
         "time_created": now() - datetime.timedelta(seconds=60),
         "image_id": _random_id(),
         "termination_protected": False,
+        "created_by": MY_EMAIL,
         "freeform_tags": {TERMPROTECT: "false"},
         "username": None,
     }
     defaults.update(kwargs)
+    defaults["defined_tags"] = {
+        "Oracle-Tags": {"CreatedBy": defaults.pop("created_by")},
+    }
     return YoInstance(**defaults)  # type: ignore
 
 
@@ -130,6 +134,8 @@ def config_factory(**kwargs) -> YoConfig:
         "my_username": "test",
         "ssh_public_key": "/fake/path/to/id_rsa.pub",
         "region": "fake-testing-region",
+        "list_columns": "Name,Shape,Mem,CPU,State,Created",
+        "silence_automatic_tag_warning": True,
     }
     defaults.update(kwargs)
     return YoConfig(**defaults)  # type: ignore

@@ -39,6 +39,7 @@ from unittest import mock
 
 import pytest
 
+from tests.testing.factories import config_factory
 from tests.testing.factories import image_factory
 from tests.testing.factories import instance_factory
 from tests.testing.rich import FakeTable
@@ -53,6 +54,7 @@ def mock_ctx():
         mock_ctx = es.enter_context(
             mock.patch("yo.main.YoCtx"),
         ).return_value
+        mock_ctx.config = config_factory()
         mock_con = es.enter_context(
             mock.patch(
                 "rich.console.Console",
