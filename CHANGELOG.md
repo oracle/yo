@@ -5,6 +5,13 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+New Features:
+
+- The `yo list` command now has a completely configurable table.
+  - Columns may be specified as a list in the config file (`list_columns`)
+  - An alternative list may be specified via `yo list -C a,b,c`
+  - Columns can be added to the end of the table with `yo list -x Column`
+
 ## 1.5.1 - Tue, Apr 9, 2024
 
 Another tiny release, which I configure a "bugfix release".

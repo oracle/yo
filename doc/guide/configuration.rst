@@ -378,6 +378,16 @@ to this list.
 You can also use this to include other people's instances in your list, if for
 example you would like to monitor and help a direct report with their instances.
 
+``list_columns``
+~~~~~~~~~~~~~~~~
+
+(String, Optional) A string containing a comma-separated list of columns to
+include in the output of :ref:`yo_list`. The list of available columns can be
+viewed in the documentation for ``-x`` in :ref:`yo_list`.
+
+You can override this on the command line with ``yo list -C Col1,Col2`` and you
+can extend the list on the command line with ``yo list -x Col1``.
+
 .. _instance profiles:
 
 Instance Profiles
