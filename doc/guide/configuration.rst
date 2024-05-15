@@ -34,34 +34,16 @@ in the yo source code for those.
 ~~~~~~~~~~
 
 (String, Required) Set the OCI region. This takes precedence over anything in
-``~/.oci/config``. It should match the ``availability_domain`` configs you have
-in this file, as well as the ``vcn_id`` config.
+``~/.oci/config``.
 
-``vcn_id``
-~~~~~~~~~~
+Whichever region you choose should be a valid OCI region. Further, you must
+include a corresponding section below, ``[regions.NAME]``, which contains
+:ref:`region-specific<regionconf>` configuration information (vcn and subnet).
 
-(String, Required) The VCN (virtual cloud network) in which your instances will
-get created. This should be an OCID as well.
-
-``subnet_id``
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-(String, Optional) The OCI subnet ID to which your instances will be
-connected.
-
-One of either ``subnet_id`` or ``subnet_compartment_id`` is required,
-with ``subnet_id`` being preferred if both are specified.
-
-``subnet_compartment_id``
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-(String, Optional) The OCI compartment which contains the subnets your instances
-should be created within. In OCI, the IDs of subnets change depending on which
-AD (availability domain) they're in. So, yo has a weird approach, where it lists
-every subnet in this compartment and AD, and simply picks the first one.
-
-One of either ``subnet_id`` or ``subnet_compartment_id`` is required,
-with ``subnet_id`` being preferred if both are specified.
+The region may be overridden on the command line with ``yo -r REGION``, in which
+case, a different region (with corresponding config section) will be used. Yo
+maintains separate cache information for each region. Yo commands can only
+operate in one region at a time.
 
 ``my_email``
 ~~~~~~~~~~~~
@@ -387,6 +369,47 @@ viewed in the documentation for ``-x`` in :ref:`yo_list`.
 
 You can override this on the command line with ``yo list -C Col1,Col2`` and you
 can extend the list on the command line with ``yo list -x Col1``.
+
+.. _regionconf:
+
+Region-Specific Configurations
+------------------------------
+
+Configurations related to the VCN and subnet used by your instance must be
+region specific. Thus, these configurations are placed in a dedicated,
+region-specific section You can select which region Yo will operate in via the
+``region`` config in the ``[yo]`` section, and override this configuration on
+the command line.
+
+The region-specific configuration sections must be named as ``[regions.NAME]``,
+replacing NAME with the region's name. For instance, ``[regions.us-ashburn-1]``.
+
+``vcn_id``
+~~~~~~~~~~
+
+(String, Required) The VCN (virtual cloud network) in which your instances will
+get created. This should be an OCID.
+
+``subnet_id``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(String, Optional) The OCI subnet ID to which your instances will be
+connected.
+
+One of either ``subnet_id`` or ``subnet_compartment_id`` is required,
+with ``subnet_id`` being preferred if both are specified.
+
+``subnet_compartment_id``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(String, Optional) The OCI compartment which contains the subnets your instances
+should be created within. In OCI, the IDs of subnets change depending on which
+AD (availability domain) they're in. So, yo has a weird approach, where it lists
+every subnet in this compartment and AD, and simply picks the first one.
+
+One of either ``subnet_id`` or ``subnet_compartment_id`` is required,
+with ``subnet_id`` being preferred if both are specified.
+
 
 .. _instance profiles:
 
