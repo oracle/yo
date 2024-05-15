@@ -3263,9 +3263,9 @@ class DebugCmd(YoCmd):
 
     def run(self) -> None:
         try:
-            import IPython  # type: ignore
+            from ptpython.repl import embed  # type: ignore
 
-            IPython.embed()
+            embed(globals(), locals(), vi_mode=False)
             return
         except ImportError:
             pass
