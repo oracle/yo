@@ -15,11 +15,11 @@ Environment Setup
 -----------------
 
 There are some prerequisite dependencies you should have available on your
-system. I develop on my Ubuntu 22.04 system, but development should be possible
-on any suitably recent Linux system (or even macOS) with an appropriate Python
-version (3.6 or higher). You'll need to ensure that ``~/.local/bin`` is in your
-``$PATH`` environment variable, and you'll also want to double check that
-standard unix tools such as make, git, cut, and sed are installed.
+system. I develop on my Oracle Linux 9 laptop, but development should be
+possible on any suitably recent Linux system (or even macOS) with an appropriate
+Python version (3.6 or higher). You'll need to ensure that ``~/.local/bin`` is
+in your ``$PATH`` environment variable, and you'll also want to double check
+that standard unix tools such as make, git, cut, and sed are installed.
 
 First, clone the repository (or your fork, if applicable) and install
 development tools:
