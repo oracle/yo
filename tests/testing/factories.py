@@ -43,6 +43,7 @@ from yo.api import TERMPROTECT
 from yo.api import YoImage
 from yo.api import YoInstance
 from yo.util import YoConfig
+from yo.util import YoRegion
 
 
 AVAILABILITY_DOMAIN = "VkEH:US-ASHBURN-AD-1"
@@ -128,14 +129,19 @@ def image_factory(**kwargs) -> YoImage:
 def config_factory(**kwargs) -> YoConfig:
     defaults = {
         "instance_compartment_id": _random_id(),
-        "vcn_id": _random_id(),
-        "subnet_compartment_id": _random_id(),
         "my_email": MY_EMAIL,
         "my_username": "test",
         "ssh_public_key": "/fake/path/to/id_rsa.pub",
         "region": "fake-testing-region",
         "list_columns": "Name,Shape,Mem,CPU,State,Created",
         "silence_automatic_tag_warning": True,
+        "regions": {
+            "fake-testing-region": YoRegion(
+                name="fake-testing-region",
+                vcn_id=_random_id(),
+                subnet_compartment_id=_random_id(),
+            ),
+        },
     }
     defaults.update(kwargs)
     return YoConfig(**defaults)  # type: ignore

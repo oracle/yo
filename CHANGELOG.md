@@ -5,6 +5,16 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+- Yo now has support for multiple OCI regions!
+  - Previously, if you wanted to run yo against another OCI region, you needed
+    to edit your config, run `yo cache-clean`, and then run your commands.
+  - Now, Yo allows you to store configuration for several OCI regions into your
+    config. You set a default region in your config file, but you can override
+    it with the `YO_REGION` environment variable, or `yo -r REGION` on the
+    command line.
+  - Please see the documentation for a migration guide:
+    https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-support
+
 ## 1.6.0 - Wed, Apr 17, 2024
 
 New Features:

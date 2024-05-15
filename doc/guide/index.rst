@@ -13,3 +13,4 @@ User Guide
    vnc
    block
    troubleshooting
+   region

@@ -120,6 +120,7 @@ from yo.util import standardize_name
 from yo.util import strftime
 from yo.util import YoConfig
 from yo.util import YoExc
+from yo.util import YoRegion
 
 CONFIG_FILE = os.path.expanduser("~/.oci/yo.ini")
 OCI_CONFIG_FILE = os.path.expanduser("~/.oci/config")
@@ -279,7 +280,16 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
     )
     assert os.path.isfile(config_file)
     config.read(config_file)
-    yo_config = YoConfig.from_config_section(config["yo"])
+
+    regions = {}
+    for sec in config.sections():
+        if not sec.startswith("regions."):
+            continue
+        rname = sec[len("regions.") :]
+        region = YoRegion.from_config_section(rname, config[sec])
+        regions[rname] = region
+
+    yo_config = YoConfig.from_config_section(config["yo"], regions)
 
     aliases: t.Dict[str, str] = {}
     if "aliases" in config.sections():
@@ -2451,17 +2461,19 @@ class LaunchCmd(YoCmd):
 
     def run(self) -> None:
         profile = self.c.instance_profiles[self.args.profile]
-        create_args = profile.create_arg_dict()
+        create_args = profile.create_arg_dict(self.c)
 
         if self.args.ad:
-            create_args["availability_domain"] = self.args.ad
+            create_args["availability_domain"] = self.c.get_ad(
+                self.args.ad
+            ).name
 
         if self.args.shape is not None:
             # override configured shape from "create_arg_dict()"
             create_args["shape"] = self.args.shape
         shape = self.c.get_shape_by_name(create_args["shape"])
         create_args["compartment_id"] = self.c.config.instance_compartment_id
-        subnet = self.c.pick_subnet(profile.availability_domain)
+        subnet = self.c.pick_subnet(create_args["availability_domain"])
         create_args["subnet_id"] = subnet.id
 
         volume = None
@@ -3463,7 +3475,9 @@ class VolumeCreateCmd(YoCmd):
 
     def _default_ad(self) -> t.Optional[str]:
         if hasattr(self, "c"):
-            self.c.instance_profiles["DEFAULT"].availability_domain
+            return self.c.get_ad(
+                self.c.instance_profiles["DEFAULT"].availability_domain
+            ).name
         return None
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
@@ -3902,6 +3916,13 @@ def main() -> None:
             "command, use 'yo COMMAND -h'."
         )
         parser = argparse.ArgumentParser(description=desc)
+        parser.add_argument(
+            "--region",
+            "-r",
+            type=str,
+            default=os.getenv("YO_REGION"),
+            help="select an alternative region configured in ~/.oci/yo.ini",
+        )
         ctx, aliases = YoCmd.setup_config()
         _extend(ctx)
         YoCmd.add_commands(
@@ -3913,6 +3934,8 @@ def main() -> None:
         )
         argcomplete.autocomplete(parser)
         ns = parser.parse_args()
+        if ns.region is not None:
+            ctx.switch_region(ns.region)
         with ctx:
             ns.func(ns)
     except YoExc as e:

@@ -44,6 +44,7 @@ import datetime
 import enum
 import json
 import os
+import random
 import re
 import stat
 import typing as t
@@ -67,6 +68,7 @@ if t.TYPE_CHECKING:
     from oci.core import ComputeClient
     from oci.core import VirtualNetworkClient
     from oci.identity import IdentityClient
+    from oci.identity.models import AvailabilityDomain
     from oci.limits import LimitsClient
     from oci.core.models import BootVolume
     from oci.core.models import BootVolumeAttachment
@@ -209,9 +211,9 @@ class InstanceProfile:
     load_image: ImageLoad = ImageLoad.UNIQUE
     username: t.Optional[str] = None
 
-    def create_arg_dict(self) -> t.Dict[str, t.Any]:
+    def create_arg_dict(self, ctx: "YoCtx") -> t.Dict[str, t.Any]:
         return {
-            "availability_domain": self.availability_domain,
+            "availability_domain": ctx.get_ad(self.availability_domain).name,
             "boot_volume_size_gbs": self.boot_volume_size_gbs,
             "shape": self.shape,
         }
@@ -276,6 +278,16 @@ class YoCachedWithId(YoCachedItem):
         # type check here is looser, but OCI ID's should be unique across
         # different types of objects
         return isinstance(other, YoCachedWithId) and self.id == other.id
+
+
+@dataclasses.dataclass
+class YoAd(YoCachedWithId):
+    name: str
+    compartment_id: str
+
+    @classmethod
+    def from_oci(cls, oci: "AvailabilityDomain") -> "YoAd":
+        return cls(id=oci.id, name=oci.name, compartment_id=oci.compartment_id)
 
 
 @dataclasses.dataclass
@@ -836,12 +848,14 @@ class YoCache(t.Generic[U]):
     name: str
     _type: t.Type[U]
     _version: int
+    _stale_hours: int
 
     def __init__(
         self,
         type_: t.Type[U],
         name: str,
         version: int,
+        stale_hours: int = 6,
     ):
         """
         Initialize an empty cache of type type_. The name field is only
@@ -857,6 +871,7 @@ class YoCache(t.Generic[U]):
         self.name = name
         self._version = version
         self._data = []
+        self._stale_hours = stale_hours
 
     def load(self, d: t.Dict[str, t.Any]) -> None:
         """
@@ -956,10 +971,13 @@ class YoCache(t.Generic[U]):
         }
 
     def is_current(
-        self, stale_thresh: datetime.timedelta = datetime.timedelta(hours=6)
+        self,
+        stale_thresh: t.Optional[datetime.timedelta] = None,
     ) -> bool:
         if self.last_refresh is None:
             return False
+        if stale_thresh is None:
+            stale_thresh = datetime.timedelta(hours=self._stale_hours)
         staleness = now() - self.last_refresh
         return staleness < stale_thresh
 
@@ -979,6 +997,7 @@ class YoCtx:
     _shapes: YoCache[YoShape] = YoCache(YoShape, "shapes", 5)
     _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 5)
     _vas: YoCache[YoVolumeAttachment] = YoCache(YoVolumeAttachment, "vas", 3)
+    _ads: YoCache[YoAd] = YoCache(YoAd, "ads", 1, stale_hours=24 * 7)
 
     # Put all cache names from above here too so we automatically manage them
     _caches = [
@@ -989,6 +1008,7 @@ class YoCtx:
         "_shapes",
         "_vols",
         "_vas",
+        "_ads",
     ]
 
     _compute: t.Optional["ComputeClient"] = None
@@ -1142,14 +1162,30 @@ class YoCtx:
         self,
         yo_config: YoConfig,
         instance_profiles: t.Mapping[str, InstanceProfile],
-        cache_file: str = "~/.cache/yo.json",
+        cache_file: t.Optional[str] = None,
     ):
+        if not cache_file:
+            cache_file = f"~/.cache/yo.{yo_config.region}.json"
         # Escape hatch to disable the log timestamps
         log_time = "YO_LOG_WITHOUT_TIME" not in os.environ
         self.con = rich.console.Console(log_path=False, log_time=log_time)
         self.config = yo_config
         self.instance_profiles = instance_profiles
         self._cache_file = os.path.expanduser(cache_file)
+        self.load_cache()
+
+    def switch_region(self, region: str) -> None:
+        if region not in self.config.regions:
+            raise YoExc(
+                f"region '{region}' is not configured. Add a "
+                f"\\[regions.{region}] configuration section to ~/.oci/yo.ini"
+            )
+        self._cache_file = os.path.expanduser(f"~/.cache/yo.{region}.json")
+        self.config.region = region
+        if self._oci:
+            # Reload the OCI SDK clients if they were already loaded for the
+            # other region. Otherwise, let them get lazily initialized later.
+            self._setup_oci()
         self.load_cache()
 
     def filter_by_creator(self, s: t.Optional[str]) -> bool:
@@ -2408,3 +2444,44 @@ class YoCtx:
         # instance.
         self.remove_saved_metadata(volume)
         return inst
+
+    def _list_ads(self) -> t.List[YoAd]:
+        if not self._ads.is_current():
+            ads = []
+            ad_resp = self.iam.list_availability_domains(
+                self.config.instance_compartment_id
+            )
+            for oci_ad in ad_resp.data:
+                ads.append(YoAd.from_oci(oci_ad))
+            self._ads.set(ads)
+        return self._ads.get_all()
+
+    def get_ad(self, value: str) -> YoAd:
+        # Make sure they are sorted in ascending order, so indexing works as
+        # expected.
+        ads = self._list_ads()
+        ads.sort(key=lambda a: a.name)
+
+        def _numeric(ad_index: int) -> YoAd:
+            # <=0 means: pick any
+            # >=1 means: use AD with that number (index N - 1)
+            if ad_index <= 0:
+                return random.choice(ads)
+            else:
+                ad_index -= 1
+                return ads[ad_index % len(ads)]
+
+        try:
+            return _numeric(int(value))
+        except ValueError:
+            pass
+
+        for ad in ads:
+            if ad.name == value:
+                return ad
+
+        m = re.fullmatch(r".*-(\d+)", value)
+        if m:
+            return _numeric(int(m.group(1)))
+
+        raise YoExc(f"could not interpret availability domain '{value}'")

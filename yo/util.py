@@ -41,6 +41,7 @@ import re
 import shlex
 import typing as t
 import urllib.request
+import warnings
 from pathlib import Path
 
 T = t.TypeVar("T")
@@ -66,15 +67,42 @@ def opt_strlist(opts: t.Dict[str, t.Any], field: str) -> None:
         opts[field] = re.split(r"[,\s]+", val.strip(), flags=re.M)
 
 
+def filter_keys(
+    d: t.Dict[str, t.Any], fields: t.Sequence[str]
+) -> t.Dict[str, t.Any]:
+    output = {}
+    for k in fields:
+        if k in d:
+            output[k] = d.pop(k)
+    return output
+
+
+@dataclasses.dataclass
+class YoRegion:
+    name: str
+    vcn_id: str
+    subnet_id: t.Optional[str] = None
+    subnet_compartment_id: t.Optional[str] = None
+
+    @classmethod
+    def from_config_section(
+        cls, name: str, conf: t.Mapping[str, str]
+    ) -> "YoRegion":
+        d = dict(**conf)
+        d["name"] = name
+        check_args_dataclass(
+            cls, d.keys(), f"~/.oci/yo.ini \\[region {name}] section"
+        )
+        return YoRegion(**d)
+
+
 @dataclasses.dataclass
 class YoConfig:
     instance_compartment_id: str
-    vcn_id: str
     region: str
     my_email: str
     my_username: str
-    subnet_id: t.Optional[str] = None
-    subnet_compartment_id: t.Optional[str] = None
+    regions: t.Dict[str, YoRegion]
     ssh_public_key: str = "~/.ssh/id_rsa.pub"
     rsync_args: t.Optional[str] = None
     vnc_prog: str = "krdc vnc://{host}:{port}"
@@ -93,6 +121,18 @@ class YoConfig:
     check_for_update_every: t.Optional[int] = 6
     creator_tags: t.List[str] = dataclasses.field(default_factory=list)
     list_columns: str = "Name,Shape,Mem,CPU,State,Created"
+
+    @property
+    def vcn_id(self) -> str:
+        return self.regions[self.region].vcn_id
+
+    @property
+    def subnet_id(self) -> t.Optional[str]:
+        return self.regions[self.region].subnet_id
+
+    @property
+    def subnet_compartment_id(self) -> t.Optional[str]:
+        return self.regions[self.region].subnet_compartment_id
 
     @property
     def ssh_public_key_full(self) -> str:
@@ -142,9 +182,23 @@ class YoConfig:
             return None
 
     @classmethod
-    def from_config_section(cls, conf: configparser.SectionProxy) -> "YoConfig":
+    def from_config_section(
+        cls, conf: configparser.SectionProxy, regions: t.Dict[str, YoRegion]
+    ) -> "YoConfig":
         d = dict(**conf)
+        d["regions"] = regions
+        region_conf = filter_keys(
+            d, ("vcn_id", "subnet_id", "subnet_compartment_id")
+        )
         check_args_dataclass(cls, d.keys(), "~/.oci/yo.ini \\[yo] section")
+        if region_conf:
+            warnings.warn(
+                "region-specific configurations in [yo] section are deprecated, please update your config to use [regions.*] sections\n"
+                "See https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-support"
+            )
+            regions[d["region"]] = YoRegion.from_config_section(
+                d["region"], region_conf
+            )
         bools = [
             "preserve_volume_on_terminate",
             "silence_automatic_tag_warning",
