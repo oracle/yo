@@ -14,6 +14,9 @@ should appear here.
     command line.
   - Please see the documentation for a migration guide:
     https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-support
+- Switched Yo's default setup dialog to use ``oci setup keys``. Updated
+  documentation accordingly.
+
 
 ## 1.6.0 - Wed, Apr 17, 2024
 

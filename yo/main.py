@@ -235,21 +235,11 @@ def check_configs() -> None:
     con.print("Welcome to yo! It looks like yo or OCI is not yet configured.\n")
     if not has_oci_config:
         con.print("OCI SDK Config is Missing\n", style="red")
-        con.print('  Run "oci setup bootstrap" and follow the instructions!')
+        con.print(
+            '  Run "oci setup keys" and upload the resulting public key to the OCI Web UI!'
+        )
+        con.print("  Then use the resulting OCI configuration in ~/.oci/config")
         con.print("  You probably want us-ashburn-1 for your region.")
-        if "SSH_CONNECTION" in os.environ:
-            con.print(
-                "\n  [red]It looks like you're connected via SSH.[/] To make",
-            )
-            con.print(
-                "  the bootstrap work properly, please reconnect using the SSH"
-            )
-            con.print(
-                '  arguments "-L 8181:localhost:8181". This is necessary to'
-            )
-            con.print(
-                "  complete the OCI authentication flow on your host computer."
-            )
         con.print()
     if not has_yo_config:
         import shutil
