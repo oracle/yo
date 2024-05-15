@@ -56,29 +56,14 @@ in the yo source code for those.</p>
 <section id="region">
 <h3><code class="docutils literal notranslate"><span class="pre">region</span></code><a class="headerlink" href="#region" title="Link to this heading">¶</a></h3>
 <p>(String, Required) Set the OCI region. This takes precedence over anything in
-<code class="docutils literal notranslate"><span class="pre">~/.oci/config</span></code>. It should match the <code class="docutils literal notranslate"><span class="pre">availability_domain</span></code> configs you have
-in this file, as well as the <code class="docutils literal notranslate"><span class="pre">vcn_id</span></code> config.</p>
-</section>
-<section id="vcn-id">
-<h3><code class="docutils literal notranslate"><span class="pre">vcn_id</span></code><a class="headerlink" href="#vcn-id" title="Link to this heading">¶</a></h3>
-<p>(String, Required) The VCN (virtual cloud network) in which your instances will
-get created. This should be an OCID as well.</p>
-</section>
-<section id="subnet-id">
-<h3><code class="docutils literal notranslate"><span class="pre">subnet_id</span></code><a class="headerlink" href="#subnet-id" title="Link to this heading">¶</a></h3>
-<p>(String, Optional) The OCI subnet ID to which your instances will be
-connected.</p>
-<p>One of either <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> or <code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code> is required,
-with <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> being preferred if both are specified.</p>
-</section>
-<section id="subnet-compartment-id">
-<h3><code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code><a class="headerlink" href="#subnet-compartment-id" title="Link to this heading">¶</a></h3>
-<p>(String, Optional) The OCI compartment which contains the subnets your instances
-should be created within. In OCI, the IDs of subnets change depending on which
-AD (availability domain) they’re in. So, yo has a weird approach, where it lists
-every subnet in this compartment and AD, and simply picks the first one.</p>
-<p>One of either <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> or <code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code> is required,
-with <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> being preferred if both are specified.</p>
+<code class="docutils literal notranslate"><span class="pre">~/.oci/config</span></code>.</p>
+<p>Whichever region you choose should be a valid OCI region. Further, you must
+include a corresponding section below, <code class="docutils literal notranslate"><span class="pre">[regions.NAME]</span></code>, which contains
+<a class="reference internal" href="#regionconf"><span class="std std-ref">region-specific</span></a> configuration information (vcn and subnet).</p>
+<p>The region may be overridden on the command line with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">-r</span> <span class="pre">REGION</span></code>, in which
+case, a different region (with corresponding config section) will be used. Yo
+maintains separate cache information for each region. Yo commands can only
+operate in one region at a time.</p>
 </section>
 <section id="my-email">
 <h3><code class="docutils literal notranslate"><span class="pre">my_email</span></code><a class="headerlink" href="#my-email" title="Link to this heading">¶</a></h3>
@@ -333,6 +318,37 @@ viewed in the documentation for <code class="docutils literal notranslate"><span
 can extend the list on the command line with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">-x</span> <span class="pre">Col1</span></code>.</p>
 </section>
 </section>
+<section id="region-specific-configurations">
+<span id="regionconf"></span><h2>Region-Specific Configurations<a class="headerlink" href="#region-specific-configurations" title="Link to this heading">¶</a></h2>
+<p>Configurations related to the VCN and subnet used by your instance must be
+region specific. Thus, these configurations are placed in a dedicated,
+region-specific section You can select which region Yo will operate in via the
+<code class="docutils literal notranslate"><span class="pre">region</span></code> config in the <code class="docutils literal notranslate"><span class="pre">[yo]</span></code> section, and override this configuration on
+the command line.</p>
+<p>The region-specific configuration sections must be named as <code class="docutils literal notranslate"><span class="pre">[regions.NAME]</span></code>,
+replacing NAME with the region’s name. For instance, <code class="docutils literal notranslate"><span class="pre">[regions.us-ashburn-1]</span></code>.</p>
+<section id="vcn-id">
+<h3><code class="docutils literal notranslate"><span class="pre">vcn_id</span></code><a class="headerlink" href="#vcn-id" title="Link to this heading">¶</a></h3>
+<p>(String, Required) The VCN (virtual cloud network) in which your instances will
+get created. This should be an OCID.</p>
+</section>
+<section id="subnet-id">
+<h3><code class="docutils literal notranslate"><span class="pre">subnet_id</span></code><a class="headerlink" href="#subnet-id" title="Link to this heading">¶</a></h3>
+<p>(String, Optional) The OCI subnet ID to which your instances will be
+connected.</p>
+<p>One of either <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> or <code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code> is required,
+with <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> being preferred if both are specified.</p>
+</section>
+<section id="subnet-compartment-id">
+<h3><code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code><a class="headerlink" href="#subnet-compartment-id" title="Link to this heading">¶</a></h3>
+<p>(String, Optional) The OCI compartment which contains the subnets your instances
+should be created within. In OCI, the IDs of subnets change depending on which
+AD (availability domain) they’re in. So, yo has a weird approach, where it lists
+every subnet in this compartment and AD, and simply picks the first one.</p>
+<p>One of either <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> or <code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code> is required,
+with <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> being preferred if both are specified.</p>
+</section>
+</section>
 <section id="instance-profiles">
 <span id="id10"></span><h2>Instance Profiles<a class="headerlink" href="#instance-profiles" title="Link to this heading">¶</a></h2>
 <p>There are many options which you may want to specify when launching an OCI
@@ -527,28 +543,17 @@ of copy/paste.</p>
 <span class="na">instance_compartment_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">INSTANCE_COMPARTMENT_ID</span>
 
 <span class="c1"># REQUIRED: Set the OCI region. This takes precedence over anything in</span>
-<span class="c1"># ~/.oci/config. It should match the availability_domain configs you have in</span>
-<span class="c1"># this file, as well as the vcn_id below.</span>
+<span class="c1"># ~/.oci/config.</span>
+<span class="c1">#</span>
+<span class="c1"># Whichever region you choose should be a valid OCI region. There must be a</span>
+<span class="c1"># corresponding section below, [regions.NAME], which contains region-specific</span>
+<span class="c1"># configuration information (vcn and subnet).</span>
+<span class="c1">#</span>
+<span class="c1"># The region may be overridden on the command line with `yo -r REGION`, in which</span>
+<span class="c1"># case, a different region (with corresponding config section) will be used. Yo</span>
+<span class="c1"># maintains separate cache information for each region. Yo commands can only</span>
+<span class="c1"># operate in one region at a time.</span>
 <span class="na">region</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">us-ashburn-1</span>
-
-<span class="c1"># REQUIRED: VCN ID which contains the subnets your instances should be created</span>
-<span class="c1"># in.</span>
-<span class="na">vcn_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VCN_ID</span>
-
-<span class="c1">## There are two ways to specify a subnet: either specify the subnet_id (most</span>
-<span class="c1">## common), OR specify a compartment which contains subnets. You must configure</span>
-<span class="c1">## either subnet_id or subnet_compartment_id.</span>
-<span class="c1">#</span>
-<span class="c1"># Option 1: Specify a single subnet ID to use for your instances.</span>
-<span class="c1"># subnet_id = SUBNET_ID</span>
-<span class="c1">#</span>
-<span class="c1"># Option 2: Subnets may change based on which availability domain you&#39;re</span>
-<span class="c1"># operating in. As a result, yo&#39;s logic is to list all subnets in the following</span>
-<span class="c1"># subnet, which belong to the above VCN. If there are multiple, it takes the</span>
-<span class="c1"># first one.  For sustaining engineers, this is the &quot;Networks&quot; compartment</span>
-<span class="c1"># below.</span>
-<span class="c1"># subnet_compartment_id = COMPARTMENT_ID</span>
-<span class="na">subnet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">SUBNET_ID</span>
 
 <span class="c1"># REQUIRED: The email address below MUST be the one you use to log into OCI.</span>
 <span class="na">my_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">EXAMPLE@EXAMPLE.COM</span>
@@ -662,12 +667,67 @@ of copy/paste.</p>
 <span class="c1">#</span>
 <span class="c1"># list_columns = Name,Shape,Mem,CPU,State,Created</span>
 
+
+<span class="c1">##################################</span>
+<span class="c1"># OCI Region Configuration</span>
+<span class="c1">#</span>
+<span class="c1"># Any section prefixed with &quot;regions.&quot; declares a region configuration.</span>
+<span class="c1"># These sections specify region-specific information: namely, the VCN and</span>
+<span class="c1"># subnet. The region you are interacting with can be set by the &quot;region&quot;</span>
+<span class="c1"># configuration in the [yo] section, or on the command line with:</span>
+<span class="c1">#</span>
+<span class="c1">#     yo -r REGION ...</span>
+<span class="c1">#</span>
+<span class="c1"># You can only use regions which have a corresponding configuration section</span>
+<span class="c1"># here.</span>
+<span class="c1">##################################</span>
+<span class="k">[regions.us-ashburn-1]</span>
+
+<span class="c1"># REQUIRED: VCN ID which contains the subnets your instances should be created</span>
+<span class="c1"># in.</span>
+<span class="na">vcn_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VCN_ID</span>
+
+<span class="c1">## There are two ways to specify a subnet: either specify the subnet_id (most</span>
+<span class="c1">## common), OR specify a compartment which contains subnets. You must configure</span>
+<span class="c1">## either subnet_id or subnet_compartment_id.</span>
+<span class="c1">#</span>
+<span class="c1"># Option 1: Specify a single subnet ID to use for your instances.</span>
+<span class="c1"># subnet_id = SUBNET_ID</span>
+<span class="c1">#</span>
+<span class="c1"># Option 2: Subnets may change based on which availability domain you&#39;re</span>
+<span class="c1"># operating in. As a result, yo&#39;s logic is to list all subnets in the following</span>
+<span class="c1"># subnet, which belong to the above VCN. If there are multiple, it takes the</span>
+<span class="c1"># first one.  For sustaining engineers, this is the &quot;Networks&quot; compartment</span>
+<span class="c1"># below.</span>
+<span class="c1"># subnet_compartment_id = COMPARTMENT_ID</span>
+<span class="na">subnet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">SUBNET_ID</span>
+
+
+<span class="c1">##################################</span>
+<span class="c1"># Instance Profile Configuration</span>
+<span class="c1">#</span>
 <span class="c1"># Any section prefixed with &quot;instances.&quot; declares an instance profile. The</span>
 <span class="c1"># instance profile DEFAULT is required, but you can make additional ones as</span>
 <span class="c1"># well.</span>
+<span class="c1">##################################</span>
 <span class="k">[instances.DEFAULT]</span>
 
 <span class="c1"># REQUIRED: set the availability domain for this instance.</span>
+<span class="c1">#</span>
+<span class="c1"># This should be set as a simple integer. For instance, instead of</span>
+<span class="c1"># &quot;VkEH:US-ASHBURN-AD-3&quot;, simply specify &quot;3&quot;. This ensures that your profile</span>
+<span class="c1"># will work in any region.</span>
+<span class="c1">#</span>
+<span class="c1"># Note that for compatibility, Yo does allow you to specify a full string AD</span>
+<span class="c1"># name. However, if that AD is not found in the region, then Yo will take the</span>
+<span class="c1"># trailing integer at the end of the AD name, and use that to select a valid AD</span>
+<span class="c1"># within the region.</span>
+<span class="c1">#</span>
+<span class="c1"># If the value specified is less than or equal to zero, then Yo will randomly</span>
+<span class="c1"># choose an availability domain each time you launch an instance. If the value</span>
+<span class="c1"># is larger than the number of ADs present in a given region, then Yo will allow</span>
+<span class="c1"># the index to silently wrap around (e.g. specifying AD 4 in a region with only</span>
+<span class="c1"># 3 ADs will result in AD 1 being selected).</span>
 <span class="na">availability_domain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VkEH:US-ASHBURN-AD-3</span>
 
 <span class="c1"># REQUIRED: set the shape for this instance</span>
@@ -786,6 +846,7 @@ of copy/paste.</p>
 <li class="toctree-l2"><a class="reference internal" href="vnc.html">VNC and Remote desktop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="block.html">Block Volume Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="region.html">Multiple OCI Region Support in Yo</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../cmds/index.html">Commands</a></li>

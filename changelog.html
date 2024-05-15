@@ -37,6 +37,20 @@
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">¶</a></h2>
 <p>Any changes which are committed, but not yet present in a released version,
 should appear here.</p>
+<ul class="simple">
+<li><p>Yo now has support for multiple OCI regions!</p>
+<ul>
+<li><p>Previously, if you wanted to run yo against another OCI region, you needed
+to edit your config, run <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">cache-clean</span></code>, and then run your commands.</p></li>
+<li><p>Now, Yo allows you to store configuration for several OCI regions into your
+config. You set a default region in your config file, but you can override
+it with the <code class="docutils literal notranslate"><span class="pre">YO_REGION</span></code> environment variable, or <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">-r</span> <span class="pre">REGION</span></code> on the
+command line.</p></li>
+<li><p>Please see the documentation for a migration guide:
+https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-support</p></li>
+</ul>
+</li>
+</ul>
 </section>
 <section id="wed-apr-17-2024">
 <h2>1.6.0 - Wed, Apr 17, 2024<a class="headerlink" href="#wed-apr-17-2024" title="Link to this heading">¶</a></h2>

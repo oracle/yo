@@ -1,0 +1,111 @@
+# Multiple OCI Region Support in Yo
+
+OCI's services are spread across datacenters in many regions. Most OCI resources
+are specific to one OCI region, such as instances and block devices. Further,
+the OCI API is region-specific, and the OCI web console only shows resources
+from a single region at a time.
+
+Yo's functionality is similar. Any Yo command can only run against a single
+region (e.g. `yo list` will only show instances of a specific region). By
+default, Yo runs in the region configured by the `region` key in the `[yo]`
+section of `yo.ini`. However, with proper configuration, you can override the
+region that Yo runs in with `yo -r REGION ...` for any sub-command.
+
+## Configuring multiple regions
+
+Each region you would like to use must have its own VCN and subnet information
+configured, within a region-specific configuration section. For example:
+
+```
+[regions.us-ashburn-1]
+vcn_id = ocid.vcn...
+subnet_id = ocid.subnet...
+
+[regions.us-phoenix-1]
+vcn_id = ocid.vcn...
+subnet_id = ocid.subnet...
+```
+
+## Using multiple regions
+
+The default region is selected via the `region` configuration key in the `[yo]`
+section. This may be overridden on the command line using `yo -r REGION`. The
+`-r` flag _must_ be immediately after the `yo` command and before the
+sub-command. For example:
+
+```bash
+# CORRECT:
+yo -r us-ashburn-1 list
+
+# INCORRECT
+yo list -r us-ashburn-1
+```
+
+If you'd like to run an entire shell session using a specific Yo region, you may
+set the `YO_REGION` environment variable, which Yo will detect and use. The
+environment variable may be overridden by the command line option.
+
+## Migrating yo.ini to multi-region support
+
+Upon upgrading Yo, you may see the following warning:
+
+```
+warning: region-specific configurations in [yo] section are deprecated, please update your config to use [regions.*] sections
+```
+
+To resolve this warning, make the following changes to your `~/.oci/yo.ini`
+configuration file:
+
+1. You should already have a line `region = something` in your configuration.
+   We'll refer to this value as `$REGION` here. First, create a new section
+   beneath the `[yo]` section named `[regions.$REGION]`
+2. Move the configuration keys `vcn_id` and `subnet_id` (or
+   `subnet_compartment_id`, if you use that instead) into the
+   `[regions.$REGION]` section.
+3. Optionally, update your availability domain configurations in each instance
+   profile to refer to the AD by number, rather than name.
+
+For example, consider this (incomplete) configuration snippet:
+
+```ini
+[yo]
+instance_compartment_id = ocid1.compartment...
+region = us-ashburn-1
+vcn_id = ocid1.vcn...
+subnet_id = ocid1.subnet...
+my_email = example@example.com
+my_username = example
+
+[instances.DEFAULT]
+availability_domain = VkEH:US-ASHBURN-AD-1
+shape = VM.Standard.x86.Generic
+cpu = 1
+mem = 8
+os = Oracle Linux:9
+name = ol9-1
+```
+
+The updated configuration would look like this:
+
+```ini
+[yo]
+instance_compartment_id = ocid1.compartment...
+region = us-ashburn-1
+my_email = example@example.com
+my_username = example
+
+[regions.us-ashburn-1]
+vcn_id = ocid1.vcn...
+subnet_id = ocid1.subnet...
+
+[instances.DEFAULT]
+availability_domain = 1
+shape = VM.Standard.x86.Generic
+cpu = 1
+mem = 8
+os = Oracle Linux:9
+name = ol9-1
+```
+
+Now, you may add more region configurations (each with its own section), and you
+can easily switch between these regions on the command line.

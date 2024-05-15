@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Multiple OCI Region Support in Yo &#8212; yo v1.6.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script src="../_static/documentation_options.js?v=896c6380"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../_static/yo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Commands" href="../cmds/index.html" />
+    <link rel="prev" title="Troubleshooting" href="troubleshooting.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="multiple-oci-region-support-in-yo">
+<h1>Multiple OCI Region Support in Yo<a class="headerlink" href="#multiple-oci-region-support-in-yo" title="Link to this heading">¶</a></h1>
+<p>OCI’s services are spread across datacenters in many regions. Most OCI resources
+are specific to one OCI region, such as instances and block devices. Further,
+the OCI API is region-specific, and the OCI web console only shows resources
+from a single region at a time.</p>
+<p>Yo’s functionality is similar. Any Yo command can only run against a single
+region (e.g. <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> will only show instances of a specific region). By
+default, Yo runs in the region configured by the <code class="docutils literal notranslate"><span class="pre">region</span></code> key in the <code class="docutils literal notranslate"><span class="pre">[yo]</span></code>
+section of <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code>. However, with proper configuration, you can override the
+region that Yo runs in with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">-r</span> <span class="pre">REGION</span> <span class="pre">...</span></code> for any sub-command.</p>
+<section id="configuring-multiple-regions">
+<h2>Configuring multiple regions<a class="headerlink" href="#configuring-multiple-regions" title="Link to this heading">¶</a></h2>
+<p>Each region you would like to use must have its own VCN and subnet information
+configured, within a region-specific configuration section. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">regions</span><span class="o">.</span><span class="n">us</span><span class="o">-</span><span class="n">ashburn</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">vcn_id</span> <span class="o">=</span> <span class="n">ocid</span><span class="o">.</span><span class="n">vcn</span><span class="o">...</span>
+<span class="n">subnet_id</span> <span class="o">=</span> <span class="n">ocid</span><span class="o">.</span><span class="n">subnet</span><span class="o">...</span>
+
+<span class="p">[</span><span class="n">regions</span><span class="o">.</span><span class="n">us</span><span class="o">-</span><span class="n">phoenix</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">vcn_id</span> <span class="o">=</span> <span class="n">ocid</span><span class="o">.</span><span class="n">vcn</span><span class="o">...</span>
+<span class="n">subnet_id</span> <span class="o">=</span> <span class="n">ocid</span><span class="o">.</span><span class="n">subnet</span><span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="using-multiple-regions">
+<h2>Using multiple regions<a class="headerlink" href="#using-multiple-regions" title="Link to this heading">¶</a></h2>
+<p>The default region is selected via the <code class="docutils literal notranslate"><span class="pre">region</span></code> configuration key in the <code class="docutils literal notranslate"><span class="pre">[yo]</span></code>
+section. This may be overridden on the command line using <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">-r</span> <span class="pre">REGION</span></code>. The
+<code class="docutils literal notranslate"><span class="pre">-r</span></code> flag <em>must</em> be immediately after the <code class="docutils literal notranslate"><span class="pre">yo</span></code> command and before the
+sub-command. For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># CORRECT:</span>
+yo<span class="w"> </span>-r<span class="w"> </span>us-ashburn-1<span class="w"> </span>list
+
+<span class="c1"># INCORRECT</span>
+yo<span class="w"> </span>list<span class="w"> </span>-r<span class="w"> </span>us-ashburn-1
+</pre></div>
+</div>
+<p>If you’d like to run an entire shell session using a specific Yo region, you may
+set the <code class="docutils literal notranslate"><span class="pre">YO_REGION</span></code> environment variable, which Yo will detect and use. The
+environment variable may be overridden by the command line option.</p>
+</section>
+<section id="migrating-yo-ini-to-multi-region-support">
+<h2>Migrating yo.ini to multi-region support<a class="headerlink" href="#migrating-yo-ini-to-multi-region-support" title="Link to this heading">¶</a></h2>
+<p>Upon upgrading Yo, you may see the following warning:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">warning</span><span class="p">:</span> <span class="n">region</span><span class="o">-</span><span class="n">specific</span> <span class="n">configurations</span> <span class="ow">in</span> <span class="p">[</span><span class="n">yo</span><span class="p">]</span> <span class="n">section</span> <span class="n">are</span> <span class="n">deprecated</span><span class="p">,</span> <span class="n">please</span> <span class="n">update</span> <span class="n">your</span> <span class="n">config</span> <span class="n">to</span> <span class="n">use</span> <span class="p">[</span><span class="n">regions</span><span class="o">.*</span><span class="p">]</span> <span class="n">sections</span>
+</pre></div>
+</div>
+<p>To resolve this warning, make the following changes to your <code class="docutils literal notranslate"><span class="pre">~/.oci/yo.ini</span></code>
+configuration file:</p>
+<ol class="arabic simple">
+<li><p>You should already have a line <code class="docutils literal notranslate"><span class="pre">region</span> <span class="pre">=</span> <span class="pre">something</span></code> in your configuration.
+We’ll refer to this value as <code class="docutils literal notranslate"><span class="pre">$REGION</span></code> here. First, create a new section
+beneath the <code class="docutils literal notranslate"><span class="pre">[yo]</span></code> section named <code class="docutils literal notranslate"><span class="pre">[regions.$REGION]</span></code></p></li>
+<li><p>Move the configuration keys <code class="docutils literal notranslate"><span class="pre">vcn_id</span></code> and <code class="docutils literal notranslate"><span class="pre">subnet_id</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">subnet_compartment_id</span></code>, if you use that instead) into the
+<code class="docutils literal notranslate"><span class="pre">[regions.$REGION]</span></code> section.</p></li>
+<li><p>Optionally, update your availability domain configurations in each instance
+profile to refer to the AD by number, rather than name.</p></li>
+</ol>
+<p>For example, consider this (incomplete) configuration snippet:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[yo]</span>
+<span class="na">instance_compartment_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ocid1.compartment...</span>
+<span class="na">region</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">us-ashburn-1</span>
+<span class="na">vcn_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ocid1.vcn...</span>
+<span class="na">subnet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ocid1.subnet...</span>
+<span class="na">my_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">example@example.com</span>
+<span class="na">my_username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">example</span>
+
+<span class="k">[instances.DEFAULT]</span>
+<span class="na">availability_domain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VkEH:US-ASHBURN-AD-1</span>
+<span class="na">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VM.Standard.x86.Generic</span>
+<span class="na">cpu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
+<span class="na">mem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">8</span>
+<span class="na">os</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">Oracle Linux:9</span>
+<span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ol9-1</span>
+</pre></div>
+</div>
+<p>The updated configuration would look like this:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[yo]</span>
+<span class="na">instance_compartment_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ocid1.compartment...</span>
+<span class="na">region</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">us-ashburn-1</span>
+<span class="na">my_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">example@example.com</span>
+<span class="na">my_username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">example</span>
+
+<span class="k">[regions.us-ashburn-1]</span>
+<span class="na">vcn_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ocid1.vcn...</span>
+<span class="na">subnet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ocid1.subnet...</span>
+
+<span class="k">[instances.DEFAULT]</span>
+<span class="na">availability_domain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
+<span class="na">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">VM.Standard.x86.Generic</span>
+<span class="na">cpu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
+<span class="na">mem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">8</span>
+<span class="na">os</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">Oracle Linux:9</span>
+<span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ol9-1</span>
+</pre></div>
+</div>
+<p>Now, you may add more region configurations (each with its own section), and you
+can easily switch between these regions on the command line.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/yo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="../index.html">yo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vnc.html">VNC and Remote desktop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="block.html">Block Volume Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Multiple OCI Region Support in Yo</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cmds/index.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optional_setup.html">Optional Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User Guide</a><ul>
+      <li>Previous: <a href="troubleshooting.html" title="previous chapter">Troubleshooting</a></li>
+      <li>Next: <a href="../cmds/index.html" title="next chapter">Commands</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020-2023, Oracle and/or its affiliates.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/guide/region.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
