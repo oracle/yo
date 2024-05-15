@@ -47,7 +47,8 @@ environment variable may be overridden by the command line option.
 
 ## Migrating yo.ini to multi-region support
 
-Upon upgrading Yo, you may see the following warning:
+Upon upgrading Yo to version 1.7.0 or later from any prior version, you may see
+the following warning:
 
 ```
 warning: region-specific configurations in [yo] section are deprecated, please update your config to use [regions.*] sections
