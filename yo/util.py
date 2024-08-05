@@ -343,3 +343,12 @@ def current_yo_version() -> t.Tuple[int, int, int]:
     ver_str = pkg_resources.get_distribution("yo").version
     g1, g2, g3 = ver_str.split(".")
     return (int(g1), int(g2), int(g3))
+
+
+_NATURAL_SORT_RE = re.compile(r"([0-9]+)")
+
+
+def natural_sort(s: str) -> t.List[t.Union[str, int]]:
+    return [
+        int(f) if f and f[0].isdigit() else f for f in _NATURAL_SORT_RE.split(s)
+    ]
