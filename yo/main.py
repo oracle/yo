@@ -115,6 +115,7 @@ from yo.api import YoVolumeAttachment
 from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
 from yo.util import latest_yo_version
+from yo.util import natural_sort
 from yo.util import shlex_join
 from yo.util import standardize_name
 from yo.util import strftime
@@ -1903,7 +1904,7 @@ class ImagesCmd(YoCmd):
             images = list(
                 filter(lambda x: x.os == os and x.os_version == ver, images)
             )
-        images.sort(key=lambda i: i.name, reverse=True)
+        images.sort(key=lambda i: natural_sort(i.name), reverse=True)
         if self.args.verbose:
             self.c.con.print(images)
         else:
@@ -2296,7 +2297,7 @@ class LaunchCmd(YoCmd):
 
         images = self.c.list_official_images()
         images = list(filter(compatible, images))
-        images.sort(key=lambda i: i.name, reverse=True)
+        images.sort(key=lambda i: natural_sort(i.name), reverse=True)
         if not images:
             raise YoExc(
                 f"No matching images for {os_config} and shape {shape}..."
