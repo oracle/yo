@@ -1033,7 +1033,40 @@ class YoCtx:
         # a value provided from its own config, to allow users to update the
         # region, VCN ID, and AD configuration, all in one place.
         self._oci_cfg["region"] = self.config.region
-        self._vnet = foo.oci.core.VirtualNetworkClient(self._oci_cfg)
+
+        # First try to load a client without using a passphrase. If that fails,
+        # we need to prompt and retry with a passphrase. If that fails, the
+        # passphrase was likely wrong, so we continue until we succeed in
+        # creating the client, or until we get any other error.
+        #
+        # KNOWN BUG: Some versions of cryptography / OpenSSL (the built-in ones
+        # on OL9, at least) will give a spurious prompt in case you provide the
+        # wrong password. This doesn't happen with recent versions from pip, and
+        # it can't be sanely monkey-patched. As a result, we just need to live
+        # with the double prompt. Try to get the password right on the first try.
+        # See: https://github.com/oracle/oci-python-sdk/issues/697
+        while True:
+            try:
+                self._vnet = foo.oci.core.VirtualNetworkClient(self._oci_cfg)
+            except foo.oci.exceptions.MissingPrivateKeyPassphrase:
+                needs_passphrase = True
+                self._oci_cfg["pass_phrase"] = self.con.input(
+                    prompt="OCI API Key Passphrase: ",
+                    password=True,
+                )
+            except foo.oci.exceptions.InvalidPrivateKey:
+                # The error is vague: either the password is wrong, or it's the
+                # wrong type of key. We can be more specific, since we know
+                # whether a password is required, we already tried without it.
+                if not needs_passphrase:
+                    raise
+                self.con.print("[red]Incorrect passphrase[/red]")
+                self._oci_cfg["pass_phrase"] = self.con.input(
+                    prompt="OCI API Key Passphrase: ",
+                    password=True,
+                )
+            else:
+                break
         self._compute = foo.oci.core.ComputeClient(self._oci_cfg)
         self._block = foo.oci.core.BlockstorageClient(self._oci_cfg)
         self._iam = foo.oci.identity.IdentityClient(self._oci_cfg)
