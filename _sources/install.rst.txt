@@ -55,7 +55,9 @@ contains the code ``NotAuthorizedOrNotFound``, then there's an alternative way
 to setup your OCI credentials:
 
 1. Run ``oci setup keys``. At the prompt, you probably want to type "N/A" to
-   avoid setting a passphrase for the key.
+   avoid setting a passphrase for the key. However, if you really feel it is
+   necessary, you can use a passphrase. Yo will detect that it is necessary and
+   prompt you for it.
 2. Open the OCI web console. Navigate to your profile using the icon at the top
    right (or search your email address in the search bar). On your profile page,
    select the "API keys" link, and then choose "Add API key".

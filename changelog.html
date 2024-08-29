@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; yo v1.6.0 documentation</title>
+    <title>Changelog &#8212; yo v1.7.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
-    <script src="_static/documentation_options.js?v=896c6380"></script>
+    <script src="_static/documentation_options.js?v=f8b929d9"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="_static/yo.png"/>
@@ -37,6 +37,9 @@
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">¶</a></h2>
 <p>Any changes which are committed, but not yet present in a released version,
 should appear here.</p>
+</section>
+<section id="thu-aug-29-2024">
+<h2>1.7.0 - Thu, Aug 29, 2024<a class="headerlink" href="#thu-aug-29-2024" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Yo now has support for multiple OCI regions!</p>
 <ul>
@@ -52,6 +55,12 @@ https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-s
 </li>
 <li><p>Switched Yo’s default setup dialog to use <code class="docutils literal notranslate"><span class="pre">oci</span> <span class="pre">setup</span> <span class="pre">keys</span></code>. Updated
 documentation accordingly.</p></li>
+<li><p>Yo can now use OCI API keys which have a passphrase. It will automatically
+detect that a passphrase is required, and prompt only when attempting to use
+the API. Since many API results are cached, prompts aren’t terribly frequent.</p></li>
+<li><p>The Yo image list now uses “natural sort”. This ensures that images with
+numbers like “8.10” sort after “8.9”, which is important if you have an
+operating system image with that version number :P</p></li>
 </ul>
 </section>
 <section id="wed-apr-17-2024">
