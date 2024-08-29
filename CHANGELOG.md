@@ -5,6 +5,8 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.7.0 - Thu, Aug 29, 2024
+
 - Yo now has support for multiple OCI regions!
   - Previously, if you wanted to run yo against another OCI region, you needed
     to edit your config, run `yo cache-clean`, and then run your commands.
@@ -16,6 +18,12 @@ should appear here.
     https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-support
 - Switched Yo's default setup dialog to use ``oci setup keys``. Updated
   documentation accordingly.
+- Yo can now use OCI API keys which have a passphrase. It will automatically
+  detect that a passphrase is required, and prompt only when attempting to use
+  the API. Since many API results are cached, prompts aren't terribly frequent.
+- The Yo image list now uses "natural sort". This ensures that images with
+  numbers like "8.10" sort after "8.9", which is important if you have an
+  operating system image with that version number :P
 
 
 ## 1.6.0 - Wed, Apr 17, 2024
