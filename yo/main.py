@@ -231,10 +231,19 @@ class FullYoConfig:
     """Aliases configured in [aliases]"""
 
 
+def yo_config_unmodified() -> bool:
+    user_cfg = os.stat(CONFIG_FILE)
+    sample_cfg = os.stat(SAMPLE_CONFIG_FILE)
+    if user_cfg.st_size != sample_cfg.st_size:
+        return False
+    return open(CONFIG_FILE).read() == open(SAMPLE_CONFIG_FILE).read()
+
+
 def check_configs() -> None:
     has_oci_config = os.path.isfile(OCI_CONFIG_FILE)
     has_yo_config = os.path.isfile(CONFIG_FILE)
-    if has_oci_config and has_yo_config:
+    unmodified = not has_yo_config or yo_config_unmodified()
+    if has_oci_config and has_yo_config and not unmodified:
         return
     con = rich.console.Console()
     con.print("Welcome to yo! It looks like yo or OCI is not yet configured.\n")
@@ -253,6 +262,16 @@ def check_configs() -> None:
         shutil.copy(SAMPLE_CONFIG_FILE, CONFIG_FILE)
         con.print("[red]yo configuration file is missing\n")
         con.print(f"  I've gone ahead and copied the {SAMPLE_CONFIG_NAME} to:")
+        con.print(f"  {CONFIG_FILE}")
+        con.print(
+            "  [orange]Please edit it (see the configuration guide below for help)\n"
+        )
+    elif unmodified:
+        con.print("[red]yo is not yet configured\n")
+        con.print(
+            f"  Your config is currently identical to the {SAMPLE_CONFIG_NAME}"
+        )
+        con.print("  Your config file is located at:")
         con.print(f"  {CONFIG_FILE}")
         con.print(
             "  [orange]Please edit it (see the configuration guide below for help)\n"
