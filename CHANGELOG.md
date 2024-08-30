@@ -6,6 +6,7 @@ Any changes which are committed, but not yet present in a released version,
 should appear here.
 
 - Fixed a cache contamination bug when switching between OCI regions.
+- `yo cache-clean` now cleans caches from all region, and the old legacy cache
 
 ## 1.7.0 - Thu, Aug 29, 2024
 
