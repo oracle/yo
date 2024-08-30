@@ -3878,19 +3878,13 @@ class HelpCmd(YoCmd):
         print(__doc__.strip())
 
 
-def _extend(ctx: YoCtx) -> None:
+def _extend() -> None:
     """
     This is for advanced users to add custom extension scripts.  It is not
     mentioned in the documentation, and for good reason: there is no stable API
     defined (yet). However, it can still be useful to stick a stub in here for
     something.
     """
-    # The configuration "extension_modules" is still supported, but no longer
-    # recommended. Entry points (below) are a better way that don't require the
-    # user to manually configure things.
-    for module in ctx.config.extension_modules:
-        importlib.import_module(module)
-
     # The importlib.metadata API is included in Python 3.8+. Normally, one might
     # simply try to import it, catching the ImportError and falling back to the
     # older API. However, the API was _transitional_ in 3.8 and 3.9, and it is
@@ -3906,6 +3900,14 @@ def _extend(ctx: YoCtx) -> None:
 
     for entry_point in entry_points(group="yo.extensions.v1"):
         entry_point.load()
+
+
+def _old_extension_modules(ctx: YoCtx) -> None:
+    # The configuration "extension_modules" is still supported, but no longer
+    # recommended. Entry points (below) are a better way that don't require the
+    # user to manually configure things.
+    for module in ctx.config.extension_modules:
+        importlib.import_module(module)
 
 
 def main() -> None:
@@ -3924,8 +3926,9 @@ def main() -> None:
             default=os.getenv("YO_REGION"),
             help="select an alternative region configured in ~/.oci/yo.ini",
         )
+        _extend()
         ctx, aliases = YoCmd.setup_config()
-        _extend(ctx)
+        _old_extension_modules(ctx)
         YoCmd.add_commands(
             parser,
             default="help",
