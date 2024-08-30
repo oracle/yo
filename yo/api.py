@@ -873,6 +873,11 @@ class YoCache(t.Generic[U]):
         self._data = []
         self._stale_hours = stale_hours
 
+    def clear(self) -> None:
+        self.last_update = None
+        self.last_refresh = None
+        self._data = []
+
     def load(self, d: t.Dict[str, t.Any]) -> None:
         """
         Load the contents of a JSON-decoded dictionary (presumably from the disk
@@ -1191,6 +1196,11 @@ class YoCtx:
             json.dump(cache, f, indent=4)
         os.replace(cache_pid_file, self._cache_file)
 
+    def clear_cache(self) -> None:
+        for cache_attr in self._caches:
+            yocache: YoCache[t.Any] = getattr(self, cache_attr)
+            yocache.clear()
+
     def __init__(
         self,
         yo_config: YoConfig,
@@ -1219,6 +1229,7 @@ class YoCtx:
             # Reload the OCI SDK clients if they were already loaded for the
             # other region. Otherwise, let them get lazily initialized later.
             self._setup_oci()
+        self.clear_cache()  # clear out cached data from other region
         self.load_cache()
 
     def filter_by_creator(self, s: t.Optional[str]) -> bool:
