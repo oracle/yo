@@ -3852,11 +3852,20 @@ class MoshCmd(SingleInstanceCommand):
 class CacheCleanCmd(YoCmd):
     name = "cache-clean"
     group = "Diagnostic Commands"
-    description = "Clear Yo's cache -- a good first troubleshooting step."
+    description = "Clear Yo's caches -- a good first troubleshooting step."
 
     def run(self) -> None:
-        if os.path.isfile(self.c._cache_file):
-            os.unlink(self.c._cache_file)
+        regions = set(self.c.config.regions.keys())
+        regions.add(self.c.config.region)
+        files = [
+            os.path.expanduser(f"~/.cache/yo.{region}.json")
+            for region in regions
+        ]
+        files.append(os.path.expanduser("~/.cache/yo.json"))
+        for file in files:
+            if os.path.isfile(file):
+                print(f"cleaned {file}")
+                os.unlink(file)
 
 
 class HelpCmd(YoCmd):
