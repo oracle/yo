@@ -5,6 +5,8 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+- Fixed a cache contamination bug when switching between OCI regions.
+
 ## 1.7.0 - Thu, Aug 29, 2024
 
 - Yo now has support for multiple OCI regions!
