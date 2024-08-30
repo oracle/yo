@@ -124,6 +124,10 @@ from yo.util import YoExc
 from yo.util import YoRegion
 
 CONFIG_FILE = os.path.expanduser("~/.oci/yo.ini")
+SAMPLE_CONFIG_FILE = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), "data/sample.yo.ini"
+)
+SAMPLE_CONFIG_NAME = "sample configuration"
 OCI_CONFIG_FILE = os.path.expanduser("~/.oci/config")
 TASK_DIRECTORIES = [
     os.path.expanduser("~/.oci/yo-tasks"),
@@ -246,12 +250,9 @@ def check_configs() -> None:
         import shutil
 
         os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
-        sample = os.path.join(
-            os.path.abspath(os.path.dirname(__file__)), "data/sample.yo.ini"
-        )
-        shutil.copy(sample, CONFIG_FILE)
+        shutil.copy(SAMPLE_CONFIG_FILE, CONFIG_FILE)
         con.print("[red]yo configuration file is missing\n")
-        con.print("  I've gone ahead and copied the sample configuration to:")
+        con.print(f"  I've gone ahead and copied the {SAMPLE_CONFIG_NAME} to:")
         con.print(f"  {CONFIG_FILE}")
         con.print(
             "  [orange]Please edit it (see the configuration guide below for help)\n"
