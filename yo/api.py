@@ -992,7 +992,7 @@ class YoCtx:
     config: YoConfig
     instance_profiles: t.Mapping[str, InstanceProfile]
 
-    cache_version = 1
+    cache_version = 2
     last_checked_for_update: datetime.datetime
 
     _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 5)
