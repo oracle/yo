@@ -5,8 +5,12 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.7.1 - Fri, Aug 30, 2024
+
 - Fixed a cache contamination bug when switching between OCI regions.
 - `yo cache-clean` now cleans caches from all region, and the old legacy cache
+- Allow extensions to customize the default config file.
+- Improve the initial configuration phases a bit.
 
 ## 1.7.0 - Thu, Aug 29, 2024
 
