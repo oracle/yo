@@ -28,6 +28,32 @@ your OCI resources, which it previously stored. If the cache is out of date (or
 you used the OCI console directly) then this could be misleading. But for normal
 use, it's fine.
 
+Zsh Completion
+--------------
+
+The python argcomplete option should also work for zsh, and includes argument
+listings and explanations comparable to the bash completions. However, it lacks
+features native to the zsh completion system like tags, descriptions, and
+argument groups.
+
+An alternative zsh completion definition is available in contrib/yo.zsh that
+implements a more native zsh experience. Add this file to a directory in your
+$fpath and run ``compinit`` again. You may need to delete ~/.zcompdump to pick
+up the new completion definition depending on your distribution and
+configuration.
+
+For these completions, ``jq`` is used to parse the yo cache files if it is
+installed. Otherwise, argument listings for some words like instances and
+shapes are not available.
+
+Typical user zstyle configurations should now work, E.g.:
+
+.. code::
+
+   zstyle ':completion:*' verbose yes
+   zstyle ':completion:*:yo:*' group-name ''
+   zstyle ':completion:*:yo:*:descriptions' format '%F{magenta}completing%f: %d'
+
 Notifications
 -------------
 
