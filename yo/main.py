@@ -1985,7 +1985,7 @@ class CompatCmd(YoCmd):
         parser.add_argument(
             "--image-names",
             action="store_true",
-            help="OS name or fnmatch(3) pattern: filters OS in table",
+            help="display the image name rather than the OS name",
         )
         parser.add_argument(
             "--width",
