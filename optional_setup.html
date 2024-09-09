@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Optional Features &#8212; yo v1.7.1 documentation</title>
+    <title>Optional Features &#8212; yo v1.7.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
-    <script src="_static/documentation_options.js?v=5cc1adc0"></script>
+    <script src="_static/documentation_options.js?v=6b3927aa"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="_static/yo.png"/>
@@ -52,6 +52,27 @@ your OCI resources, which it previously stored. If the cache is out of date (or
 you used the OCI console directly) then this could be misleading. But for normal
 use, it’s fine.</p>
 </section>
+<section id="zsh-completion">
+<h2>Zsh Completion<a class="headerlink" href="#zsh-completion" title="Link to this heading">¶</a></h2>
+<p>The python argcomplete option should also work for zsh, and includes argument
+listings and explanations comparable to the bash completions. However, it lacks
+features native to the zsh completion system like tags, descriptions, and
+argument groups.</p>
+<p>An alternative zsh completion definition is available in contrib/yo.zsh that
+implements a more native zsh experience. Add this file to a directory in your
+$fpath and run <code class="docutils literal notranslate"><span class="pre">compinit</span></code> again. You may need to delete ~/.zcompdump to pick
+up the new completion definition depending on your distribution and
+configuration.</p>
+<p>For these completions, <code class="docutils literal notranslate"><span class="pre">jq</span></code> is used to parse the yo cache files if it is
+installed. Otherwise, argument listings for some words like instances and
+shapes are not available.</p>
+<p>Typical user zstyle configurations should now work, E.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">zstyle</span> <span class="s1">&#39;:completion:*&#39;</span> <span class="n">verbose</span> <span class="n">yes</span>
+<span class="n">zstyle</span> <span class="s1">&#39;:completion:*:yo:*&#39;</span> <span class="n">group</span><span class="o">-</span><span class="n">name</span> <span class="s1">&#39;&#39;</span>
+<span class="n">zstyle</span> <span class="s1">&#39;:completion:*:yo:*:descriptions&#39;</span> <span class="nb">format</span> <span class="s1">&#39;</span><span class="si">%F{magenta}</span><span class="s1">completing</span><span class="si">%f</span><span class="s1">: </span><span class="si">%d</span><span class="s1">&#39;</span>
+</pre></div>
+</div>
+</section>
 <section id="notifications">
 <h2>Notifications<a class="headerlink" href="#notifications" title="Link to this heading">¶</a></h2>
 <p>Sometimes OCI operations (like launching) take a few moments to complete. These
@@ -87,6 +108,7 @@ See <a class="reference internal" href="guide/configuration.html#global-configur
 <li class="toctree-l1"><a class="reference internal" href="cmds/index.html">Commands</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Optional Features</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#bash-completion">Bash Completion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zsh-completion">Zsh Completion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#notifications">Notifications</a></li>
 </ul>
 </li>

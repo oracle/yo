@@ -5,6 +5,12 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.7.2 - Mon, Sep 9, 2024
+
+- Added zsh completion script, thanks @rpigott!
+- Fixed race condition in launching tasks on some `ssh` / OS versions.
+- Fixed copy/paste error in argument description of `yo compat --image-names`
+
 ## 1.7.1 - Fri, Aug 30, 2024
 
 - Fixed a cache contamination bug when switching between OCI regions.
