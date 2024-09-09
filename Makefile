@@ -56,7 +56,11 @@ test:
 
 .PHONY: docs
 docs:
+	@$(PYTHON) scripts/rebuild_docs.py
 	@$(PYTHON) -m tox -e docs
+	@if [ ! -z "$$(git status docs --porcelain)" ]; then \
+	    echo "note: The docs tree is unclean"; \
+	fi
 
 .PHONY: docs-publish
 docs-publish: docs

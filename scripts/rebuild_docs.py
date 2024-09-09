@@ -4,9 +4,7 @@ import yo.main
 DIRECTIVE_FMT = """.. argparse::
    :module: yo.main
    :func: cmd_{stdname}_args
-   :prog: yo {name}
-
-"""
+   :prog: yo {name}"""
 
 
 def main():
@@ -25,7 +23,9 @@ def main():
             # f.write(f".. _{group}::\n\n")
             f.write(group + "\n")
             f.write("=" * len(group) + "\n\n")
-            for cmd in group_to_cmd[group]:
+            for j, cmd in enumerate(group_to_cmd[group]):
+                if j > 0:
+                    f.write("\n\n")
                 stdname = cmd.name.translate(trans)
                 directive = DIRECTIVE_FMT.format(
                     name=cmd.name,
