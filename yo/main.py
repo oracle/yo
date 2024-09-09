@@ -644,7 +644,7 @@ def task_get_status(
     command = (
         f"find {task_dir_safe} "
         "\\( -name pid -or -name status -or -name wait \\) -and -print0 "
-        '| xargs -0 grep -H ".*" | sort'
+        '2>/dev/null | xargs -0 grep -H ".*" | sort'
     )
     ip = ctx.get_instance_ip(inst, True)
     user = ctx.get_ssh_user(inst)
