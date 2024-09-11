@@ -5,6 +5,12 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.7.3 - Wed, Sep 11, 2024
+
+- Fixed crash in `yo images` parsing an OS value without colon.
+- Added user-friendly catch for a common error: adding a comment at the end of a
+  `~/.oci/yo.ini` value.
+
 ## 1.7.2 - Mon, Sep 9, 2024
 
 - Added zsh completion script, thanks @rpigott!
