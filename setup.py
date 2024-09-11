@@ -37,7 +37,7 @@ from setuptools import setup
 
 long_description = open("README.md").read()
 
-VERSION = "1.7.2"
+VERSION = "1.7.3"
 
 setup(
     name="yo",
