@@ -56,6 +56,7 @@ import yo.util
 from yo.util import check_args_dataclass
 from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
+from yo.util import hasherr
 from yo.util import latest_yo_version
 from yo.util import one
 from yo.util import standardize_name
@@ -219,8 +220,14 @@ class InstanceProfile:
         }
 
     @staticmethod
-    def from_dict(d: t.Dict[str, t.Any], name: str) -> "InstanceProfile":
+    def from_dict(
+        d: t.Dict[str, t.Any], name: str, allow_hash: bool
+    ) -> "InstanceProfile":
         d = d.copy()
+        if not allow_hash:
+            for k, v in d.items():
+                if isinstance(v, str) and "#" in v:
+                    hasherr(k, v, name)
         check_args_dataclass(
             InstanceProfile, d.keys(), f"~/.oci/yo.ini \\[{name}] section"
         )
