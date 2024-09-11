@@ -1920,7 +1920,12 @@ class ImagesCmd(YoCmd):
     def run(self) -> None:
         images = self.c.list_all_images()
         if self.args.os:
-            os, ver = self.args.os.split(":", 1)
+            try:
+                os, ver = self.args.os.split(":", 1)
+            except ValueError:
+                raise YoExc(
+                    f"OS name must be of the form name:version (got '{self.args.os}')"
+                )
             images = list(
                 filter(lambda x: x.os == os and x.os_version == ver, images)
             )
