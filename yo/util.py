@@ -77,6 +77,17 @@ def filter_keys(
     return output
 
 
+def hasherr(k: str, v: str, sec: str) -> None:
+    raise YoExc(
+        f"There is a '#' character in the config entry within section \\[{sec}]:\n"
+        f"  {k} = {v}\n"
+        "Ini-style configs do not allow comments except on their own line, you\n"
+        "cannot include a comment after a config value. If this was intended,\n"
+        "you can bypass this error by setting 'allow_hash_in_config_value = true'\n"
+        "in the \\[yo] section."
+    )
+
+
 @dataclasses.dataclass
 class YoRegion:
     name: str
@@ -94,6 +105,12 @@ class YoRegion:
             cls, d.keys(), f"~/.oci/yo.ini \\[region {name}] section"
         )
         return YoRegion(**d)
+
+    def check_hasherr(self) -> None:
+        for k in ("vcn_id", "subnet_id", "subnet_compartment_id"):
+            v = getattr(self, k)
+            if isinstance(v, str) and "#" in v:
+                hasherr(k, v, "regions." + self.name)
 
 
 @dataclasses.dataclass
@@ -121,6 +138,7 @@ class YoConfig:
     check_for_update_every: t.Optional[int] = 6
     creator_tags: t.List[str] = dataclasses.field(default_factory=list)
     list_columns: str = "Name,Shape,Mem,CPU,State,Created"
+    allow_hash_in_config_value: bool = False
 
     @property
     def vcn_id(self) -> str:
@@ -186,6 +204,7 @@ class YoConfig:
         cls, conf: configparser.SectionProxy, regions: t.Dict[str, YoRegion]
     ) -> "YoConfig":
         d = dict(**conf)
+
         d["regions"] = regions
         region_conf = filter_keys(
             d, ("vcn_id", "subnet_id", "subnet_compartment_id")
@@ -204,10 +223,21 @@ class YoConfig:
             "silence_automatic_tag_warning",
             "exact_name",
             "resource_filtering",
+            "allow_hash_in_config_value",
         ]
         for b in bools:
             if b in d:
                 d[b] = conf.getboolean(b)
+
+        allow_hash = d.get("allow_hash_in_config_value", False)
+        if not allow_hash:
+            for k, v in d.items():
+                if isinstance(v, str) and "#" in v:
+                    hasherr(k, v, "yo")
+            # Region configs are loaded before [yo], so check them once
+            # we know whether we should be raising an error.
+            for v in regions.values():
+                v.check_hasherr()
         if "check_for_update_every" in d:
             d["check_for_update_every"] = int(d["check_for_update_every"])
         # OCI stores email addresses as lower case. While most people write

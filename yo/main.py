@@ -114,6 +114,7 @@ from yo.api import YoVolume
 from yo.api import YoVolumeAttachment
 from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
+from yo.util import hasherr
 from yo.util import latest_yo_version
 from yo.util import natural_sort
 from yo.util import shlex_join
@@ -305,7 +306,10 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
     aliases: t.Dict[str, str] = {}
     if "aliases" in config.sections():
         for key in config["aliases"]:
-            aliases[key] = str(config["aliases"][key])
+            val = str(config["aliases"][key])
+            if "#" in val and not yo_config.allow_hash_in_config_value:
+                hasherr(key, val, "aliases")
+            aliases[key] = val
 
     instance_profiles: t.Dict[str, InstanceProfile] = {}
     expr = re.compile(r"^instances.")
@@ -341,7 +345,7 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
             del config[f"instances.{sec}"]["inherit"]
         keys.update(config[f"instances.{sec}"])
         instance_profiles[sec] = InstanceProfile.from_dict(
-            keys, f"instances.{sec}"
+            keys, f"instances.{sec}", yo_config.allow_hash_in_config_value
         )
         instance_profiles[sec].validate(sec)
     return FullYoConfig(yo_config, instance_profiles, aliases)

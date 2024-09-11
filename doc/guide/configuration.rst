@@ -370,6 +370,18 @@ viewed in the documentation for ``-x`` in :ref:`yo_list`.
 You can override this on the command line with ``yo list -C Col1,Col2`` and you
 can extend the list on the command line with ``yo list -x Col1``.
 
+``allow_hash_in_config_value``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Boolean, Optional, Default: false)
+
+By default, Yo detects the '#' character within a configuration value, and
+raises an error, becaues this is a common mistake for users. The '#' character
+can only introduce a comment at the beginning of a line. If you use it after a
+config value, it is included in the resulting value, which is usually not what
+you want. However, if there is some case where you actually want to include a
+hash in the config, set this to true to bypass the error.
+
 .. _regionconf:
 
 Region-Specific Configurations
