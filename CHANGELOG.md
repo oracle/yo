@@ -5,6 +5,13 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+- Yo now automatically disables the less secure, legacy [IMDS v1
+  endpoints](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/gettingmetadata.htm#upgrading-v2)
+  by default. The configuration `allow_legacy_imds_endpoints` and corresponding
+  `--allow-legacy-imds-endpoints` flag for `yo launch` have been added to
+  disable this feature, but in most situations there should be no reason to
+  change this.
+
 ## 1.7.3 - Wed, Sep 11, 2024
 
 - Fixed crash in `yo images` parsing an OS value without colon.
