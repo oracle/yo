@@ -2243,6 +2243,11 @@ class LaunchCmd(YoCmd):
             default=None,
             help="Custom username for logging into the instance",
         )
+        parser.add_argument(
+            "--allow-legacy-imds-endpoints",
+            action="store_true",
+            help="Allows IMDS v1 endpoints (overrides configured value)",
+        )
 
     def _maybe_warn_name(self, profile: InstanceProfile, name: str) -> str:
         if self.args.name is not None and name != self.args.name:
@@ -2495,6 +2500,11 @@ class LaunchCmd(YoCmd):
         create_args["compartment_id"] = self.c.config.instance_compartment_id
         subnet = self.c.pick_subnet(create_args["availability_domain"])
         create_args["subnet_id"] = subnet.id
+
+        create_args["are_legacy_imds_endpoints_disabled"] = not (
+            self.args.allow_legacy_imds_endpoints
+            or self.c.config.allow_legacy_imds_endpoints
+        )
 
         volume = None
         if self.args.volume:

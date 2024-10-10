@@ -139,6 +139,7 @@ class YoConfig:
     creator_tags: t.List[str] = dataclasses.field(default_factory=list)
     list_columns: str = "Name,Shape,Mem,CPU,State,Created"
     allow_hash_in_config_value: bool = False
+    allow_legacy_imds_endpoints: bool = False
 
     @property
     def vcn_id(self) -> str:
@@ -224,6 +225,7 @@ class YoConfig:
             "exact_name",
             "resource_filtering",
             "allow_hash_in_config_value",
+            "allow_legacy_imdc_endpoints",
         ]
         for b in bools:
             if b in d:

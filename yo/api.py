@@ -1849,6 +1849,16 @@ class YoCtx:
             details["shape_config"] = self.oci.LaunchInstanceShapeConfigDetails(
                 **shape_config,
             )
+
+        # The IMDS is the instance metadata service. v1 endpoints are less
+        # secure and most images support v2, so v1 should be disabled.
+        disable_legacy_imds = details.pop(
+            "are_legacy_imds_endpoints_disabled", True
+        )
+        details["instance_options"] = self.oci.InstanceOptions(
+            are_legacy_imds_endpoints_disabled=disable_legacy_imds,
+        )
+
         # Most tenancies will automatically create "Oracle-Tags.CreatedBy" which
         # has the user email address, but seemingly not all of them. It is
         # definitely better to have those tags, because this allows Yo to manage

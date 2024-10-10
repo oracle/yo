@@ -382,6 +382,22 @@ config value, it is included in the resulting value, which is usually not what
 you want. However, if there is some case where you actually want to include a
 hash in the config, set this to true to bypass the error.
 
+``allow_legacy_imds_endpoints``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Boolean, Optional, Default: false)
+
+The `Instance Metadata Service
+<https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/gettingmetadata.htm#upgrading-v2>`_
+v1 is a less-secure mechanism for OCI to retrieve metadata from your instance.
+If your images support IMDS v2, then v1 should be disabled. Since virtually all
+platform images support v2, it is best practice at this point to disable v1.
+
+If this causes issues, then you can either set this configuration to "true" to
+use the less-secure option globally, or you can use the
+``--allow-legacy-imds-endpoints`` flag for ``yo launch`` to use the less-secure
+option for just one instance.
+
 .. _regionconf:
 
 Region-Specific Configurations
