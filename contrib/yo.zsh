@@ -454,7 +454,7 @@ local -a _yo_volume_detach_options=(
   '--no-exact-name[Always prefix the instance name with your username]'
   '--no-teardown[Do not run iSCSI teardown commands]'
   + '(volume-detach-which)'
-  '--from[Instance to detach from if there are multiple]'
+  '--from=[Instance to detach from if there are multiple]:instance:_yo_instances'
   '--all[Detach from all instances]'
 )
 
