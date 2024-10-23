@@ -55,7 +55,7 @@ _yo_context() {
 # }}}
 # yo resources  {{{
 _yo_instances() {
-  local filter='.instances.cache[] | "\(.name | gsub(":"; "\\:")):\(.shape) [\(.state)]"'
+  local filter='.instances.cache[] | select(.state != "TERMINATED") | "\(.name | gsub(":"; "\\:")):\(.shape) [\(.state)]"'
   local -Ua instances=(${(@f)"$(_call_program yo-instances jq -r ${(q)filter} $caches)"})
   if [[ -z ${exact_name:-${opt_args[(I)-E|--exact-name]}} ||
         -n ${exact_name+$opt_args[(I)--no-exact-name]} ]]; then
@@ -83,7 +83,7 @@ _yo_images() {
 }
 
 _yo_volumes() {
-  local filter='.bootvols.cache[] |
+  local filter='.bootvols.cache[] | select(.state != "TERMINATED") |
     "\(.name | gsub(":"; "\\:")):\(.name | gsub(":"; "\\:")) \(.size_in_gbs)GB [\(.state)]"'
   local -a volumes=(${(@f)"$(_call_program yo-volumes jq -r ${(q)filter} $caches)"})
 
