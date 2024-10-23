@@ -71,7 +71,7 @@ _yo_shapes() {
     + if .local_disks > 0 then " / \(.local_disks_total_size_in_gbs)GB \(.local_disk_description)" else "" end'
   local -a shapes=(${(@f)"$(_call_program yo-shapes jq -r ${(q)filter} $caches)"})
 
-  _describe -t yo-shapes "shape" shapes "$@"
+  _describe -t yo-shapes "shape" shapes -M 'm:{[:lower:]}={[:upper:]} r:|.=*' "$@"
 }
 
 _yo_images() {
