@@ -69,7 +69,6 @@ To avoid this behavior, you can pass --exact-name to various subcommands, or
 set "exact_name = true" in the [yo] section of your config.
 """
 import argparse
-import base64
 import collections
 import contextlib
 import dataclasses
@@ -104,11 +103,8 @@ import yo.util
 from yo.api import AttachmentType
 from yo.api import ImageLoad
 from yo.api import InstanceProfile
-from yo.api import OS_TO_USER
 from yo.api import SavedInstanceMetadata
-from yo.api import VolumeKind
 from yo.api import YoCtx
-from yo.api import YoImage
 from yo.api import YoInstance
 from yo.api import YoShape
 from yo.api import YoVolume
@@ -2250,189 +2246,6 @@ class LaunchCmd(YoCmd):
             help="Allows IMDS v1 endpoints (overrides configured value)",
         )
 
-    def _maybe_warn_name(self, profile: InstanceProfile, name: str) -> str:
-        if self.args.name is not None and name != self.args.name:
-            self.c.con.log(
-                f"[magenta]Warning[/magenta]: display name set to {name} "
-                f"instead of {self.args.name}. If you want to have your name "
-                f"used exactly, use --exact-name."
-            )
-        elif self.args.name is None and name != profile.name:
-            self.c.con.log(
-                f"[magenta]Warning[/magenta]: display name set to {name} "
-                f"instead of {profile.name}. If you want to have your name "
-                f"used exactly, use --exact-name and pass --name explicitly."
-            )
-        return name
-
-    def pick_name(self, profile: InstanceProfile, max_tries: int = 100) -> str:
-        if self.args.exact_name:
-            if not self.args.name:
-                raise YoExc(
-                    "You specified --exact-name but did not provide a name"
-                )
-            return t.cast(str, self.args.name)
-        name = profile.name
-        if self.args.name is not None:
-            name = self.args.name
-        name = standardize_name(name, self.args.exact_name, self.c.config)
-        all_instances = self.c.list_instances()
-        names = set(
-            inst.name for inst in all_instances if inst.state != "TERMINATED"
-        )
-        for vol in self.c.list_volumes():
-            if vol.saved_instance_metadata:
-                names.add(vol.saved_instance_metadata.name)
-        if name not in names:
-            return self._maybe_warn_name(profile, name)
-        stem = name
-        ver = 0
-        m = re.search(r"-(\d+)$", stem)
-        if m:
-            stem = stem[: m.span()[0]]
-            ver = int(m.group(1))
-        for i in range(ver + 1, ver + max_tries + 1):
-            name = f"{stem}-{i}"
-            if name not in names:
-                return self._maybe_warn_name(profile, name)
-        raise YoExc(
-            f"We could not come up with a unique instance name, after trying "
-            f"{max_tries} times. Consider changing your supplied name or "
-            f"using the --exact-name option to allow non-unique names."
-        )
-
-    def pick_image(self, profile: InstanceProfile, shape: str) -> YoImage:
-        """
-        Return an image ID based on the profile settings (and command line
-        args if they override it).
-        """
-        load_image = profile.load_image
-        if self.args.load_image:
-            load_image = self.args.load_image
-
-        if self.args.image:
-            return self.c.get_image_by_name(self.args.image, load_image)
-        elif self.args.os:
-            return self.c.get_image_by_os(self.args.os, shape)
-        elif profile.image:
-            return self.c.get_image_by_name(profile.image, load_image)
-        elif profile.os:
-            return self.c.get_image_by_os(profile.os, shape)
-        else:
-            # should be impossible
-            assert False, "no image or os specified"
-
-    def set_mem_cpu(
-        self,
-        profile: InstanceProfile,
-        image: YoImage,
-        shape: YoShape,
-        create_args: t.Dict[str, t.Any],
-    ) -> None:
-        """
-        Set the memory and cpu of an instance, if necessary.
-
-        This is actually complex. We let users configure mem/cpu in many places,
-        and you can configure just one of them if you'd like. One could be set,
-        but not the other. Further, a shape may or may not support memory or CPU
-        flex. And finally, we need to check the image compatibility.
-        """
-        mem = self.args.mem or profile.mem
-        cpu = self.args.cpu or profile.cpu
-        if (
-            not self.args.mem
-            and not self.args.cpu
-            and not shape.memory_options
-            and not shape.ocpu_options
-        ):
-            # This is very specific but very common. When the instance is not
-            # flex, and the user didn't provide mem/cpu CLI flags, we don't need
-            # to do any more. Note that in the case where the instance profile
-            # does have memory/cpu values configured, but the instance is
-            # non-flex, we don't continue: this would raise an error which is
-            # somewhat hard for a user to avoid.
-            return
-
-        # ENSURE CPU CONFIGURED, VERIFY SHAPE COMPAT
-        if not cpu:
-            # cpu is not configured (but memory was), use the shape default
-            cpu = shape.ocpus
-        elif shape.ocpu_options:
-            if cpu < shape.ocpu_options.min or cpu > shape.ocpu_options.max:
-                raise YoExc(
-                    f"CPU selection {cpu} is out of allowed range "
-                    f"{shape.ocpu_options.min} - {shape.ocpu_options.max}"
-                )
-            # cpu is set, and in correct range, yay!
-        else:
-            raise YoExc("You configured CPU, but this is not a flex shape")
-
-        # ENSURE MEM CONFIGURED, VERIFY SHAPE COMPAT
-        if not mem:
-            # mem is not configured (but cpu was), use the shape default
-            if (
-                shape.memory_options
-                and shape.memory_options.default_per_ocpu_gbs
-            ):
-                mem = shape.memory_options.default_per_ocpu_gbs * cpu
-            else:
-                mem = (shape.memory_in_gbs / shape.ocpus) * cpu
-        elif shape.memory_options:
-            # mem is configured, check its range
-            mem_per_ocpu = mem / cpu
-            if (
-                mem < shape.memory_options.min_gbs
-                or mem > shape.memory_options.max_gbs
-            ):
-                raise YoExc(
-                    f"Memory selection {mem} is out of allowed range "
-                    f"{shape.memory_options.min_gbs} - "
-                    f"{shape.memory_options.max_gbs}"
-                )
-            elif (
-                mem_per_ocpu < shape.memory_options.min_per_ocpu_gbs
-                or mem_per_ocpu > shape.memory_options.max_per_ocpu_gbs
-            ):
-                raise YoExc(
-                    f"The mem/CPU ratio you have, {mem_per_ocpu} GiB/CPU "
-                    f"(mem={mem}, cpu={cpu}) is out of allowed range: "
-                    f"{shape.memory_options.min_per_ocpu_gbs} GiB/CPU - "
-                    f"{shape.memory_options.max_per_ocpu_gbs} GiB/CPU"
-                )
-        else:
-            raise YoExc("You configured Mem, but this is not a flex shape")
-
-        # CHECK IMAGE COMPATIBILITY
-        compat = image.compatibility[shape.shape]
-        if (
-            compat.min_ocpu
-            and compat.max_ocpu
-            and (cpu < compat.min_ocpu or cpu > compat.max_ocpu)
-        ):
-            raise YoExc(
-                f"Configured CPU {cpu} is not compatible with image "
-                f"{image.name}: allowed CPU range {compat.min_ocpu} "
-                f" - {compat.max_ocpu}"
-            )
-        if (
-            compat.min_mem_gbs
-            and compat.max_mem_gbs
-            and (mem < compat.min_mem_gbs or mem > compat.max_mem_gbs)
-        ):
-            raise YoExc(
-                f"Configured Mem {mem} is not compatible with image "
-                f"{image.name}: allowed Mem range (GiB) {compat.min_mem_gbs}"
-                f" - {compat.max_mem_gbs}"
-            )
-        self.c.con.log(
-            f"Configured flex shape with [blue]{cpu} CPUs[/blue]"
-            f" and [blue]{mem} GiB[/blue] memory"
-        )
-        create_args["shape_config"] = {
-            "memory_in_gbs": mem,
-            "ocpus": cpu,
-        }
-
     def standardize_wait(self, tasks: bool) -> None:
         # There are several conditions where we may need to wait. Of course,
         # --ssh requires waiting for the instance to be ready, but also running
@@ -2444,83 +2257,32 @@ class LaunchCmd(YoCmd):
         if self.args.wait_ssh:
             self.args.wait = True
 
-    def user_data(
-        self, image_user: str, profile: InstanceProfile
-    ) -> t.Tuple[str, t.Optional[str]]:
-        user_spec = self.args.username or profile.username
-        if not user_spec or user_spec == "$DEFAULT":
-            return image_user, None
-        elif user_spec == "$MY_USERNAME":
-            user_spec = self.c.config.my_username
-        self.c.con.log(f"Setting custom username: {user_spec}")
-        user_data_lines = [
-            "#cloud-config",
-            "system_info:",
-            "  default_user:",
-            f"    name: {user_spec}",
-        ]
-        user_data = base64.b64encode(
-            "\n".join(user_data_lines).encode()
-        ).decode()
-        return user_spec, user_data
-
     def run(self) -> None:
+        create_args = self.c.get_launch_config(
+            self.args.profile,
+            name=self.args.name,
+            exact_name=self.args.exact_name,
+            ad=self.args.ad,
+            shape=self.args.shape,
+            image=self.args.image,
+            load_image=self.args.load_image,
+            volume=self.args.volume,
+            os=self.args.os,
+            mem=self.args.mem,
+            cpu=self.args.cpu,
+            username=self.args.username,
+            boot_volume_size_gbs=self.args.boot_volume_size_gbs,
+        )
         profile = self.c.instance_profiles[self.args.profile]
-        create_args = profile.create_arg_dict(self.c)
+        user = create_args["username"]
+        name = create_args["display_name"]
 
-        if self.args.ad:
-            create_args["availability_domain"] = self.c.get_ad(
-                self.args.ad
-            ).name
-
-        if self.args.shape is not None:
-            # override configured shape from "create_arg_dict()"
-            create_args["shape"] = self.args.shape
-        shape = self.c.get_shape_by_name(create_args["shape"])
-        create_args["compartment_id"] = self.c.config.instance_compartment_id
-        subnet = self.c.pick_subnet(create_args["availability_domain"])
-        create_args["subnet_id"] = subnet.id
-
+        # This logic wasn't moved into get_launch_config, there's no reason to
+        # support an old feature there.
         create_args["are_legacy_imds_endpoints_disabled"] = not (
             self.args.allow_legacy_imds_endpoints
             or self.c.config.allow_legacy_imds_endpoints
         )
-
-        volume = None
-        if self.args.volume:
-            volname = standardize_name(
-                self.args.volume, self.args.exact_name, self.c.config
-            )
-            volume = self.c.get_volume(volname, kind=VolumeKind.BOOT)
-            if volume.image_id is not None:
-                image = self.c.get_image(volume.image_id)
-                user = OS_TO_USER[image.os]
-            else:
-                user = "opc"  # better than nothing
-            create_args["volume_id"] = volume.id
-            self.c.con.log(f"Using boot volume: {self.args.volume}")
-        else:
-            image = self.pick_image(profile, shape.shape)
-            create_args["image_id"] = image.id
-            user = OS_TO_USER[image.os]
-
-        # Grab ssh key from the config file, NOT instance profile
-        create_args["metadata"] = {
-            "ssh_authorized_keys": self.c.config.ssh_public_key_full,
-        }
-
-        user, user_data = self.user_data(user, profile)
-        if user_data:
-            create_args["metadata"]["user_data"] = user_data
-        create_args["username"] = user
-
-        self.set_mem_cpu(profile, image, shape, create_args)
-
-        name = self.pick_name(profile)
-        create_args["display_name"] = name
-        if self.args.boot_volume_size_gbs is not None:
-            gbs = self.args.boot_volume_size_gbs
-            create_args["boot_volume_size_gbs"] = gbs
 
         self.c.con.log(f"Launching instance [blue]{name}[/blue]")
         if self.args.dry_run:
@@ -2528,12 +2290,6 @@ class LaunchCmd(YoCmd):
             self.c.con.log(create_args)
             return
         inst = self.c.launch_instance(create_args)
-        if volume:
-            # If we're launching from a boot volume, there may be a saved
-            # instance metadata. Clearly we didn't use that to launch the
-            # instance, but regardless, we don't want that metadata on the
-            # volume now that it has in use again. Remove it.
-            self.c.remove_saved_metadata(volume)
 
         tasks = set(profile.tasks + self.args.tasks)
         self.standardize_wait(bool(tasks))
