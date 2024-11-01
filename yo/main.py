@@ -2313,35 +2313,14 @@ class LaunchCmd(YoCmd):
         if self.args.image:
             return self.c.get_image_by_name(self.args.image, load_image)
         elif self.args.os:
-            os_config = self.args.os
+            return self.c.get_image_by_os(self.args.os, shape)
         elif profile.image:
             return self.c.get_image_by_name(profile.image, load_image)
         elif profile.os:
-            os_config = profile.os
+            return self.c.get_image_by_os(profile.os, shape)
         else:
             # should be impossible
             assert False, "no image or os specified"
-        os, ver = os_config.split(":", 1)
-
-        def compatible(image: YoImage) -> bool:
-            return (
-                image.os == os
-                and image.os_version == ver
-                and image.compatibility.get(shape) is not None
-            )
-
-        images = self.c.list_official_images()
-        images = list(filter(compatible, images))
-        images.sort(key=lambda i: natural_sort(i.name), reverse=True)
-        if not images:
-            raise YoExc(
-                f"No matching images for {os_config} and shape {shape}..."
-            )
-
-        image = images[0]
-        dn = image.name
-        self.c.con.log(f"Using image [blue]{dn}[/blue]")
-        return image
 
     def set_mem_cpu(
         self,
