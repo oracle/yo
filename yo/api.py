@@ -2101,7 +2101,7 @@ class YoCtx:
         self,
         vol: YoVolume,
         inst_id: str,
-        kind: t.Optional[str] = None,
+        atch_type: t.Optional[str] = None,
         ro: bool = False,
         shared: bool = False,
     ) -> YoVolumeAttachment:
@@ -2110,31 +2110,42 @@ class YoCtx:
         # just supply their ID like you would a block volume ID. Of course, this
         # doesn't make them bootable. For that sort of surgery, Yo isn't very
         # well suited.
-        if not kind:
-            kind = "service_determined"
-        kind_to_details_cls = {
-            "service_determined": self.oci.AttachServiceDeterminedVolumeDetails,
-            "iscsi": self.oci.AttachIScsiVolumeDetails,
-            "pv": self.oci.AttachParavirtualizedVolumeDetails,
-            "paravirt": self.oci.AttachParavirtualizedVolumeDetails,
-            "emulated": self.oci.AttachEmulatedVolumeDetails,
-        }
-        details_cls = kind_to_details_cls[kind]
-        details = details_cls(
-            display_name="yo block volume attachment",
-            instance_id=inst_id,
-            volume_id=vol.id,
-            is_read_only=ro,
-            is_shareable=shared,
-        )
-        resp = self.compute.attach_volume(details)
-        va = YoVolumeAttachment.from_oci_block(resp.data)
+        if vol.kind == VolumeKind.BOOT and atch_type == AttachmentType.BOOT:
+            details = self.oci.AttachBootVolumeDetails(
+                instance_id=inst_id,
+                boot_volume_id=vol.id,
+            )
+            resp = self.compute.attach_boot_volume(details)
+            va = YoVolumeAttachment.from_oci_boot(resp.data)
+        else:
+            if not atch_type:
+                atch_type = "service_determined"
+            atch_type_to_details_cls = {
+                "service_determined": self.oci.AttachServiceDeterminedVolumeDetails,
+                "iscsi": self.oci.AttachIScsiVolumeDetails,
+                "pv": self.oci.AttachParavirtualizedVolumeDetails,
+                "paravirt": self.oci.AttachParavirtualizedVolumeDetails,
+                "emulated": self.oci.AttachEmulatedVolumeDetails,
+            }
+            details_cls = atch_type_to_details_cls[atch_type]
+            details = details_cls(
+                display_name="yo block volume attachment",
+                instance_id=inst_id,
+                volume_id=vol.id,
+                is_read_only=ro,
+                is_shareable=shared,
+            )
+            resp = self.compute.attach_volume(details)
+            va = YoVolumeAttachment.from_oci_block(resp.data)
         self._vas.insert(va)
         self.save_cache()
         return va
 
     def detach_volume(self, va: YoVolumeAttachment) -> YoVolumeAttachment:
-        self.compute.detach_volume(va.id)
+        if va.kind == VolumeKind.BOOT:
+            self.compute.detach_boot_volume(va.id)
+        else:
+            self.compute.detach_volume(va.id)
         # Normally the API returns an updated item, but in this case
         # it does not. Let's fake it so that the cache doesn't contain a volume
         # which is still available.
