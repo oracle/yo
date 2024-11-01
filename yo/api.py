@@ -36,6 +36,7 @@
 """
 Yo context module - contains the code for interacting with/hiding OCI API
 """
+import base64
 import collections
 import concurrent.futures
 import contextlib
@@ -1904,6 +1905,305 @@ class YoCtx:
         self._vols.dirty()
         self.save_cache()
         return instance
+
+    def _launch_config_mem_cpu(
+        self,
+        profile: InstanceProfile,
+        image: t.Optional[YoImage],
+        shape: YoShape,
+        cpu: t.Optional[float],
+        mem: t.Optional[float],
+        create_args: t.Dict[str, t.Any],
+    ) -> None:
+        """
+        Set the memory and cpu of an instance, if necessary.
+
+        This is actually complex. We let users configure mem/cpu in many places,
+        and you can configure just one of them if you'd like. One could be set,
+        but not the other. Further, a shape may or may not support memory or CPU
+        flex. And finally, we need to check the image compatibility.
+        """
+        if (
+            mem is None
+            and cpu is None
+            and not shape.memory_options
+            and not shape.ocpu_options
+        ):
+            # This is very specific but very common. When the instance is not
+            # flex, and the user didn't provide mem/cpu CLI flags, we don't need
+            # to do any more. Note that in the case where the instance profile
+            # does have memory/cpu values configured, but the instance is
+            # non-flex, we don't continue: this would raise an error which is
+            # somewhat hard for a user to avoid.
+            return
+
+        mem = mem or profile.mem
+        cpu = cpu or profile.cpu
+
+        # ENSURE CPU CONFIGURED, VERIFY SHAPE COMPAT
+        if not cpu:
+            # cpu is not configured (but memory was), use the shape default
+            cpu = shape.ocpus
+        elif shape.ocpu_options:
+            if cpu < shape.ocpu_options.min or cpu > shape.ocpu_options.max:
+                raise YoExc(
+                    f"CPU selection {cpu} is out of allowed range "
+                    f"{shape.ocpu_options.min} - {shape.ocpu_options.max}"
+                )
+            # cpu is set, and in correct range, yay!
+        else:
+            raise YoExc("You configured CPU, but this is not a flex shape")
+
+        # ENSURE MEM CONFIGURED, VERIFY SHAPE COMPAT
+        if not mem:
+            # mem is not configured (but cpu was), use the shape default
+            if (
+                shape.memory_options
+                and shape.memory_options.default_per_ocpu_gbs
+            ):
+                mem = shape.memory_options.default_per_ocpu_gbs * cpu
+            else:
+                mem = (shape.memory_in_gbs / shape.ocpus) * cpu
+        elif shape.memory_options:
+            # mem is configured, check its range
+            mem_per_ocpu = mem / cpu
+            if (
+                mem < shape.memory_options.min_gbs
+                or mem > shape.memory_options.max_gbs
+            ):
+                raise YoExc(
+                    f"Memory selection {mem} is out of allowed range "
+                    f"{shape.memory_options.min_gbs} - "
+                    f"{shape.memory_options.max_gbs}"
+                )
+            elif (
+                mem_per_ocpu < shape.memory_options.min_per_ocpu_gbs
+                or mem_per_ocpu > shape.memory_options.max_per_ocpu_gbs
+            ):
+                raise YoExc(
+                    f"The mem/CPU ratio you have, {mem_per_ocpu} GiB/CPU "
+                    f"(mem={mem}, cpu={cpu}) is out of allowed range: "
+                    f"{shape.memory_options.min_per_ocpu_gbs} GiB/CPU - "
+                    f"{shape.memory_options.max_per_ocpu_gbs} GiB/CPU"
+                )
+        else:
+            raise YoExc("You configured Mem, but this is not a flex shape")
+
+        # CHECK IMAGE COMPATIBILITY
+        if image is not None:
+            compat = image.compatibility[shape.shape]
+            if (
+                compat.min_ocpu
+                and compat.max_ocpu
+                and (cpu < compat.min_ocpu or cpu > compat.max_ocpu)
+            ):
+                raise YoExc(
+                    f"Configured CPU {cpu} is not compatible with image "
+                    f"{image.name}: allowed CPU range {compat.min_ocpu} "
+                    f" - {compat.max_ocpu}"
+                )
+            if (
+                compat.min_mem_gbs
+                and compat.max_mem_gbs
+                and (mem < compat.min_mem_gbs or mem > compat.max_mem_gbs)
+            ):
+                raise YoExc(
+                    f"Configured Mem {mem} is not compatible with image "
+                    f"{image.name}: allowed Mem range (GiB) {compat.min_mem_gbs}"
+                    f" - {compat.max_mem_gbs}"
+                )
+        self.con.log(
+            f"Configured flex shape with [blue]{cpu} CPUs[/blue]"
+            f" and [blue]{mem} GiB[/blue] memory"
+        )
+        create_args["shape_config"] = {
+            "memory_in_gbs": mem,
+            "ocpus": cpu,
+        }
+
+    def _launch_config_user(
+        self,
+        default_username: str,
+        requested_username: t.Optional[str],
+        profile: InstanceProfile,
+    ) -> t.Tuple[str, t.Optional[str]]:
+        user_spec = requested_username or profile.username
+        if not user_spec or user_spec == "$DEFAULT":
+            return default_username, None
+        elif user_spec == "$MY_USERNAME":
+            user_spec = self.config.my_username
+        self.con.log(f"Setting custom username: {user_spec}")
+        user_data_lines = [
+            "#cloud-config",
+            "system_info:",
+            "  default_user:",
+            f"    name: {user_spec}",
+        ]
+        user_data = base64.b64encode(
+            "\n".join(user_data_lines).encode()
+        ).decode()
+        return user_spec, user_data
+
+    def _launch_config_name(
+        self,
+        profile: InstanceProfile,
+        name: t.Optional[str],
+        exact_name: bool,
+        max_tries: int = 100,
+    ) -> str:
+        # If the users says they want exact names, they need to specify it
+        # directly here, not rely on the instance profile.
+        if exact_name:
+            if not name:
+                raise YoExc(
+                    "You specified --exact-name but did not provide a name"
+                )
+            return name
+        # This name is used as the baseline for what the user expected.
+        # If we choose one that doesn't match, we print a warning.
+        name = orig_name = name or profile.name
+        name = standardize_name(name, exact_name, self.config)
+        all_instances = self.list_instances()
+        names = set(
+            inst.name for inst in all_instances if inst.state != "TERMINATED"
+        )
+        for vol in self.list_volumes():
+            if vol.saved_instance_metadata:
+                names.add(vol.saved_instance_metadata.name)
+
+        def _maybe_warn_name(profile: InstanceProfile, name: str) -> str:
+            if orig_name is not None and name != orig_name:
+                self.con.log(
+                    f"[magenta]Warning[/magenta]: display name set to {name} "
+                    f"instead of {orig_name}. If you want to have your name "
+                    f"used exactly, use --exact-name."
+                )
+            return name
+
+        if name not in names:
+            return _maybe_warn_name(profile, name)
+
+        stem = name
+        ver = 0
+        m = re.search(r"-(\d+)$", stem)
+        if m:
+            stem = stem[: m.span()[0]]
+            ver = int(m.group(1))
+        for i in range(ver + 1, ver + max_tries + 1):
+            name = f"{stem}-{i}"
+            if name not in names:
+                return _maybe_warn_name(profile, name)
+        raise YoExc(
+            f"We could not come up with a unique instance name, after trying "
+            f"{max_tries} times. Consider changing your supplied name or "
+            f"using the --exact-name option to allow non-unique names."
+        )
+
+    def simple_launch(self, *args: t.Any, **kwargs: t.Any) -> YoInstance:
+        return self.launch_instance(self.get_launch_config(*args, **kwargs))
+
+    def get_launch_config(
+        self,
+        profile_name: str,
+        name: t.Optional[str] = None,
+        exact_name: t.Optional[bool] = None,
+        ad: t.Optional[str] = None,
+        shape: t.Optional[str] = None,
+        image: t.Optional[str] = None,
+        load_image: t.Optional[ImageLoad] = None,
+        volume: t.Optional[str] = None,
+        os: t.Optional[str] = None,
+        mem: t.Optional[float] = None,
+        cpu: t.Optional[float] = None,
+        username: t.Optional[str] = None,
+        boot_volume_size_gbs: t.Optional[int] = None,
+    ) -> t.Dict[str, t.Any]:
+        """
+        Create a launch config dictionary which for launch_instance().
+
+        This presents an API which is very similar to what the "yo launch"
+        command does. Unlike many other YoCtx methods, this one does a lot of
+        logging and printing, it's nearly interactive. The point is to make it
+        simple for scripts to launch instances.
+
+        Nearly all of these kwargs correspond to a "yo launch" argument, and as
+        such, they are pretty much all optional and they all take their defaults
+        from the instance profile. Note that "image", "os", and "volume" are all
+        mutually exclusive.
+
+        :param profile_name: instance profile to use
+        :param name: name for the instance
+        :param ad: availability domain (need not include the region)
+        :param shape: name of the shape to use
+        :param image: name of the image to use
+        :param load_image: whether to enforce uniqueness of images
+        :param volume: name of the volume to use
+        :param os: operating system to use
+        :param mem: amount of memory (gbs) for flex shape
+        :param cpu: amount of ocpus for flex shape
+        :param username: requested username
+        :param exact_name: whether to use the "name" without modification
+        :param boot_volume_size_gbs: size of boot volume
+        """
+        profile = self.instance_profiles[profile_name]
+        create_args = profile.create_arg_dict(self)
+        if exact_name is not None:
+            en = exact_name
+        else:
+            en = bool(self.config.exact_name)
+
+        shape_obj = self.get_shape_by_name(shape or profile.shape)
+        create_args["shape"] = shape_obj.name
+        create_args["compartment_id"] = self.config.instance_compartment_id
+        avd = self.get_ad(ad or profile.availability_domain).name
+        create_args["availability_domain"] = avd
+        subnet = self.pick_subnet(avd)
+        create_args["subnet_id"] = subnet.id
+
+        img = None
+        vol = None
+        if volume is not None:
+            volname = standardize_name(volume, en, self.config)
+            vol = self.get_volume(volname, kind=VolumeKind.BOOT)
+            default_username = "opc"
+            if vol.image_id is not None:
+                img = self.get_image(vol.image_id)
+                default_username = OS_TO_USER.get(img.os, default_username)
+            create_args["volume_id"] = vol.id
+        else:
+            if image is not None:
+                img = self.get_image_by_name(
+                    image, load_image or profile.load_image
+                )
+            elif os is not None:
+                img = self.get_image_by_os(os, shape_obj.name)
+            elif profile.image:
+                img = self.get_image_by_name(
+                    profile.image, load_image or profile.load_image
+                )
+            elif profile.os:
+                img = self.get_image_by_os(profile.os, shape_obj.name)
+            else:
+                raise YoExc("no image, volume, or OS selected")
+            create_args["image_id"] = img.id
+            default_username = OS_TO_USER.get(img.os, "opc")
+        user, user_data = self._launch_config_user(
+            default_username, username, profile
+        )
+        create_args["metadata"] = {
+            "ssh_authorized_keys": self.config.ssh_public_key_full,
+        }
+        if user_data:
+            create_args["metadata"]["user_data"] = user_data
+        create_args["username"] = user
+        self._launch_config_mem_cpu(
+            profile, img, shape_obj, cpu, mem, create_args
+        )
+        name = self._launch_config_name(profile, name, en)
+        create_args["display_name"] = name
+        if boot_volume_size_gbs is not None:
+            create_args["boot_volume_size_gbs"] = boot_volume_size_gbs
+        return create_args
 
     def instance_action(self, inst_id: str, action: str) -> YoInstance:
         inst = YoInstance.from_oci(
