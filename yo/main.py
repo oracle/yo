@@ -597,7 +597,9 @@ def _task_run(ctx: YoCtx, inst: YoInstance, task: YoTask) -> None:
     ssh_into(ip, user, ctx, extra_args=["-q"], cmds=[commands], quiet=True)
 
 
-def run_all_tasks(ctx: YoCtx, inst: YoInstance, tasks: t.Iterable[str]) -> None:
+def run_all_tasks(
+    ctx: YoCtx, inst: YoInstance, tasks: t.Iterable[t.Union[YoTask, str]]
+) -> None:
     # Tasks can have dependencies. We need to be sure to load the full set of
     # dependencies in the list of tasks we're given. We also need to verify
     # there are no circular dependencies. And it's nice to launch them in order
@@ -609,19 +611,26 @@ def run_all_tasks(ctx: YoCtx, inst: YoInstance, tasks: t.Iterable[str]) -> None:
     # output ordering
     ordered_tasks: t.List[YoTask] = []
 
-    def visit(task_name: str) -> None:
-        if name_to_visit[task_name] == 2:
+    def visit(task_or_name: t.Union[YoTask, str]) -> None:
+        if isinstance(task_or_name, str):
+            name: str = task_or_name
+            task: t.Optional[YoTask] = None
+        else:
+            name = task_or_name.name
+            task = task_or_name
+        if name_to_visit[name] == 2:
             # already completed, skip
             return
-        if name_to_visit[task_name] == 1:
+        if name_to_visit[name] == 1:
             # currently visiting, not a DAG
             raise YoExc("Tasks express a circular dependency")
 
-        name_to_visit[task_name] = 1
-        task = YoTask.load(task_name)
+        name_to_visit[name] = 1
+        if not task:
+            task = YoTask.load(name)
         for dep_name in task.dependencies:
             visit(dep_name)
-        name_to_visit[task_name] = 2
+        name_to_visit[name] = 2
         ordered_tasks.append(task)
 
     for name in tasks:
