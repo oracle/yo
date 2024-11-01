@@ -479,25 +479,7 @@ class YoTask:
     conflicts: t.List[str]
 
     @classmethod
-    @lru_cache(maxsize=None)
-    def load(cls, name: str) -> "YoTask":
-        """
-        Load a task by name and return it.
-
-        This function is cached - it will only really search and load any given
-        task name once: then it will return the same object thereafter.
-        """
-        for directory in TASK_DIRECTORIES:
-            path = os.path.join(directory, name)
-            if os.path.isfile(path):
-                path = os.path.abspath(path)
-                break
-        else:
-            raise YoExc(f"error: Script for task {name} not found")
-
-        with open(path) as f:
-            script = f.read()
-
+    def create_from_string(cls, name: str, script: str) -> "YoTask":
         dependencies = []
         conflicts = []
         all_tasks = list_tasks()
@@ -518,7 +500,30 @@ class YoTask:
                         "MAYBE_DEPENDS_ON", "# MAYBE_DEPENDS_ON"
                     )
                 lines[i] = line
-        return YoTask(name, path, "\n".join(lines), dependencies, conflicts)
+        return YoTask(
+            name, "(memory)", "\n".join(lines), dependencies, conflicts
+        )
+
+    @classmethod
+    @lru_cache(maxsize=None)
+    def load(cls, name: str) -> "YoTask":
+        """
+        Load a task by name and return it.
+
+        This function is cached - it will only really search and load any given
+        task name once: then it will return the same object thereafter.
+        """
+        for directory in TASK_DIRECTORIES:
+            path = os.path.join(directory, name)
+            if os.path.isfile(path):
+                path = os.path.abspath(path)
+                break
+        else:
+            raise YoExc(f"error: Script for task {name} not found")
+
+        with open(path) as f:
+            script = f.read()
+        return cls.create_from_string(name, script)
 
 
 @lru_cache(maxsize=1)
