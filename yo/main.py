@@ -3397,7 +3397,9 @@ class AttachedCmd(YoCmd):
         self.c.con.print(table)
 
 
-def volume_attach_args(parser: argparse.ArgumentParser) -> None:
+def volume_attach_args(
+    parser: argparse.ArgumentParser, for_create: bool = False
+) -> None:
     parser.add_argument(
         "--no-exact-name",
         action="store_false",
@@ -3463,6 +3465,18 @@ def volume_attach_args(parser: argparse.ArgumentParser) -> None:
         const="service_determined",
         help="Let OCI decide the right attachment type",
     )
+    if not for_create:
+        # While it is possible to create a boot volume, it doesn't make sense to
+        # immediately attach it to instance as a boot volume. It could make
+        # sense to attach it as a data volume though.
+        grp.add_argument(
+            "--as-boot",
+            dest="kind",
+            action="store_const",
+            const="boot",
+            help="Attach to the instance as a BOOT VOLUME. The instance must not "
+            "already be attached to a boot volume.",
+        )
 
 
 def do_volume_attach(
@@ -3471,7 +3485,7 @@ def do_volume_attach(
     va = ctx.attach_volume(
         volume,
         inst.id,
-        kind=args.kind,
+        atch_type=args.kind,
         ro=args.ro,
         shared=args.shared,
     )
@@ -3543,7 +3557,7 @@ class VolumeCreateCmd(YoCmd):
             action="store_true",
             help="attach to the instance after completion (requires --for)",
         )
-        volume_attach_args(parser)
+        volume_attach_args(parser, for_create=True)
 
     def run(self) -> None:
         if self.args.setup:
@@ -3604,10 +3618,18 @@ class AttachCmd(YoCmd):
         )
         inst = self.c.get_instance_by_name(
             self.args.instance_name,
-            ("RUNNING",),
+            ("RUNNING", "STOPPED"),
             (),
             exact_name=self.args.exact_name,
         )
+        if inst.state == "STOPPED" and self.args.kind != "boot":
+            raise YoExc(
+                "Block (data) volumes may only be attached while the instance is RUNNING"
+            )
+        elif inst.state == "RUNNING" and self.args.kind == "boot":
+            raise YoExc(
+                "Boot volumes may only be attached while the instance is STOPPED."
+            )
         vol = self.c.get_volume(name)
         do_volume_attach(self.c, self.args, vol, inst)
 
