@@ -58,6 +58,7 @@ from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
 from yo.util import hasherr
 from yo.util import latest_yo_version
+from yo.util import natural_sort
 from yo.util import one
 from yo.util import standardize_name
 from yo.util import YoConfig
@@ -1699,6 +1700,27 @@ class YoCtx:
         else:
             matches.sort(key=lambda i: i.time_created, reverse=True)
             return matches[0]
+
+    def get_image_by_os(self, os_cfg: str, shape: str) -> YoImage:
+        os, ver = os_cfg.split(":", 1)
+
+        def compatible(image: YoImage) -> bool:
+            return (
+                image.os == os
+                and image.os_version == ver
+                and image.compatibility.get(shape) is not None
+            )
+
+        images = self.list_official_images()
+        images = list(filter(compatible, images))
+        images.sort(key=lambda i: natural_sort(i.name), reverse=True)
+        if not images:
+            raise YoExc(f"No matching images for {os_cfg} and shape {shape}...")
+
+        image = images[0]
+        dn = image.name
+        self.con.log(f"Using image [blue]{dn}[/blue]")
+        return image
 
     def list_shapes(self) -> t.List[YoShape]:
         cid = self.config.instance_compartment_id
