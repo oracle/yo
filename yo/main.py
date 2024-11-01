@@ -78,6 +78,7 @@ import inspect
 import os
 import random
 import re
+import runpy
 import shlex
 import string
 import subprocess
@@ -3936,6 +3937,31 @@ class HelpCmd(YoCmd):
 
     def run(self) -> None:
         print(__doc__.strip())
+
+
+class ScriptCmd(YoCmd):
+    name = "script"
+    group = "Diagnostic Commands"
+    description = "Run a script file with Yo context available"
+
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            "file",
+            help="script to run",
+        )
+        parser.add_argument(
+            "args",
+            nargs="*",
+            help="arguments to script (use a -- to help delineate them)",
+        )
+
+    def run(self) -> None:
+        sys.argv = [self.args.file] + self.args.args
+        runpy.run_path(
+            self.args.file,
+            init_globals={"ctx": self.c},
+            run_name="__main__",
+        )
 
 
 def _extend() -> None:
