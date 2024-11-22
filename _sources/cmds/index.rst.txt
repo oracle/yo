@@ -84,6 +84,7 @@ Diagnostic Commands:
   - :ref:`yo_cache_clean` - Clear Yo's caches -- a good first troubleshooting step.
   - :ref:`yo_debug` - Open up a python prompt in the context of a command.
   - :ref:`yo_help` - Show help for yo.
+  - :ref:`yo_script` - Run a script file with Yo context available
   - :ref:`yo_version` - Show the version of yo and check for updates.
 
 Command Group Index

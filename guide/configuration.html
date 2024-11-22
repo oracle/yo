@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Configuration &#8212; yo v1.7.3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
     <script src="../_static/documentation_options.js?v=cf41a3b3"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -19,8 +19,9 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -326,6 +327,18 @@ can only introduce a comment at the beginning of a line. If you use it after a
 config value, it is included in the resulting value, which is usually not what
 you want. However, if there is some case where you actually want to include a
 hash in the config, set this to true to bypass the error.</p>
+</section>
+<section id="allow-legacy-imds-endpoints">
+<h3><code class="docutils literal notranslate"><span class="pre">allow_legacy_imds_endpoints</span></code><a class="headerlink" href="#allow-legacy-imds-endpoints" title="Link to this heading">¶</a></h3>
+<p>(Boolean, Optional, Default: false)</p>
+<p>The <a class="reference external" href="https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/gettingmetadata.htm#upgrading-v2">Instance Metadata Service</a>
+v1 is a less-secure mechanism for OCI to retrieve metadata from your instance.
+If your images support IMDS v2, then v1 should be disabled. Since virtually all
+platform images support v2, it is best practice at this point to disable v1.</p>
+<p>If this causes issues, then you can either set this configuration to “true” to
+use the less-secure option globally, or you can use the
+<code class="docutils literal notranslate"><span class="pre">--allow-legacy-imds-endpoints</span></code> flag for <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> to use the less-secure
+option for just one instance.</p>
 </section>
 </section>
 <section id="region-specific-configurations">
@@ -690,6 +703,22 @@ of copy/paste.</p>
 <span class="c1">#</span>
 <span class="c1"># allow_hash_in_config_value = false</span>
 
+<span class="c1"># OPTIONAL: allow_legacy_imds_endpoints</span>
+<span class="c1">#</span>
+<span class="c1"># (Boolean, Optional, Default: false)</span>
+<span class="c1">#</span>
+<span class="c1"># The Instance Metadata Service v1 is a less-secure mechanism for OCI to</span>
+<span class="c1"># retrieve metadata from your instance.  If your images support IMDS v2, then v1</span>
+<span class="c1"># should be disabled. Since virtually all platform images support v2, it is best</span>
+<span class="c1"># practice at this point to disable v1.</span>
+<span class="c1">#</span>
+<span class="c1"># If this causes issues, then you can either set this configuration to &quot;true&quot; to</span>
+<span class="c1"># use the less-secure option globally, or you can use the</span>
+<span class="c1"># ``--allow-legacy-imds-endpoints`` flag for ``yo launch`` to use the</span>
+<span class="c1"># less-secure option for just one instance.</span>
+<span class="c1">#</span>
+<span class="c1"># allow_legacy_imds_endpoints = false</span>
+
 <span class="c1">##################################</span>
 <span class="c1"># OCI Region Configuration</span>
 <span class="c1">#</span>
@@ -844,10 +873,10 @@ of copy/paste.</p>
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
             <p class="logo"><a href="../index.html">
-              <img class="logo" src="../_static/yo.png" alt="Logo"/>
+              <img class="logo" src="../_static/yo.png" alt="Logo of yo"/>
             </a></p>
 <h1 class="logo"><a href="../index.html">yo</a></h1>
 
@@ -890,7 +919,7 @@ of copy/paste.</p>
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
@@ -898,7 +927,7 @@ of copy/paste.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -913,11 +942,11 @@ of copy/paste.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2020-2023, Oracle and/or its affiliates.
+      &#169;2020-2023, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
       <a href="../_sources/guide/configuration.rst.txt"

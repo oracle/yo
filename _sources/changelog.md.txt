@@ -5,6 +5,24 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+- Yo now automatically disables the less secure, legacy [IMDS v1
+  endpoints](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/gettingmetadata.htm#upgrading-v2)
+  by default. The configuration `allow_legacy_imds_endpoints` and corresponding
+  `--allow-legacy-imds-endpoints` flag for `yo launch` have been added to
+  disable this feature, but in most situations there should be no reason to
+  change this.
+- A new, experimental command called `yo script` allows you to write a Python
+  script using Yo's helpers. Some of Yo's internals have been refactored in a
+  way to make it easier to do basic operations like launching an instance
+  programatically. Please note that the internal APIs of Yo aren't considered
+  stable, so future updates may break compatibility with such scripts.
+- OCI Service Errors are now caught and handled in a slightly nicer way. While a
+  traceback is still shown, we try to de-emphasize it, and show the actual OCI
+  error message. This way, users may be able to easily see what went wrong, in
+  case it was a user error rather than Yo client error.
+- Add some code to handle rate-limiting from the OCI API by backing off, in the
+  `yo list --ip` command.
+
 ## 1.7.3 - Wed, Sep 11, 2024
 
 - Fixed crash in `yo images` parsing an OS value without colon.

@@ -34,6 +34,17 @@ yo help
    :prog: yo help
 
 
+.. _yo_script:
+
+yo script
+---------
+
+.. argparse::
+   :module: yo.main
+   :func: cmd_script_args
+   :prog: yo script
+
+
 .. _yo_version:
 
 yo version
