@@ -5,6 +5,8 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.8.0 - Fr, Nov 22, 2024
+
 - Yo now automatically disables the less secure, legacy [IMDS v1
   endpoints](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/gettingmetadata.htm#upgrading-v2)
   by default. The configuration `allow_legacy_imds_endpoints` and corresponding
