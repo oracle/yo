@@ -48,6 +48,7 @@ import os
 import random
 import re
 import stat
+import time
 import typing as t
 from collections import defaultdict
 
@@ -1582,7 +1583,19 @@ class YoCtx:
                 pair: t.Tuple[str, t.List["VnicAttachment"]]
             ) -> t.Tuple[str, YoVnic]:
                 inst_id, atch_list = pair
-                vnic = self.vnet.get_vnic(atch_list[0].vnic_id).data
+                for i in range(3):
+                    try:
+                        vnic = self.vnet.get_vnic(atch_list[0].vnic_id).data
+                        break
+                    except self.oci.TransientServiceError as e:
+                        if e.code == "TooManyRequests" and i < 2:
+                            sleep = random.uniform(1, 4)
+                            self.con.log(
+                                f"Rate-limited by OCI ({i+1})! Backing off {sleep:.2f}s"
+                            )
+                            time.sleep(sleep)
+                            continue
+                        raise
                 yovnic = YoVnic.from_oci(vnic, atch_list[0])
                 return inst_id, yovnic
 

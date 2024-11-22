@@ -78,6 +78,7 @@ from oci.core.models import UpdateBootVolumeDetails  # noqa
 from oci.core.models import UpdateInstanceDetails  # noqa
 from oci.core.models import UpdateVolumeDetails  # noqa
 from oci.exceptions import ServiceError  # noqa
+from oci.exceptions import TransientServiceError  # noqa
 from oci.pagination import list_call_get_all_results  # noqa
 from oci.pagination import list_call_get_all_results_generator  # noqa
 from rich.progress import Progress
