@@ -84,6 +84,7 @@ import subprocess
 import sys
 import textwrap
 import time
+import traceback
 import typing as t
 from configparser import ConfigParser
 from fnmatch import fnmatch
@@ -95,9 +96,11 @@ import rich.progress
 import rich.syntax
 import rich.table
 import subc
+from oci.exceptions import ServiceError
 from rich.live import Live
 from rich.progress import Progress
 from rich.prompt import Confirm
+from rich.text import Text
 
 import yo.util
 from yo.api import AttachmentType
@@ -3780,6 +3783,15 @@ def main() -> None:
     except YoExc as e:
         con = rich.console.Console()
         con.print(f"[bold red]error: {e.args[0]}")
+        sys.exit(1)
+    except ServiceError as e:
+        con = rich.console.Console()
+        con.print("[bold red]-- error: cut here when reporting --")
+        tb = traceback.format_exc()
+        con.print(Text(tb, style="dim italic"))
+        con.print(
+            f"[bold red]OCI Service Error: {e.status} - {e.code} - {e.message}"
+        )
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)
