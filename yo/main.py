@@ -3589,7 +3589,7 @@ class RenameCmd(SingleInstanceCommand):
 
     # This runs on any instance state
     states_allowlist = ()
-    states_denylist = ()
+    states_denylist = ("TERMINATED",)
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         super().add_args(parser)
