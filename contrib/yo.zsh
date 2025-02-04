@@ -75,11 +75,29 @@ _yo_shapes() {
 }
 
 _yo_images() {
-  local filter='.images.cache[] | "\(.os):\(.os_version)"'
-  local -a images=(${(@f)"$(_call_program yo-images jq -r ${(q)filter} $caches)"})
+  local filter_os='.images.cache[] | select(.os != "Custom" and .os_version != "Custom") | "\(.os):\(.os_version)"'
+  local filter_name='.images.cache[] | select(.os != "Custom" and .os_version != "Custom").name | gsub(":"; "\\:")'
+  local filter_custom='.images.cache[] | select(.os == "Custom" or .os_version == "Custom").name | gsub(":"; "\\:")'
+  local -a images_os images_custom images_named
 
-  local expl
-  _wanted yo-images expl "image" _multi_parts "$@" -i : images
+  local expl ret=1
+  _tags yo-images-os yo-images-custom yo-images-named
+  while _tags; do
+    if _requested yo-images-os; then
+      ((#images_os)) || images_os=(${(@f)"$(_call_program yo-images-os jq -r ${(q)filter_os} $caches)"})
+     _all_labels yo-images-os expl "OS image" _multi_parts -i : images_os && ret=0
+    fi
+    if _requested yo-images-custom; then
+      ((#images_custom)) || images_custom=(${(@f)"$(_call_program yo-images-custom jq -r ${(q)filter_custom} $caches)"})
+     _all_labels yo-images-custom expl "custom image" compadd -a - images_custom && ret=0
+    fi
+    if ((ret)) && _requested yo-images-named; then
+      ((#images_named)) || images_named=(${(@f)"$(_call_program yo-images-named jq -r ${(q)filter_name} $caches)"})
+      _all_labels yo-images-named expl "named image" compadd -a - images_named && ret=0
+    fi
+    ((ret)) || break
+  done
+  return ret
 }
 
 _yo_volumes() {
