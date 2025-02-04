@@ -80,6 +80,7 @@ _yo_images() {
   local filter_custom='.images.cache[] | select(.os == "Custom" or .os_version == "Custom").name | gsub(":"; "\\:")'
   local -a images_os images_custom images_named
 
+
   local expl ret=1
   _tags yo-images-os yo-images-custom yo-images-named
   while _tags; do
@@ -135,7 +136,7 @@ _yo_list_command() {
   )
   _arguments -S -A '*' $_yo_list_options
 }
-local -a yo_list_command=(/$'[^\0]#\0'/ ': : :_yo_list_command' '#')
+local -a yo_list_command=(/$'[^\0]#\0'/ ':yo-list: :_yo_list_command' '#')
 
 _yo_launch_command() {
   local -a _yo_launch_options=(
@@ -160,7 +161,7 @@ _yo_launch_command() {
   )
   _arguments -S -A '*' $_yo_launch_options
 }
-local -a yo_launch_command=(/$'[^\0]#\0'/ ': : :_yo_launch_command' '#')
+local -a yo_launch_command=(/$'[^\0]#\0'/ ':yo-launch: :_yo_launch_command' '#')
 
 _yo_ssh_command() {
   local -a _yo_ssh_options=(
@@ -177,7 +178,7 @@ _yo_ssh_command() {
     '1:instance:_yo_instances' \
     '*:: := {words[1]=ssh; _normal}'
 }
-local -a yo_ssh_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_ssh_command' '#')
+local -a yo_ssh_command=(/$'[^\0]#\0'/ ':yo-ssh: :_yo_context _yo_ssh_command' '#')
 
 local -a _yo_basic_commands=(
   'list:List your OCI instances:$yo_list_command'
@@ -199,7 +200,7 @@ _yo_rebuild_command() {
   )
   _arguments -S -A '*' $_yo_rebuild_options
 }
-local -a yo_rebuild_command=(/$'[^\0]#\0'/ ': : :_yo_rebuild_command' '#')
+local -a yo_rebuild_command=(/$'[^\0]#\0'/ ':yo-rebuild: :_yo_rebuild_command' '#')
 
 _yo_wait_command() {
   local -a _yo_wait_options=(
@@ -212,7 +213,7 @@ _yo_wait_command() {
     $_yo_wait_options \
     '1:instance:_yo_instances'
 }
-local -a yo_wait_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_wait_command' '#')
+local -a yo_wait_command=(/$'[^\0]#\0'/ ':yo-wait: :_yo_context _yo_wait_command' '#')
 
 _yo_teardown_command() {
   local -a _yo_teardown_options=(
@@ -224,7 +225,7 @@ _yo_teardown_command() {
     $_yo_teardown_options \
     '1:instance:_yo_instances'
 }
-local -a yo_teardown_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_teardown_command' '#')
+local -a yo_teardown_command=(/$'[^\0]#\0'/ ':yo-teardown: :_yo_context _yo_teardown_command' '#')
 
 _yo_rename_command() {
   _arguments -S \
@@ -232,7 +233,7 @@ _yo_rename_command() {
     '1:instance:_yo_instances' \
     '2:new name:()'
 }
-local -a yo_rename_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_rename_command' '#')
+local -a yo_rename_command=(/$'[^\0]#\0'/ ':yo-rename: :_yo_context _yo_rename_command' '#')
 
 _yo_protect_command() {
   _arguments -S \
@@ -240,7 +241,7 @@ _yo_protect_command() {
     '1:instance:_yo_instances' \
     '2:protection setting:(on off)'
 }
-local -a yo_protect_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_protect_command' '#')
+local -a yo_protect_command=(/$'[^\0]#\0'/ ':yo-protect: :_yo_context _yo_protect_command' '#')
 
 _yo_terminate_command() {
   local -a _yo_terminate_options=(
@@ -255,7 +256,7 @@ _yo_terminate_command() {
     $_yo_terminate_options \
     '*:instance:_yo_instances'
 }
-local -a yo_terminate_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_terminate_command' '#')
+local -a yo_terminate_command=(/$'[^\0]#\0'/ ':yo-terminate: :_yo_context _yo_terminate_command' '#')
 
 _yo_resize_command() {
   local -a _yo_resize_options=(
@@ -266,7 +267,7 @@ _yo_resize_command() {
     $_yo_resize_options \
     '1:instance:_yo_instances'
 }
-local -a yo_resize_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_resize_command' '#')
+local -a yo_resize_command=(/$'[^\0]#\0'/ ':yo-resize: :_yo_context _yo_resize_command' '#')
 
 local -a _yo_instance_commands=(
   'rebuild:Rebuild a saved and torn down instance:$yo_rebuild_command'
@@ -292,7 +293,7 @@ _yo_ip_command() {
   )
   _arguments -S -A '*' $_yo_ip_options '*:instance:_yo_instances'
 }
-local -a yo_ip_command=(/$'[^\0]#\0'/ ': : :_yo_ip_command' '#')
+local -a yo_ip_command=(/$'[^\0]#\0'/ ':yo-ip: :_yo_ip_command' '#')
 
 _yo_scp_service() {
   _alternative \
@@ -305,7 +306,7 @@ _yo_scp_command() {
     $_yo_single_instance_options \
     '*:: := _yo_scp_service'
 }
-local -a yo_scp_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_scp_command' '#')
+local -a yo_scp_command=(/$'[^\0]#\0'/ ':yo-scp: :_yo_context _yo_scp_command' '#')
 
 _yo_rsync_service() {
   _alternative \
@@ -323,7 +324,7 @@ _yo_rsync_command() {
     $_yo_single_instance_options \
     '*:: := _yo_rsync_service'
 }
-local -a yo_rsync_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_rsync_command' '#')
+local -a yo_rsync_command=(/$'[^\0]#\0'/ ':yo-rsync: :_yo_context _yo_rsync_command' '#')
 
 _yo_console_command() {
   local -a _yo_console_options=(
@@ -335,7 +336,7 @@ _yo_console_command() {
     $_yo_single_instance_options \
     '1:instance:_yo_instances'
 }
-local -a yo_console_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_console_command' '#')
+local -a yo_console_command=(/$'[^\0]#\0'/ ':yo-console: :_yo_context _yo_console_command' '#')
 
 _yo_copy_id_command() {
   local -a _yo_copy_id_options=(
@@ -347,7 +348,7 @@ _yo_copy_id_command() {
     $_yo_single_instance_options \
     '1:instance:_yo_instances'
 }
-local -a yo_copy_id_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_copy_id_command' '#')
+local -a yo_copy_id_command=(/$'[^\0]#\0'/ ':yo-copy-id: :_yo_context _yo_copy_id_command' '#')
 
 local -a _yo_interactive_commands=(
   'ip:Print the IP address for one or more instances:$yo_ip_command'
@@ -369,7 +370,7 @@ _yo_task_info_command() {
   _arguments -S \
     $n':task:_yo_tasks'
 }
-local -a yo_task_info_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_task_info_command' '#')
+local -a yo_task_info_command=(/$'[^\0]#\0'/ ':yo-task-info: :_yo_context _yo_task_info_command' '#')
 
 _yo_task_run_command() {
   integer n=2-${words[(I)task-*]}
@@ -382,7 +383,7 @@ _yo_task_run_command() {
     $n':instance:_yo_instances' \
       ':task:_yo_tasks'
 }
-local -a yo_task_run_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_task_run_command' '#')
+local -a yo_task_run_command=(/$'[^\0]#\0'/ ':yo-task-run: :_yo_context _yo_task_run_command' '#')
 
 _yo_task_wait_command() {
   integer n=2-${words[(I)task-*]}
@@ -391,7 +392,7 @@ _yo_task_wait_command() {
     $n':instance:_yo_instances' \
       ':task:_yo_tasks'
 }
-local -a yo_task_wait_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_task_wait_command' '#')
+local -a yo_task_wait_command=(/$'[^\0]#\0'/ ':yo-task-wait: :_yo_context _yo_task_wait_command' '#')
 
 _yo_task_single_instance_command() {
   integer n=2-${words[(I)task-*]}
@@ -445,7 +446,7 @@ _yo_volume_create_command() {
     $n':volume name:()' \
       ':size:()'
 }
-local -a yo_volume_create_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_volume_create_command' '#')
+local -a yo_volume_create_command=(/$'[^\0]#\0'/ ':yo-volume-create: :_yo_context _yo_volume_create_command' '#')
 
 _yo_volume_attach_command() {
   integer n=2-${words[(I)volume-*]}
@@ -455,7 +456,7 @@ _yo_volume_attach_command() {
     $n':volume name:_yo_volumes' \
       ':instance name:_yo_instances'
 }
-local -a yo_volume_attach_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_volume_attach_command' '#')
+local -a yo_volume_attach_command=(/$'[^\0]#\0'/ ':yo-volume-attach: :_yo_context _yo_volume_attach_command' '#')
 
 _yo_volume_rename_command() {
   integer n=2-${words[(I)volume-*]}
@@ -466,7 +467,7 @@ _yo_volume_rename_command() {
     $n':old name:_yo_volumes' \
       ':new name:()'
 }
-local -a yo_volume_rename_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_volume_rename_command' '#')
+local -a yo_volume_rename_command=(/$'[^\0]#\0'/ ':yo-volume-rename: :_yo_context _yo_volume_rename_command' '#')
 
 local -a _yo_volume_detach_options=(
   '(-E --exact-name)'{-E,--exact-name}'[Do not prefix the instance name with your username]'
@@ -483,7 +484,7 @@ _yo_volume_detach_command() {
     + volume\
     $n':volume:_yo_volumes'
 }
-local -a yo_volume_detach_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_volume_detach_command' '#')
+local -a yo_volume_detach_command=(/$'[^\0]#\0'/ ':yo-volume-detach: :_yo_context _yo_volume_detach_command' '#')
 
 _yo_volume_delete_command() {
   integer n=2-${words[(I)volume-*]}
@@ -496,7 +497,7 @@ _yo_volume_delete_command() {
     + volume \
     $n':name:_yo_volumes'
 }
-local -a yo_volume_delete_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_volume_delete_command' '#')
+local -a yo_volume_delete_command=(/$'[^\0]#\0'/ ':yo-volume-delete: :_yo_context _yo_volume_delete_command' '#')
 
 local -a _yo_volume_commands=(
   'list:List block and boot volumes'
@@ -524,7 +525,7 @@ _yo_images_command() {
   )
   _arguments -S $_yo_images_options '1:image:_yo_images'
 }
-local -a yo_images_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_images_command' '#')
+local -a yo_images_command=(/$'[^\0]#\0'/ ':yo-images: :_yo_context _yo_images_command' '#')
 
 _yo_shapes_command() {
   local -a filters=(bm vm amd intel arm flex gpu disk)
@@ -538,7 +539,7 @@ _yo_shapes_command() {
   )
   _arguments -S -A '*' $_yo_shapes_options
 }
-local -a yo_shapes_command=(/$'[^\0]#\0'/ ': : :_yo_shapes_command' '#')
+local -a yo_shapes_command=(/$'[^\0]#\0'/ ':yo-shapes: :_yo_shapes_command' '#')
 
 _yo_compat_command() {
   local -a _yo_compat_options=(
@@ -550,10 +551,10 @@ _yo_compat_command() {
   )
   _arguments -S -A '*' $_yo_compat_options
 }
-local -a yo_compat_command=(/$'[^\0]#\0'/ ': : :_yo_compat_command' '#')
+local -a yo_compat_command=(/$'[^\0]#\0'/ ':yo-compat: :_yo_compat_command' '#')
 
 _yo_shape_command() { _arguments -S '1:shape:_yo_shapes' }
-local -a yo_shape_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_shape_command' '#')
+local -a yo_shape_command=(/$'[^\0]#\0'/ ':yo-shape: :_yo_context _yo_shape_command' '#')
 
 _yo_limits_command()  {
   local -a _yo_limits_options=(
@@ -562,7 +563,7 @@ _yo_limits_command()  {
   )
   _arguments -S -A '*' $_yo_limits_options
 }
-local -a yo_limits_command=(/$'[^\0]#\0'/ ': : :_yo_limits_command' '#')
+local -a yo_limits_command=(/$'[^\0]#\0'/ ':yo-limits: :_yo_limits_command' '#')
 
 local -a _yo_info_commands=(
   'im*ages:List images available to use for launching an instance:$yo_images_command'
