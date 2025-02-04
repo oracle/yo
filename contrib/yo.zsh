@@ -233,9 +233,9 @@ _yo_terminate_command() {
   )
 
   _arguments -S \
-    $_yo_single_instance_options \
+    $_yo_multi_instance_options \
     $_yo_terminate_options \
-    '1:instance:_yo_instances'
+    '*:instance:_yo_instances'
 }
 local -a yo_terminate_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_terminate_command' '#')
 
@@ -432,6 +432,7 @@ local -a yo_volume_create_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_volume_cr
 _yo_volume_attach_command() {
   integer n=2-${words[(I)volume-*]}
   _arguments -S $_yo_volume_attach_options \
+    '--as-boot[Attach as a boot volume]' \
     + volume \
     $n':volume name:_yo_volumes' \
       ':instance name:_yo_instances'
