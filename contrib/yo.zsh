@@ -443,6 +443,7 @@ _yo_volume_create_command() {
   )
   _arguments -S $_yo_volume_create_options \
     $_yo_volume_attach_options \
+    + -default- \
     $n':volume name:()' \
       ':size:()'
 }
@@ -452,7 +453,7 @@ _yo_volume_attach_command() {
   integer n=2-${words[(I)volume-*]}
   _arguments -S $_yo_volume_attach_options \
     '--as-boot[Attach as a boot volume]' \
-    + volume \
+    + -default- \
     $n':volume name:_yo_volumes' \
       ':instance name:_yo_instances'
 }
