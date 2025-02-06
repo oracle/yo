@@ -615,9 +615,10 @@ fi
 _yo_prep_cmd() {
   # yuck
   local region_default_sed_pattern='/\[yo\]/,/^ *\[/ s/^ *region *= *([a-z0-9-]+)/\1/p'
-  local region_default="$(_call_program -l yo-region-default sed -En ${(q)region_default_sed_pattern} ~/.oci/yo.ini)"
   local region=${YO_REGION:-${(v)opt_args[(I)-r|--region]}}
-  region=${region:-$region_default}
+  if [[ -z $region ]]; then
+    region="$(_call_program -l yo-region-default sed -En ${(q)region_default_sed_pattern} ~/.oci/yo.ini)"
+  fi
   local -a caches=( ~/.cache/yo.${region:-*}.json(N.) )
 
   _yo_cmd "$@"
