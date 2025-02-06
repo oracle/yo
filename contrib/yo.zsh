@@ -56,7 +56,7 @@ _yo_context() {
 # yo resources  {{{
 _yo_instances() {
   local filter='.instances.cache[] | select(.state != "TERMINATED") | "\(.name | gsub(":"; "\\:")):\(.shape) [\(.state)]"'
-  local -Ua instances=(${(@f)"$(_call_program yo-instances jq -r ${(q)filter} $caches)"})
+  local -Ua instances=(${(@f)"$(_call_program -l yo-instances jq -r ${(q)filter} $caches)"})
   if [[ -z ${exact_name:-${opt_args[(I)-E|--exact-name]}} ||
         -n ${exact_name+$opt_args[(I)--no-exact-name]} ]]; then
           instances+=(${instances#$USER-})
@@ -69,7 +69,7 @@ _yo_instances() {
 _yo_shapes() {
   local filter='.shapes.cache[] | "\(.name):\(.name ) / \(.memory_in_gbs)GB"
     + if .local_disks > 0 then " / \(.local_disks_total_size_in_gbs)GB \(.local_disk_description)" else "" end'
-  local -a shapes=(${(@f)"$(_call_program yo-shapes jq -r ${(q)filter} $caches)"})
+  local -a shapes=(${(@f)"$(_call_program -l yo-shapes jq -r ${(q)filter} $caches)"})
 
   _describe -t yo-shapes "shape" shapes -M 'm:{[:lower:]}={[:upper:]} r:|.=*' "$@"
 }
@@ -85,15 +85,15 @@ _yo_images() {
   _tags yo-images-os yo-images-custom yo-images-named
   while _tags; do
     if _requested yo-images-os; then
-      ((#images_os)) || images_os=(${(@f)"$(_call_program yo-images-os jq -r ${(q)filter_os} $caches)"})
+      ((#images_os)) || images_os=(${(@f)"$(_call_program -l yo-images-os jq -r ${(q)filter_os} $caches)"})
      _all_labels yo-images-os expl "OS image" _multi_parts -i : images_os && ret=0
     fi
     if _requested yo-images-custom; then
-      ((#images_custom)) || images_custom=(${(@f)"$(_call_program yo-images-custom jq -r ${(q)filter_custom} $caches)"})
+      ((#images_custom)) || images_custom=(${(@f)"$(_call_program -l yo-images-custom jq -r ${(q)filter_custom} $caches)"})
      _all_labels yo-images-custom expl "custom image" compadd -a - images_custom && ret=0
     fi
     if ((ret)) && _requested yo-images-named; then
-      ((#images_named)) || images_named=(${(@f)"$(_call_program yo-images-named jq -r ${(q)filter_name} $caches)"})
+      ((#images_named)) || images_named=(${(@f)"$(_call_program -l yo-images-named jq -r ${(q)filter_name} $caches)"})
       _all_labels yo-images-named expl "named image" compadd -a - images_named && ret=0
     fi
     ((ret)) || break
@@ -104,14 +104,14 @@ _yo_images() {
 _yo_volumes() {
   local filter='.bootvols.cache[] | select(.state != "TERMINATED") |
     "\(.name | gsub(":"; "\\:")):\(.name | gsub(":"; "\\:")) \(.size_in_gbs)GB [\(.state)]"'
-  local -a volumes=(${(@f)"$(_call_program yo-volumes jq -r ${(q)filter} $caches)"})
+  local -a volumes=(${(@f)"$(_call_program -l yo-volumes jq -r ${(q)filter} $caches)"})
 
   _describe -t yo-volumes "volume" volumes "$@"
 }
 
 _yo_ads() {
   local filter='.ads.cache[].name | gsub(":"; "\\:")'
-  local -a ads=(${(@f)"$(_call_program yo-ads jq -r ${(q)filter} $caches)"})
+  local -a ads=(${(@f)"$(_call_program -l yo-ads jq -r ${(q)filter} $caches)"})
 
   _describe -t yo-ads "availability domain" ads "$@"
 }
@@ -615,7 +615,7 @@ fi
 _yo_prep_cmd() {
   # yuck
   local region_default_sed_pattern='/\[yo\]/,/^ *\[/ s/^ *region *= *([a-z0-9-]+)/\1/p'
-  local region_default="$(_call_program yo-region-default sed -En ${(q)region_default_sed_pattern} ~/.oci/yo.ini)"
+  local region_default="$(_call_program -l yo-region-default sed -En ${(q)region_default_sed_pattern} ~/.oci/yo.ini)"
   local region=${YO_REGION:-${(v)opt_args[(I)-r|--region]}}
   region=${region:-$region_default}
   local -a caches=( ~/.cache/yo.${region:-*}.json(N.) )
@@ -624,12 +624,12 @@ _yo_prep_cmd() {
 }
 
 # also yuck
-local exact_name="$(_call_program yo-exact-name grep -E ${(q):-'^ *exact_name *= *true'} ~/.oci/yo.ini)"
+local exact_name="$(_call_program -l yo-exact-name grep -E ${(q):-'^ *exact_name *= *true'} ~/.oci/yo.ini)"
 local -a _yo_regions=(
-  ${${(@f)"$(_call_program yo-regions grep -Eo ${(q):-'^ *\[regions.([a-z0-9-]+)'} ~/.oci/yo.ini)"}# #\[regions.}
+  ${${(@f)"$(_call_program -l yo-regions grep -Eo ${(q):-'^ *\[regions.([a-z0-9-]+)'} ~/.oci/yo.ini)"}# #\[regions.}
 )
 local -a _yo_profiles=(
-  ${${(@f)"$(_call_program yo-profiles grep -Eo ${(q):-'^ *\[instances.([a-z0-9-]+)'} ~/.oci/yo.ini)"}# #\[instances.}
+  ${${(@f)"$(_call_program -l yo-profiles grep -Eo ${(q):-'^ *\[instances.([a-z0-9-]+)'} ~/.oci/yo.ini)"}# #\[instances.}
 )
 
 local -a _yo_options=(
