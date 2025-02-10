@@ -129,7 +129,7 @@ _yo_list_command() {
   local -a _yo_list_options=(
     '(-c --cached)'{-c,--cached}'[Avoid loading and calling OCI]'
     '(-C --columns)'{-C+,--columns=}'[Specify all columns in the table]:column:('"$columns"')'
-    '(-x --extra-column)'{-x+,--extra-column=}'[Add a column to the table]:column:('"$columns"')'
+    \*{-x+,--extra-column=}'[Add a column to the table]:column:('"$columns"')'
     '(-i --ip)'{-i,--ip}'[Include the IP address column]'
     '--ad[Include the availability domain column]'
     '(-a --all)'{-a,--all}'[Display all instances in the compartment]'
@@ -155,7 +155,7 @@ _yo_launch_command() {
     '--no-exact-name[Always not prefix the instance name with your username]'
     '--dry-run[Do not launch an instance, but print what would be done]'
     '(-p --profile)'{-p+,--profile=}'[Profile to use]:profile:('"$_yo_profiles"')'
-    '(-t --task)'{-t+,--task=}'[Tasks to run once the instance is up]:task:_yo_tasks'
+    \*{-t+,--task=}'[Tasks to run once the instance is up]:task:_yo_tasks'
     '--load-image=[Strategy for loading images]:strategy:(UNIQUE LATEST)'
     '(-u --username)'{-u+,--username=}'[Username for logging into the instance]:user:_users'
   )
@@ -536,7 +536,7 @@ _yo_shapes_command() {
     '--disk[Display details disk information]'
     '--gpu[Display detailed GPU information]'
     '(-a --availability)'{-a,--availability}'[Display availability across domains]'
-    {-f+,--filter=}'[Filter to shapes with particular features]:filter:('"$filters"')'
+    \*{-f+,--filter=}'[Filter to shapes with particular features]:filter:('"$filters"')'
   )
   _arguments -S -A '*' $_yo_shapes_options
 }
