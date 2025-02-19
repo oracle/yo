@@ -5,6 +5,12 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.8.1 - Tue, Feb 18, 2025
+
+- Fixed an issue with renaming an instance when there is a terminated instance
+  of the same name.
+- Included updated ZSH completions, thanks to @rpigott again!
+
 ## 1.8.0 - Fr, Nov 22, 2024
 
 - Yo now automatically disables the less secure, legacy [IMDS v1
