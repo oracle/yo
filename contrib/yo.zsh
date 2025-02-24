@@ -54,22 +54,31 @@ _yo_context() {
 }
 # }}}
 # yo resources  {{{
+_yo_maybe_msg_resource_err() {
+  local rcode=$1 resource=$2; shift 2
+  case $rcode in
+    127 ) _message "$resource completion requires jq";;
+    <1->) _message "failed to parse $resource names from $@";;
+  esac
+}
+
 _yo_instances() {
   local filter='.instances.cache[] | select(.state != "TERMINATED") | "\(.name | gsub(":"; "\\:")):\(.shape) [\(.state)]"'
-  local -Ua instances=(${(@f)"$(_call_program -l yo-instances jq -r ${(q)filter} $caches)"})
+  local -Ua instances; instances=(${(@f)"$(_call_program -l yo-instances jq -r ${(q)filter} $caches)"})
+  _yo_maybe_msg_resource_err $status "instance" $caches
   if [[ -z ${exact_name:-${opt_args[(I)-E|--exact-name]}} ||
         -n ${exact_name+$opt_args[(I)--no-exact-name]} ]]; then
           instances+=(${instances#$USER-})
   fi
 
-  local expl="$@"
   _describe -t yo-instances "instance" instances "$@"
 }
 
 _yo_shapes() {
   local filter='.shapes.cache[] | "\(.name):\(.name ) / \(.memory_in_gbs)GB"
     + if .local_disks > 0 then " / \(.local_disks_total_size_in_gbs)GB \(.local_disk_description)" else "" end'
-  local -a shapes=(${(@f)"$(_call_program -l yo-shapes jq -r ${(q)filter} $caches)"})
+  local -a shapes; shapes=(${(@f)"$(_call_program -l yo-shapes jq -r ${(q)filter} $caches)"})
+  _yo_maybe_msg_resource_err $status "shape" $caches
 
   _describe -t yo-shapes "shape" shapes -M 'm:{[:lower:]}={[:upper:]} r:|.=*' "$@"
 }
@@ -86,14 +95,17 @@ _yo_images() {
   while _tags; do
     if _requested yo-images-os; then
       ((#images_os)) || images_os=(${(@f)"$(_call_program -l yo-images-os jq -r ${(q)filter_os} $caches)"})
+      _yo_maybe_msg_resource_err $status "OS image" $caches
      _all_labels yo-images-os expl "OS image" _multi_parts -i : images_os && ret=0
     fi
     if _requested yo-images-custom; then
       ((#images_custom)) || images_custom=(${(@f)"$(_call_program -l yo-images-custom jq -r ${(q)filter_custom} $caches)"})
+      _yo_maybe_msg_resource_err $status "custom image" $caches
      _all_labels yo-images-custom expl "custom image" compadd -a - images_custom && ret=0
     fi
     if ((ret)) && _requested yo-images-named; then
       ((#images_named)) || images_named=(${(@f)"$(_call_program -l yo-images-named jq -r ${(q)filter_name} $caches)"})
+      _yo_maybe_msg_resource_err $status "named image" $caches
       _all_labels yo-images-named expl "named image" compadd -a - images_named && ret=0
     fi
     ((ret)) || break
@@ -104,14 +116,16 @@ _yo_images() {
 _yo_volumes() {
   local filter='.bootvols.cache[] | select(.state != "TERMINATED") |
     "\(.name | gsub(":"; "\\:")):\(.name | gsub(":"; "\\:")) \(.size_in_gbs)GB [\(.state)]"'
-  local -a volumes=(${(@f)"$(_call_program -l yo-volumes jq -r ${(q)filter} $caches)"})
+  local -a volumes; volumes=(${(@f)"$(_call_program -l yo-volumes jq -r ${(q)filter} $caches)"})
+  _yo_maybe_msg_resource_err $status "volume" $caches
 
   _describe -t yo-volumes "volume" volumes "$@"
 }
 
 _yo_ads() {
   local filter='.ads.cache[].name | gsub(":"; "\\:")'
-  local -a ads=(${(@f)"$(_call_program -l yo-ads jq -r ${(q)filter} $caches)"})
+  local -a ads; ads=(${(@f)"$(_call_program -l yo-ads jq -r ${(q)filter} $caches)"})
+  _yo_maybe_msg_resource_err $status "availability domain" $caches
 
   _describe -t yo-ads "availability domain" ads "$@"
 }
