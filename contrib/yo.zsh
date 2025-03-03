@@ -39,10 +39,7 @@ local -a yo_remote_desktop_command=(/$'[^\0]#\0'/ ': : :_yo_context _yo_remote_d
 
 _yo_context() {
   # This makes nested _arguments calls a little simpler
-  if (( ${offset:=$words[(I)argument-rest]} > 0 )); then
-    let 'CURRENT = CURRENT - offset'
-    shift offset words
-  else
+  if ! compset -N argument-rest; then
     _message "no more arguments"
     return 1
   fi
