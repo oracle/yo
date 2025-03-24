@@ -115,6 +115,7 @@ class YoRegion:
 
 @dataclasses.dataclass
 class YoConfig:
+    mtime: float
     instance_compartment_id: str
     region: str
     my_email: str
@@ -202,9 +203,13 @@ class YoConfig:
 
     @classmethod
     def from_config_section(
-        cls, conf: configparser.SectionProxy, regions: t.Dict[str, YoRegion]
+        cls,
+        conf: configparser.SectionProxy,
+        regions: t.Dict[str, YoRegion],
+        mtime: float,
     ) -> "YoConfig":
         d = dict(**conf)
+        d["mtime"] = mtime
 
         d["regions"] = regions
         region_conf = filter_keys(
