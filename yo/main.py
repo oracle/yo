@@ -290,7 +290,9 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
         # no value config sections, which will set the value to None.
         allow_no_value=True,
     )
-    assert os.path.isfile(config_file)
+    # Existence of the file should have already been checked by check_configs(),
+    # here we just want to know the mtime.
+    stbuf = os.stat(config_file)
     config.read(config_file)
 
     regions = {}
@@ -301,7 +303,9 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
         region = YoRegion.from_config_section(rname, config[sec])
         regions[rname] = region
 
-    yo_config = YoConfig.from_config_section(config["yo"], regions)
+    yo_config = YoConfig.from_config_section(
+        config["yo"], regions, stbuf.st_mtime
+    )
 
     aliases: t.Dict[str, str] = {}
     if "aliases" in config.sections():

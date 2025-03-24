@@ -1141,7 +1141,15 @@ class YoCtx:
     def load_cache(self) -> None:
         cache_file = self._cache_file
         cache = {}
-        if os.path.isfile(cache_file):
+        try:
+            stbuf = os.stat(cache_file)
+            exists = True
+        except FileNotFoundError:
+            exists = False
+        if exists and stbuf.st_mtime < self.config.mtime:
+            self.con.log("Invalidating cache due to updated config")
+            os.unlink(cache_file)
+        elif exists:
             with open(cache_file) as f:
                 cache = json.load(f)
             cache_version = cache.pop("cache_version", 0)
