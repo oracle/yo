@@ -484,6 +484,7 @@ class YoTask:
     script: str
     dependencies: t.List[str]
     conflicts: t.List[str]
+    prereq_for: t.List[str]
 
     @classmethod
     def create_from_string(
@@ -491,6 +492,7 @@ class YoTask:
     ) -> "YoTask":
         dependencies = []
         conflicts = []
+        prereq_for = []
         all_tasks = list_tasks()
         lines = script.split("\n")
         for i in range(len(lines)):
@@ -509,7 +511,11 @@ class YoTask:
                         "MAYBE_DEPENDS_ON", "# MAYBE_DEPENDS_ON"
                     )
                 lines[i] = line
-        return YoTask(name, path, "\n".join(lines), dependencies, conflicts)
+            elif line.startswith("PREREQ_FOR"):
+                prereq_for.append(line.split(None, maxsplit=1)[1])
+        return YoTask(
+            name, path, "\n".join(lines), dependencies, conflicts, prereq_for
+        )
 
     @classmethod
     @lru_cache(maxsize=None)
@@ -531,6 +537,10 @@ class YoTask:
         with open(path) as f:
             script = f.read()
         return cls.create_from_string(name, script, path=path)
+
+    def insert_prereq(self, other: str) -> None:
+        self.dependencies.append(other)
+        self.script = f"DEPENDS_ON {other}\n{self.script}"
 
 
 @lru_cache(maxsize=1)
@@ -607,51 +617,67 @@ def _task_run(ctx: YoCtx, inst: YoInstance, task: YoTask) -> None:
 def run_all_tasks(
     ctx: YoCtx, inst: YoInstance, tasks: t.Iterable[t.Union[YoTask, str]]
 ) -> None:
-    # Tasks can have dependencies. We need to be sure to load the full set of
-    # dependencies in the list of tasks we're given. We also need to verify
-    # there are no circular dependencies. And it's nice to launch them in order
-    # that will satisfy their dependencies, but the "DEPENDS_ON" function should
-    # successfully handle waiting until all depnedencies are completed anyway.
+    # The caller may specify tasks as either strings or YoTask instances, for
+    # convenience. Let's get everything into a "name_to_task" dict.
+    name_to_task: t.Dict[str, YoTask] = {}
+    for task in tasks:
+        if isinstance(task, str):
+            name_to_task[task] = YoTask.load(task)
+        else:
+            name_to_task[task.name] = task
 
-    # 0: not visited, 1: visiting, 2: finished visit
+    # Tasks may have dependencies. Let's go through every task, and their
+    # dependencies, and load them all. At this point, we're not yet checking
+    # whether there are any circular dependencies: just loading them.
+    tasks_to_load = list(name_to_task.values())
+    for task in tasks_to_load:
+        for name in task.dependencies:
+            if name not in name_to_task:
+                name_to_task[name] = YoTask.load(name)
+                tasks_to_load.append(name_to_task[name])
+
+    # Now we have loaded the complete set of tasks that should run. Some tasks
+    # may appoint themselves as "prerequisites" for another. We need to insert
+    # this dependency relationship so that the script is updated, and so that
+    # the circular dependency detection knows about it. We can also use this
+    # opportunity to detect conflicts.
+    for task in name_to_task.values():
+        for name in task.prereq_for:
+            if name in name_to_task:
+                name_to_task[name].insert_prereq(task.name)
+        for name in task.conflicts:
+            if name in name_to_task:
+                raise YoExc(f"Task {task.name} conflicts with {name}")
+
+    # Now all tasks are loaded, and prerequisites have been marked. Use a
+    # topological sort to verify that no circular dependencies are present. Here
+    # we use a recursive traversal because honestly, if you specify enough tasks
+    # to trigger a recursion error, then I would like to receive that bug
+    # report!
     name_to_visit: t.Dict[str, int] = collections.defaultdict(int)
-    # output ordering
     ordered_tasks: t.List[YoTask] = []
 
-    def visit(task_or_name: t.Union[YoTask, str]) -> None:
-        if isinstance(task_or_name, str):
-            name: str = task_or_name
-            task: t.Optional[YoTask] = None
-        else:
-            name = task_or_name.name
-            task = task_or_name
-        if name_to_visit[name] == 2:
+    def visit(task: YoTask) -> None:
+        if name_to_visit[task.name] == 2:
             # already completed, skip
             return
-        if name_to_visit[name] == 1:
+        if name_to_visit[task.name] == 1:
             # currently visiting, not a DAG
             raise YoExc("Tasks express a circular dependency")
 
-        name_to_visit[name] = 1
-        if not task:
-            task = YoTask.load(name)
+        name_to_visit[task.name] = 1
         for dep_name in task.dependencies:
-            visit(dep_name)
-        name_to_visit[name] = 2
+            visit(name_to_task[dep_name])
+        name_to_visit[task.name] = 2
         ordered_tasks.append(task)
 
-    for name in tasks:
-        visit(name)
+    for task in name_to_task.values():
+        visit(task)
 
-    # Now ordered_tasks contains the order in which we should launch them.
-    # Verify that there are no conflicts
-    all_task_names = {t.name for t in ordered_tasks}
-    for task in ordered_tasks:
-        for conflict in task.conflicts:
-            if conflict in all_task_names:
-                raise YoExc(f"Task {task} conflicts with {conflict}")
-
-    # Do the thing!
+    # Now ordered_tasks contains the order in which we should launch them.  This
+    # is just a nice-to-have: even if we launched them out of order, the
+    # DEPENDS_ON function would enforce the order of execution. Regardless,
+    # let's start the tasks.
     for task in ordered_tasks:
         _task_run(ctx, inst, task)
 

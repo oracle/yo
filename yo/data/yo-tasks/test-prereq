@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Oracle and/or its affiliates.
+# Copyright (c) 2025, Oracle and/or its affiliates.
 #
 # The Universal Permissive License (UPL), Version 1.0
 #
@@ -33,8 +33,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-MAYBE_DEPENDS_ON test-non-existing-task
-MAYBE_DEPENDS_ON test-existing-task
-DEPENDS_ON test-task
+PREREQ_FOR test-existing-task
 sleep 10
 echo completed
