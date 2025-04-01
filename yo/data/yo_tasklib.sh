@@ -35,6 +35,10 @@ RUN_ONCE() {
     fi
 }
 
+PREREQ_FOR() {
+    true
+}
+
 # Setup the "$ORAVER" variable for Oracle Linux
 if [ -f /etc/oracle-release ] && grep '6\.' /etc/oracle-release; then
     ORAVER=6
