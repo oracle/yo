@@ -486,7 +486,9 @@ class YoTask:
     conflicts: t.List[str]
 
     @classmethod
-    def create_from_string(cls, name: str, script: str) -> "YoTask":
+    def create_from_string(
+        cls, name: str, script: str, path: str = "(memory)"
+    ) -> "YoTask":
         dependencies = []
         conflicts = []
         all_tasks = list_tasks()
@@ -507,9 +509,7 @@ class YoTask:
                         "MAYBE_DEPENDS_ON", "# MAYBE_DEPENDS_ON"
                     )
                 lines[i] = line
-        return YoTask(
-            name, "(memory)", "\n".join(lines), dependencies, conflicts
-        )
+        return YoTask(name, path, "\n".join(lines), dependencies, conflicts)
 
     @classmethod
     @lru_cache(maxsize=None)
@@ -530,7 +530,7 @@ class YoTask:
 
         with open(path) as f:
             script = f.read()
-        return cls.create_from_string(name, script)
+        return cls.create_from_string(name, script, path=path)
 
 
 @lru_cache(maxsize=1)
