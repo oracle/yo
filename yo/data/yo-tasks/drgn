@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2023, Oracle and/or its affiliates.
+# Copyright (c) 2025, Oracle and/or its affiliates.
 #
 # The Universal Permissive License (UPL), Version 1.0
 #
@@ -46,7 +46,5 @@ if [ "$ORAVER" -le 7 ]; then
     echo "Not supported on OL7 or earlier"
     exit 1
 else
-    # Use the EPEL for OL8 and OL9
-    sudo yum-config-manager --enable ol${ORAVER}_developer_EPEL
     sudo yum -y install drgn
 fi
