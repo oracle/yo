@@ -128,6 +128,7 @@ def image_factory(**kwargs) -> YoImage:
 
 def config_factory(**kwargs) -> YoConfig:
     defaults = {
+        "mtime": 123,
         "instance_compartment_id": _random_id(),
         "my_email": MY_EMAIL,
         "my_username": "test",
