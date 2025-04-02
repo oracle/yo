@@ -425,13 +425,17 @@ class YoImage(YoCachedWithId):
         return cls(**d)
 
     @classmethod
-    def from_oci(cls, img: "Image") -> "YoImage":
+    def from_oci(cls, img: "Image", tag: str | None = None) -> "YoImage":
         os_version = img.operating_system_version
         # Hack: I don't have good support for matching a GPU instance to the
         # appropriate image with GPU support. "Detect" GPU support in the image name
         # and mark it as a separate image.
         if "GPU" in img.display_name:
             os_version += " GPU"
+
+        op_sys = img.operating_system
+        if tag:
+            op_sys += " " + tag
 
         created_by = img.defined_tags.get("Oracle-Tags", {}).get("CreatedBy")
         if not created_by:
@@ -445,7 +449,7 @@ class YoImage(YoCachedWithId):
             compartment_id=img.compartment_id,
             display_name=img.display_name,
             launch_mode=img.launch_mode,
-            os=img.operating_system,
+            os=op_sys,
             os_version=os_version,
             size_in_mbs=img.size_in_mbs,
             time_created=img.time_created,
@@ -1599,7 +1603,7 @@ class YoCtx:
                         if e.code == "TooManyRequests" and i < 2:
                             sleep = random.uniform(1, 4)
                             self.con.log(
-                                f"Rate-limited by OCI ({i+1})! Backing off {sleep:.2f}s"
+                                f"Rate-limited by OCI ({i + 1})! Backing off {sleep:.2f}s"
                             )
                             time.sleep(sleep)
                             continue
@@ -1671,6 +1675,9 @@ class YoCtx:
             self.con.log("Refreshing cached image list")
             seen_ids = set()
             for cid in compartments:
+                tag = None
+                if ":" in cid:
+                    cid, tag = cid.split(":", maxsplit=1)
                 img_gen = self.oci.list_call_get_all_results_generator(
                     self.compute.list_images,
                     "record",
@@ -1678,7 +1685,7 @@ class YoCtx:
                 )
                 for img in img_gen:
                     if img.id not in seen_ids:
-                        images.append(YoImage.from_oci(img))
+                        images.append(YoImage.from_oci(img, tag))
                         seen_ids.add(img.id)
             self.con.log("Loading image compatibility")
             list(self._tpe.map(self._load_image_compatibility, images))
