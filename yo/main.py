@@ -746,6 +746,19 @@ def task_get_status(
     return task_to_status
 
 
+def _status_code(status: str, code: t.Union[int, str, None]) -> str:
+    if status == "RUNNING":
+        return f"[yellow]RUNNING[/yellow] (pid={code})"
+    elif status == "FAIL":
+        return f"[red]FAILED[/red] (code={code})"
+    elif status == "WAITING":
+        return f"[green]WAITING[/green] (on={code})"
+    elif status == "UNKNOWN":
+        return "[red]UNKNOWN[/red]"
+    else:
+        return "[green]SUCCESS[/green]"
+
+
 def task_status_to_table(
     statuses: t.Mapping[str, t.Tuple[str, t.Union[int, str]]]
 ) -> rich.table.Table:
@@ -753,53 +766,45 @@ def task_status_to_table(
     t.add_column("Task")
     t.add_column("Status")
     for task, (status, code) in statuses.items():
-        if status == "RUNNING":
-            status = f"[yellow]RUNNING[/yellow] (pid={code})"
-        elif status == "FAIL":
-            status = f"[red]FAILED[/red] (code={code})"
-        elif status == "WAITING":
-            status = f"[green]WAITING[/green] (on={code})"
-        elif status == "UNKNOWN":
-            status = "[red]UNKNOWN[/red]"
-        else:
-            status = f"[green]SUCCESS[/green] (code={code})"
-        t.add_row(task, status)
+        t.add_row(task, _status_code(status, code))
     return t
 
 
 def task_join(
     ctx: YoCtx,
     inst: YoInstance,
-    wait_task: t.Optional[str] = None,
+    wait_tasks: t.Iterable[str] = (),
 ) -> t.Mapping[str, t.Tuple[str, t.Union[str, int]]]:
     with Live(console=ctx.con) as live:
-        task_previous_status: t.Dict[str, str] = {}
+        task_previous_status: t.Dict[str, t.Tuple[str, t.Union[int, str]]] = {}
         while True:
             status_dict = task_get_status(ctx, inst)
             live.update(task_status_to_table(status_dict))
             any_running = False
-            for task, (status, _) in status_dict.items():
-                prev_status = task_previous_status.get(task)
-                task_previous_status[task] = status
+            for task, (status, code) in status_dict.items():
+                prev_status, prev_code = task_previous_status.get(
+                    task, (None, None)
+                )
+                task_previous_status[task] = status, code
                 if not prev_status:
-                    live.console.log(f"{task}: starting in status {status}")
-                elif prev_status != status:
                     live.console.log(
-                        f"{task}: changing status {prev_status} -> {status}"
+                        f"{task}: starting in status {_status_code(status, code)}",
+                        highlight=False,
+                    )
+                elif prev_status != status or prev_code != code:
+                    live.console.log(
+                        f"{task}: changing status {_status_code(prev_status, prev_code)} -> {_status_code(status, code)}",
+                        highlight=False,
                     )
                 if status in ("RUNNING", "WAITING"):
                     any_running = True
 
             # If we're waiting for no particular task, then we have to wait
             # until all are completed. Otherwise, we wait until just the
-            # specific wait_task is completed.
-            can_terminate = (wait_task is None and not any_running) or (
-                wait_task is not None
-                and status_dict[wait_task][0]
-                not in (
-                    "RUNNING",
-                    "WAITING",
-                )
+            # specific wait_tasks are all completed.
+            can_terminate = (not wait_tasks and not any_running) or all(
+                (status_dict[wt][0] not in ("RUNNING", "WAITING"))
+                for wt in wait_tasks
             )
             if can_terminate:
                 break
@@ -1717,6 +1722,7 @@ class TaskRunCmd(SingleInstanceCommand):
             "task",
             choices=arg_choices(list_tasks()),
             help="name of the task to execute",
+            nargs="+",
         )
         parser.add_argument(
             "-w",
@@ -1726,9 +1732,9 @@ class TaskRunCmd(SingleInstanceCommand):
         )
 
     def run_for_instance(self, inst: YoInstance) -> None:
-        run_all_tasks(self.c, inst, [self.args.task])
+        run_all_tasks(self.c, inst, self.args.task)
         if self.args.wait:
-            task_join(self.c, inst, wait_task=self.args.task)
+            task_join(self.c, inst, wait_tasks=self.args.task)
             send_notification(
                 self.c,
                 f"Task {self.args.task} complete on instance {inst.name}",
@@ -1802,7 +1808,7 @@ class TaskWaitCmd(SingleInstanceCommand):
         )
 
     def run_for_instance(self, inst: YoInstance) -> None:
-        task_join(self.c, inst, wait_task=self.args.task)
+        task_join(self.c, inst, wait_tasks=[self.args.task])
         send_notification(
             self.c, f"Task {self.args.task} complete on instance {inst.name}"
         )
