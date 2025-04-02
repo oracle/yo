@@ -5,6 +5,15 @@
 Any changes which are committed, but not yet present in a released version,
 should appear here.
 
+## 1.9.0 - Wed, Apr 2, 2025
+
+- Added "PREREQ_FOR" relationship for tasks.
+- Improved the operation of `yo task join` and other commands that wait for task
+  completion.
+- Fixed the drgn task to install drgn without enabling EPEL.
+- Removed "test-" tasks from the Yo task directory.
+- Bug fix: whenever configs are modified, Yo now invalidates its cache.
+
 ## 1.8.1 - Tue, Feb 18, 2025
 
 - Fixed an issue with renaming an instance when there is a terminated instance
