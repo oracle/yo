@@ -93,6 +93,17 @@ functions which are available to you:
   script should not run again. It will detect a previous success, and exit with
   code 0. Note that this will still allow you to re-run a failed task.
 
+- ``PREREQ_FOR <other task>`` - this declares that your task is a
+  prerequisite of another. It can be thought of as the inverse of
+  ``DEPENDS_ON``, but with one important caveat. This relationship only applies
+  if the other task is actually loaded and run by Yo at the same time as this
+  one. For example, suppose task ``A`` contains ``PREREQ_FOR B``. Then:
+
+  - Specifying task ``A`` will not automatically run task ``B``
+  - Similarly, specifying task ``B`` will not automatically run ``A``
+  - However, if task ``A`` and ``B`` are both specified to run, then Yo will
+    ensure that A runs to completion before task ``B`` begins.
+
 These functions can be used anywhere in your script, however bash syntax such as
 quoting or variable expansion is not respected when Yo locates them. So, while
 the following is valid bash, it won't work with Yo:
