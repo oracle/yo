@@ -802,9 +802,12 @@ def task_join(
             # If we're waiting for no particular task, then we have to wait
             # until all are completed. Otherwise, we wait until just the
             # specific wait_tasks are all completed.
-            can_terminate = (not wait_tasks and not any_running) or all(
-                (status_dict[wt][0] not in ("RUNNING", "WAITING"))
-                for wt in wait_tasks
+            can_terminate = (not wait_tasks and not any_running) or (
+                wait_tasks
+                and all(
+                    (status_dict[wt][0] not in ("RUNNING", "WAITING"))
+                    for wt in wait_tasks
+                )
             )
             if can_terminate:
                 break
