@@ -425,7 +425,9 @@ class YoImage(YoCachedWithId):
         return cls(**d)
 
     @classmethod
-    def from_oci(cls, img: "Image", tag: str | None = None) -> "YoImage":
+    def from_oci(
+        cls, img: "Image", tag: t.Union[str, None] = None
+    ) -> "YoImage":
         os_version = img.operating_system_version
         # Hack: I don't have good support for matching a GPU instance to the
         # appropriate image with GPU support. "Detect" GPU support in the image name
