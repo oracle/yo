@@ -40,14 +40,9 @@ PREREQ_FOR() {
 }
 
 # Setup the "$ORAVER" variable for Oracle Linux
-if [ -f /etc/oracle-release ] && grep '6\.' /etc/oracle-release; then
-    ORAVER=6
-elif [ -f /etc/oracle-release ] && grep '7\.' /etc/oracle-release; then
-    ORAVER=7
-elif [ -f /etc/oracle-release ] && grep '8\.' /etc/oracle-release; then
-    ORAVER=8
-elif [ -f /etc/oracle-release ] && grep '9\.' /etc/oracle-release; then
-    ORAVER=9
+if [ -f /etc/oracle-release ]; then
+    . /etc/os-release
+    ORAVER="${VERSION//\.*}"
 fi
 
 ## END: yo_tasklib.sh
