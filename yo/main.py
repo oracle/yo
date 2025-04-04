@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2023, Oracle and/or its affiliates.
+# Copyright (c) 2023, 2025, Oracle and/or its affiliates.
 #
 # The Universal Permissive License (UPL), Version 1.0
 #
@@ -73,13 +73,10 @@ import collections
 import contextlib
 import dataclasses
 import importlib
-import inspect
 import os
-import random
 import re
 import runpy
 import shlex
-import string
 import subprocess
 import sys
 import textwrap
@@ -88,7 +85,6 @@ import traceback
 import typing as t
 from configparser import ConfigParser
 from fnmatch import fnmatch
-from functools import lru_cache
 
 import argcomplete  # type: ignore
 import rich.console
@@ -96,7 +92,6 @@ import rich.progress
 import rich.syntax
 import rich.table
 from oci.exceptions import ServiceError
-from rich.live import Live
 from rich.progress import Progress
 from rich.prompt import Confirm
 from rich.text import Text
@@ -112,6 +107,19 @@ from yo.api import YoInstance
 from yo.api import YoShape
 from yo.api import YoVolume
 from yo.api import YoVolumeAttachment
+from yo.ssh import ssh_args
+from yo.ssh import ssh_cmd
+from yo.ssh import SSH_CONSOLE_OPTIONS
+from yo.ssh import ssh_into
+from yo.ssh import SSH_MINIMUM_TIME
+from yo.ssh import SSH_OPTIONS
+from yo.ssh import wait_for_ssh_access
+from yo.tasks import list_tasks
+from yo.tasks import run_all_tasks
+from yo.tasks import task_get_status
+from yo.tasks import task_join
+from yo.tasks import task_status_to_table
+from yo.tasks import YoTask
 from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
 from yo.util import hasherr
@@ -130,62 +138,13 @@ SAMPLE_CONFIG_FILE = os.path.join(
 )
 SAMPLE_CONFIG_NAME = "sample configuration"
 OCI_CONFIG_FILE = os.path.expanduser("~/.oci/config")
-TASK_DIRECTORIES = [
-    os.path.expanduser("~/.oci/yo-tasks"),
-    # This should be installed with the package
-    os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/yo-tasks"),
-]
-
 T = t.TypeVar("T")
 V = t.TypeVar("V")
-
-SSH_OPTIONS = [
-    # OCI instances reuse the same pool of IPs. If you use OCI a lot, you'll
-    # start getting IP collisions and key verification failures. While I'm never
-    # one to disable security features, this is a case where it just doesn't
-    # make sense to have it enabled. First, it annoys users who expect yo to
-    # "just connect", but instead it prompts yes/no, or fails due to
-    # verification errors. Second, it clutters up the ~/.ssh/known_hosts and
-    # encourages users to chuck out their existing host keys, because of the OCI
-    # verification failures. SO, we completely neuter the feature in our config.
-    "-oCheckHostIP=no",
-    "-oStrictHostKeyChecking=no",
-    "-oUpdateHostKeys=no",
-    "-oUserKnownHostsFile=/dev/null",
-    # This will suppress warnings regarding "permanently added host key", which
-    # are pretty pointless given that our known hosts file is /dev/null, and so
-    # it's not very permanent, is it?
-    "-oLogLevel=ERROR",
-    # The following two options are mostly useful for long-running serial
-    # console connections. But they certainly don't harm things when you're
-    # keeping SSH open for a while.
-    "-oServerAliveInterval=60",
-    "-oTCPKeepAlive=yes",
-]
-SSH_CONSOLE_OPTIONS = [
-    "-oHostKeyAlgorithms=+ssh-rsa",
-    # From the OpenSSH 8.5 Changelog:
-    #
-    #   ssh(1), sshd(8): rename the PubkeyAcceptedKeyTypes keyword to
-    #   PubkeyAcceptedAlgorithms. The previous name incorrectly suggested
-    #   that it control allowed key algorithms, when this option actually
-    #   specifies the signature algorithms that are accepted. The previous
-    #   name remains available as an alias. bz#3253
-    #
-    # Thankfully, the alias seems to be available for a while. Unfortunately,
-    # it means we're using an "undocumented" option in order to retain maximal
-    # compatibility with OpenSSH versions.
-    "-oPubkeyAcceptedKeyTypes=+ssh-rsa",
-]
-SSH_MINIMUM_TIME = 4
 
 REPOSITORY_URL = "https://github.com/oracle/yo"
 DOCUMENTATION_URL = "https://oracle.github.io/yo/"
 INITIAL_CONFIG_LINK = REPOSITORY_URL
 
-warned_about_SSH_timeout = False
-
-PYVER = sys.version_info[:2]
 
 COMMAND_GROUP_ORDER = [
     "Basic Commands",
@@ -353,466 +312,6 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
         )
         instance_profiles[sec].validate(sec)
     return FullYoConfig(yo_config, instance_profiles, aliases)
-
-
-def ssh_args(
-    ctx: YoCtx,
-    interactive: bool,
-) -> t.List[str]:
-    cmd = SSH_OPTIONS.copy()
-    cmd += shlex.split(ctx.config.ssh_args or "")
-    if "-i" in cmd:
-        raise YoExc(
-            "you have -i configured in ssh_args, but yo now "
-            "automatically selects the -i value corresponding to"
-            "your configured SSH key. Please remove it from your"
-            "configuration."
-        )
-    if ctx.config.ssh_private_key is not None:
-        cmd.extend(["-i", str(ctx.config.ssh_private_key)])
-    if interactive:
-        cmd += shlex.split(ctx.config.ssh_interactive_args or "")
-    return cmd
-
-
-def ssh_cmd(
-    ctx: YoCtx,
-    target: str,
-    extra_args: t.Iterable[str] = (),
-    cmds: t.Iterable[str] = (),
-) -> t.List[str]:
-    cmds = list(cmds)
-    cmd = ["ssh"] + ssh_args(ctx, bool(cmds))
-    cmd.extend(extra_args)
-    cmd.append(target)
-    cmd.extend(cmds)
-    return cmd
-
-
-def ssh_into(
-    ip: str,
-    user: str,
-    ctx: YoCtx,
-    extra_args: t.Iterable[str] = (),
-    cmds: t.Iterable[str] = (),
-    quiet: bool = False,
-    **kwargs: t.Any,
-) -> "subprocess.CompletedProcess[bytes]":
-    """
-    Run an SSH command with a user@ip target. Use extra_args before the
-    hostname, and then add the strings in "cmds" to the command. If cmds is
-    empty, this will result in SSH to the machine. Otherwise, SSH will interpret
-    them as a command to execute on the remote system, and then exit.
-    """
-    if not quiet:
-        ctx.con.print(f"ssh [green]{user}[/green]@[blue]{ip}[/blue]...")
-
-    extra_args = list(extra_args)
-    cmd = ssh_cmd(ctx, f"{user}@{ip}", extra_args, cmds)
-
-    if extra_args and not quiet:
-        print("Exact SSH command: {}".format(repr(cmd)))
-
-    # Python 3.6 has no capture_output= kwarg. But we can just implement it
-    # here. The run() method *will* properly handle reading from the pipe,
-    # so we don't risk a deadlock.
-    capture_output = kwargs.get("capture_output")
-    if capture_output is not None and PYVER == (3, 6):
-        del kwargs["capture_output"]
-        if capture_output:
-            kwargs["stdout"] = subprocess.PIPE
-            kwargs["stderr"] = subprocess.STDOUT
-
-    return subprocess.run(cmd, **kwargs)
-
-
-def wait_for_ssh_access(
-    ip: str,
-    user: str,
-    ctx: YoCtx,
-    timeout_sec: int = 600,
-    ssh_warn_grace: int = 60,
-) -> bool:
-    global warned_about_SSH_timeout
-    start_time = last_time = time.time()
-    progress = Progress(
-        rich.progress.TextColumn("{task.description}"),
-        rich.progress.SpinnerColumn(),
-        rich.progress.TimeElapsedColumn(),
-        rich.progress.TextColumn("Timeout in:"),
-        rich.progress.TimeRemainingColumn(),
-        console=ctx.con,
-    )
-    with progress:
-        t = progress.add_task(
-            "Wait for SSH", total=timeout_sec, finished_time=1, start=True
-        )
-        while not progress.finished:
-            cmd = ssh_cmd(ctx, f"{user}@{ip}", ["-q"], ["true"])
-            proc = subprocess.Popen(cmd)
-            rv = 1
-            try:
-                rv = proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proc.terminate()
-                proc.wait()
-                if (
-                    not warned_about_SSH_timeout
-                    and time.time() - start_time >= ssh_warn_grace
-                ):
-                    ctx.con.log(
-                        "[magenta]Warning:[/magenta] SSH command timed out. "
-                        "This is normal: it may happen early in the boot. "
-                        "But, it can also happen if you're disconnected from "
-                        "a VPN between you and your instance. Double check your "
-                        "connection if this hangs for more than a few minutes."
-                    )
-                    warned_about_SSH_timeout = True
-            new_time = time.time()
-            progress.advance(t, new_time - last_time)
-            last_time = new_time
-            if rv == 0:
-                ctx.con.log("SSH is up!")
-                return True
-    return False
-
-
-@dataclasses.dataclass
-class YoTask:
-    name: str
-    path: str
-    script: str
-    dependencies: t.List[str]
-    conflicts: t.List[str]
-    prereq_for: t.List[str]
-
-    @classmethod
-    def create_from_string(
-        cls, name: str, script: str, path: str = "(memory)"
-    ) -> "YoTask":
-        dependencies = []
-        conflicts = []
-        prereq_for = []
-        all_tasks = list_tasks()
-        lines = script.split("\n")
-        for i in range(len(lines)):
-            line = lines[i].strip()
-            if line.startswith("DEPENDS_ON"):
-                dependencies.append(line.split(None, maxsplit=1)[1])
-            elif line.startswith("CONFLICTS_WITH"):
-                conflicts.append(line.split(None, maxsplit=1)[1])
-            elif line.startswith("MAYBE_DEPENDS_ON"):
-                task = line.split(None, maxsplit=1)[1]
-                if task in all_tasks:
-                    dependencies.append(task)
-                    line = line.replace("MAYBE_DEPENDS_ON", "DEPENDS_ON")
-                else:
-                    line = line.replace(
-                        "MAYBE_DEPENDS_ON", "# MAYBE_DEPENDS_ON"
-                    )
-                lines[i] = line
-            elif line.startswith("PREREQ_FOR"):
-                prereq_for.append(line.split(None, maxsplit=1)[1])
-        return YoTask(
-            name, path, "\n".join(lines), dependencies, conflicts, prereq_for
-        )
-
-    @classmethod
-    @lru_cache(maxsize=None)
-    def load(cls, name: str) -> "YoTask":
-        """
-        Load a task by name and return it.
-
-        This function is cached - it will only really search and load any given
-        task name once: then it will return the same object thereafter.
-        """
-        for directory in TASK_DIRECTORIES:
-            path = os.path.join(directory, name)
-            if os.path.isfile(path):
-                path = os.path.abspath(path)
-                break
-        else:
-            raise YoExc(f"error: Script for task {name} not found")
-
-        with open(path) as f:
-            script = f.read()
-        return cls.create_from_string(name, script, path=path)
-
-    def insert_prereq(self, other: str) -> None:
-        self.dependencies.append(other)
-        self.script = f"DEPENDS_ON {other}\n{self.script}"
-
-
-@lru_cache(maxsize=1)
-def list_tasks() -> t.List[str]:
-    tasks = []
-    for directory in TASK_DIRECTORIES:
-        if os.path.isdir(directory):
-            tasks.extend(os.listdir(directory))
-    return sorted({s for s in tasks if s[-1] != "~"})
-
-
-def get_safe_heredoc(text: str) -> str:
-    while True:
-        here = "".join(random.sample(string.ascii_letters, 32))
-        if here not in text:
-            return here
-
-
-@lru_cache(maxsize=1)
-def get_tasklib(task_dir_safe: str) -> str:
-    tasklib = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), "data/yo_tasklib.sh"
-    )
-    contents = open(tasklib).read()
-    return contents.replace("$$TASK_DIR$$", task_dir_safe)
-
-
-def _task_run(ctx: YoCtx, inst: YoInstance, task: YoTask) -> None:
-    """
-    Run a task on an instance. This doesn't check or load dependencies.
-    """
-    task_dir_safe = ctx.config.task_dir_safe
-    ctx.con.log(
-        f"Start task [blue]{task.name}[/blue] on instance [green]{inst.name}..."
-    )
-    ip = ctx.get_instance_ip(inst, True)
-    user = ctx.get_ssh_user(inst)
-    script_text = get_tasklib(task_dir_safe) + task.script
-    commands = inspect.cleandoc(
-        """
-    task_dir={task_dir}
-    name={name}
-    dir="$task_dir/$name"
-    if [ -f "$dir/status" ]; then
-        mv "$dir/status" "$dir/../$name.status"
-        rm -rf "$dir"
-        mkdir -p "$dir"
-        mv "$dir/../$name.status" "$dir/status.old"
-    fi
-    mkdir -p "$dir"
-    cd "$dir"
-    cat <<'{heredoc}' > ./script
-    {script_text}
-    {heredoc}
-    if [ -f ./pid ]; then
-        echo Task is already running!
-        exit
-    fi
-    nohup sh -c 'bash -x ./script; echo $? >./status; rm ./pid' \
-        >./output 2>&1 </dev/null &
-    echo $! >./pid
-    """
-    )
-    heredoc = get_safe_heredoc(script_text)
-    commands = commands.format(
-        heredoc=heredoc,
-        script_text=script_text,
-        task_dir=task_dir_safe,
-        name=shlex.quote(task.name),
-    )
-    ssh_into(ip, user, ctx, extra_args=["-q"], cmds=[commands], quiet=True)
-
-
-def run_all_tasks(
-    ctx: YoCtx, inst: YoInstance, tasks: t.Iterable[t.Union[YoTask, str]]
-) -> None:
-    # The caller may specify tasks as either strings or YoTask instances, for
-    # convenience. Let's get everything into a "name_to_task" dict.
-    name_to_task: t.Dict[str, YoTask] = {}
-    for task in tasks:
-        if isinstance(task, str):
-            name_to_task[task] = YoTask.load(task)
-        else:
-            name_to_task[task.name] = task
-
-    # Tasks may have dependencies. Let's go through every task, and their
-    # dependencies, and load them all. At this point, we're not yet checking
-    # whether there are any circular dependencies: just loading them.
-    tasks_to_load = list(name_to_task.values())
-    for task in tasks_to_load:
-        for name in task.dependencies:
-            if name not in name_to_task:
-                name_to_task[name] = YoTask.load(name)
-                tasks_to_load.append(name_to_task[name])
-
-    # Now we have loaded the complete set of tasks that should run. Some tasks
-    # may appoint themselves as "prerequisites" for another. We need to insert
-    # this dependency relationship so that the script is updated, and so that
-    # the circular dependency detection knows about it. We can also use this
-    # opportunity to detect conflicts.
-    for task in name_to_task.values():
-        for name in task.prereq_for:
-            if name in name_to_task:
-                name_to_task[name].insert_prereq(task.name)
-        for name in task.conflicts:
-            if name in name_to_task:
-                raise YoExc(f"Task {task.name} conflicts with {name}")
-
-    # Now all tasks are loaded, and prerequisites have been marked. Use a
-    # topological sort to verify that no circular dependencies are present. Here
-    # we use a recursive traversal because honestly, if you specify enough tasks
-    # to trigger a recursion error, then I would like to receive that bug
-    # report!
-    name_to_visit: t.Dict[str, int] = collections.defaultdict(int)
-    ordered_tasks: t.List[YoTask] = []
-
-    def visit(task: YoTask) -> None:
-        if name_to_visit[task.name] == 2:
-            # already completed, skip
-            return
-        if name_to_visit[task.name] == 1:
-            # currently visiting, not a DAG
-            raise YoExc("Tasks express a circular dependency")
-
-        name_to_visit[task.name] = 1
-        for dep_name in task.dependencies:
-            visit(name_to_task[dep_name])
-        name_to_visit[task.name] = 2
-        ordered_tasks.append(task)
-
-    for task in name_to_task.values():
-        visit(task)
-
-    # Now ordered_tasks contains the order in which we should launch them.  This
-    # is just a nice-to-have: even if we launched them out of order, the
-    # DEPENDS_ON function would enforce the order of execution. Regardless,
-    # let's start the tasks.
-    for task in ordered_tasks:
-        _task_run(ctx, inst, task)
-
-
-def task_get_status(
-    ctx: YoCtx,
-    inst: YoInstance,
-) -> t.Mapping[str, t.Tuple[str, t.Union[int, str]]]:
-    task_dir_safe = ctx.config.task_dir_safe
-    # Take care to use the escaped task dir, and use the -print0 and xargs -0
-    # arguments for maximum safety: filenames can be weird.
-    command = (
-        f"find {task_dir_safe} "
-        "\\( -name pid -or -name status -or -name wait \\) -and -print0 "
-        '2>/dev/null | xargs -0 grep -H ".*" | sort'
-    )
-    ip = ctx.get_instance_ip(inst, True)
-    user = ctx.get_ssh_user(inst)
-    res = ssh_into(
-        ip,
-        user,
-        ctx,
-        extra_args=["-q"],
-        cmds=[command],
-        capture_output=True,
-        quiet=True,
-    )
-    expr = re.compile(r"^.*/([^/]*)/(pid|status|wait):(.*)$")
-    task_to_files: t.Dict[
-        str, t.List[t.Tuple[str, str]]
-    ] = collections.defaultdict(list)
-    output = res.stdout.decode("utf-8").strip()
-    if not output:
-        return {}
-    for line in output.split("\n"):
-        match = expr.match(line)
-        if not match:
-            print(line)
-            print(res.stdout)
-            raise YoExc(
-                f"bad task status data, examine {ctx.config.task_dir} on the host"
-            )
-        task, kind, stat = match.groups()
-        task_to_files[task].append((kind, stat))
-
-    task_to_status: t.Dict[str, t.Tuple[str, t.Union[str, int]]] = {}
-    for task, stat_list in task_to_files.items():
-        stat_list.sort()  # alphabetical ensures that "wait" is at the end
-        if len(stat_list) == 1:
-            kind, statstr = stat_list[0]
-            stat = int(statstr)
-            if kind == "pid":
-                task_to_status[task] = ("RUNNING", stat)
-            elif stat == 0:
-                task_to_status[task] = ("SUCCESS", 0)
-            else:
-                task_to_status[task] = ("FAIL", 0)
-        elif (
-            len(stat_list) == 2
-            and stat_list[0][0] == "pid"
-            and stat_list[1][0] == "wait"
-        ):
-            task_to_status[task] = ("WAITING", stat_list[1][1])
-        else:
-            task_to_status[task] = ("UNKNOWN", 0)
-    return task_to_status
-
-
-def _status_code(status: str, code: t.Union[int, str, None]) -> str:
-    if status == "RUNNING":
-        return f"[yellow]RUNNING[/yellow] (pid={code})"
-    elif status == "FAIL":
-        return f"[red]FAILED[/red] (code={code})"
-    elif status == "WAITING":
-        return f"[green]WAITING[/green] (on={code})"
-    elif status == "UNKNOWN":
-        return "[red]UNKNOWN[/red]"
-    else:
-        return "[green]SUCCESS[/green]"
-
-
-def task_status_to_table(
-    statuses: t.Mapping[str, t.Tuple[str, t.Union[int, str]]]
-) -> rich.table.Table:
-    t = rich.table.Table(title="Task Status")
-    t.add_column("Task")
-    t.add_column("Status")
-    for task, (status, code) in statuses.items():
-        t.add_row(task, _status_code(status, code))
-    return t
-
-
-def task_join(
-    ctx: YoCtx,
-    inst: YoInstance,
-    wait_tasks: t.Iterable[str] = (),
-) -> t.Mapping[str, t.Tuple[str, t.Union[str, int]]]:
-    with Live(console=ctx.con) as live:
-        task_previous_status: t.Dict[str, t.Tuple[str, t.Union[int, str]]] = {}
-        while True:
-            status_dict = task_get_status(ctx, inst)
-            live.update(task_status_to_table(status_dict))
-            any_running = False
-            for task, (status, code) in status_dict.items():
-                prev_status, prev_code = task_previous_status.get(
-                    task, (None, None)
-                )
-                task_previous_status[task] = status, code
-                if not prev_status:
-                    live.console.log(
-                        f"{task}: starting in status {_status_code(status, code)}",
-                        highlight=False,
-                    )
-                elif prev_status != status or prev_code != code:
-                    live.console.log(
-                        f"{task}: changing status {_status_code(prev_status, prev_code)} -> {_status_code(status, code)}",
-                        highlight=False,
-                    )
-                if status in ("RUNNING", "WAITING"):
-                    any_running = True
-
-            # If we're waiting for no particular task, then we have to wait
-            # until all are completed. Otherwise, we wait until just the
-            # specific wait_tasks are all completed.
-            can_terminate = (not wait_tasks and not any_running) or (
-                wait_tasks
-                and all(
-                    (status_dict[wt][0] not in ("RUNNING", "WAITING"))
-                    for wt in wait_tasks
-                )
-            )
-            if can_terminate:
-                break
-            time.sleep(1)
-    return status_dict
 
 
 class YoCmd(subc.Command):
