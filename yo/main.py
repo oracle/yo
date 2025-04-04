@@ -95,13 +95,13 @@ import rich.console
 import rich.progress
 import rich.syntax
 import rich.table
-import subc
 from oci.exceptions import ServiceError
 from rich.live import Live
 from rich.progress import Progress
 from rich.prompt import Confirm
 from rich.text import Text
 
+import yo.subc as subc
 import yo.util
 from yo.api import AttachmentType
 from yo.api import ImageLoad
@@ -819,7 +819,7 @@ class YoCmd(subc.Command):
     c: YoCtx
     es: contextlib.ExitStack
     rootname = "yo"
-    help_formatter_class = ParagraphFormatter  # type: ignore
+    help_formatter_class = ParagraphFormatter
 
     @classmethod
     def setup_config(cls) -> t.Tuple[YoCtx, t.Dict[str, str]]:
