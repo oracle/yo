@@ -39,10 +39,49 @@ PREREQ_FOR() {
     true
 }
 
-# Setup the "$ORAVER" variable for Oracle Linux
-if [ -f /etc/oracle-release ]; then
-    . /etc/os-release
-    ORAVER="${VERSION//\.*}"
-fi
+# Operating system information
+source /etc/os-release
+case "${NAME}" in
+    Oracle*)
+        # Setup the "$ORAVER" variable for Oracle Linux. It is a single integer
+        # number describing the current Oracle Linux distribution release. EG:
+        # "8", "9", "10", etc.
+        ORAVER="${VERSION//\.*}"
+        case "${ORAVER}" in
+            6|7)
+                PKGMGR=yum
+                ;;
+            *)
+                PKGMGR=dnf
+                ;;
+        esac
+        ;;
+    Ubuntu*)
+        UBUVER="${VERSION_ID//\.*}"
+        PKGMGR=apt-get
+        ;;
+    Debian*)
+        DEBVER="$VERSION_ID"
+        PKGMGR=apt-get
+        ;;
+    Fedora*)
+        FEDVER="$VERSION_ID"
+        PKGMGR=dnf
+        ;;
+    Arch*)
+        PKGMGR=pacman
+        ;;
+esac
+
+PKG_INSTALL() {
+    if [ "$PKGMGR" = "pacman" ]; then
+        pacman -Sy --noconfirm "$@"
+    elif [ -n "$PKGMGR" ]; then
+        $PKGMGR install -y "$@"
+    else
+        echo "error: package manager is unknown"
+        exit 1
+    fi
+}
 
 ## END: yo_tasklib.sh
