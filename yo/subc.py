@@ -1,13 +1,47 @@
-#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (c) 2025, Oracle and/or its affiliates.
+#
+# The Universal Permissive License (UPL), Version 1.0
+#
+# Subject to the condition set forth below, permission is hereby granted to any
+# person obtaining a copy of this software, associated documentation and/or data
+# (collectively the "Software"), free of charge and under any and all copyright
+# rights in the Software, and any and all patent rights owned or freely
+# licensable by each licensor hereunder covering either (i) the unmodified
+# Software as contributed to or provided by such licensor, or (ii) the Larger
+# Works (as defined below), to deal in both
+#
+# (a) the Software, and
+# (b) any piece of software and/or hardware listed in the
+#     lrgrwrks.txt file if one is included with the Software (each a "Larger
+#     Work" to which the Software is contributed by such licensors),
+#
+# without restriction, including without limitation the rights to copy, create
+# derivative works of, display, perform, and distribute the Software and make,
+# use, sell, offer for sale, import, export, have made, and have sold the
+# Software and the Larger Work(s), and to sublicense the foregoing rights on
+# either these or other terms.
+#
+# This license is subject to the following condition: The above copyright notice
+# and either this complete permission notice or at a minimum a reference to the
+# UPL must be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 """
-A simple sub-command library for writing rich CLIs
+yo.subc: A simple sub-command library for writing rich CLIs
 """
 import argparse
 import collections
 import typing as t
 from abc import ABC
-from abc import abstractproperty
 from abc import abstractmethod
+from abc import abstractproperty
 
 
 def _first_different(s1: str, s2: str) -> int:
@@ -51,33 +85,37 @@ def _unique_prefixes(strings: t.Iterable[str]) -> t.Dict[str, t.List[str]]:
     }
 
 
-class _SneakyDict(collections.UserDict):
+Tk = t.TypeVar("Tk")
+Tv = t.TypeVar("Tv")
+
+
+class _SneakyDict(collections.UserDict, t.Generic[Tk, Tv]):  # type: ignore
     """
     A dictionary which can have "hidden" keys that only show up if you know
     about them. The keys are just aliases to other keys. They show up with
     "getitem" and "contains" operations, but not in list / len operations.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
-        self._aliases = {}
+        self._aliases: t.Dict[Tk, Tk] = {}
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Tk) -> t.Any:
         key = self._aliases.get(key, key)
         return super().__getitem__(key)
 
-    def __contains__(self, key):
+    def __contains__(self, key: t.Any) -> bool:
         key = self._aliases.get(key, key)
         return super().__contains__(key)
 
-    def add_aliases(self, alias_map: t.Dict[str, t.List[str]]):
+    def add_aliases(self, alias_map: t.Dict[Tk, t.List[Tk]]) -> None:
         alias_to_name = {a: n for n, l in alias_map.items() for a in l}
         self._aliases.update(alias_to_name)
 
 
 def _wrap_subparser_aliases(
-        option: argparse._SubParsersAction,
-        alias_map: t.Dict[str, t.List[str]]
+    option: argparse._SubParsersAction,  # type: ignore
+    alias_map: t.Dict[str, t.List[str]],
 ) -> None:
     """
     Unfortunately, this mucks around with an internal implementation of
@@ -94,14 +132,13 @@ def _wrap_subparser_aliases(
     aliases should be hidden. Thus, use a the _SneakyDict from above to hide the
     aliases.
     """
-    new_choices = _SneakyDict(option.choices)
+    new_choices: _SneakyDict[str, str] = _SneakyDict(option.choices)
     new_choices.add_aliases(alias_map)
     option.choices = new_choices  # type: ignore
     option._name_parser_map = option.choices
 
 
 T = t.TypeVar("T", bound="Command")
-F = t.TypeVar("F", bound=argparse.HelpFormatter)
 
 
 class Command(ABC):
@@ -138,7 +175,7 @@ class Command(ABC):
     """
 
     @property
-    def help_formatter_class(self) -> t.Type[F]:
+    def help_formatter_class(self) -> t.Type[argparse.HelpFormatter]:
         return argparse.HelpFormatter
 
     @abstractproperty
@@ -149,14 +186,14 @@ class Command(ABC):
     def description(self) -> str:
         """A field or property which is used as the help/description"""
 
-    def add_args(self, parser: argparse.ArgumentParser):
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
         pass  # default is no arguments
 
     @abstractmethod
     def run(self) -> t.Any:
         """Function which is called for this command."""
 
-    def base_run(self, args: argparse.Namespace):
+    def base_run(self, args: argparse.Namespace) -> t.Any:
         self.args = args
         return self.run()
 
@@ -248,7 +285,8 @@ class Command(ABC):
         """
         default_set = False
         subparsers = parser.add_subparsers(
-            help=argparse.SUPPRESS, metavar="SUB-COMMAND",
+            help=argparse.SUPPRESS,
+            metavar="SUB-COMMAND",
         )
         parser.formatter_class = argparse.RawTextHelpFormatter
         to_add = list(cls.iter_commands())
@@ -306,7 +344,8 @@ class Command(ABC):
         for subcmd, cmdlist in subcmds.items():
             subcmd_parser = subparsers.add_parser(subcmd)
             subcmd_subp = subcmd_parser.add_subparsers(
-                title="sub-command", metavar="SUB-COMMAND",
+                title="sub-command",
+                metavar="SUB-COMMAND",
             )
             sub_names = []
             names.append(subcmd)
@@ -330,7 +369,7 @@ class Command(ABC):
             names.extend(cmd_aliases)
             aliases.update(cmd_aliases)
 
-        inv_aliases = collections.defaultdict(list)
+        inv_aliases: t.Dict[str, t.List[str]] = collections.defaultdict(list)
         if shortest_prefix:
             inv_aliases.update(_unique_prefixes(names))
         for name, target in aliases.items():
@@ -356,18 +395,20 @@ class Command(ABC):
         parser.epilog = "\n".join(lines[:-1])
 
         if not default_set:
-            def default_func(*args, **kwargs):
-                raise Exception('you must select a sub-command')
+
+            def default_func(*args: t.Any, **kwargs: t.Any) -> None:
+                raise Exception("you must select a sub-command")
+
             parser.set_defaults(func=default_func)
         return parser
 
     @classmethod
     def main(
-            cls,
-            description: str,
-            default: t.Optional[str] = None,
-            args: t.Optional[t.List[str]] = None,
-            shortest_prefix: bool = False,
+        cls,
+        description: str,
+        default: t.Optional[str] = None,
+        args: t.Optional[t.List[str]] = None,
+        shortest_prefix: bool = False,
     ) -> t.Any:
         """
         Parse arguments and run the selected sub-command.
@@ -390,7 +431,9 @@ class Command(ABC):
         """
         parser = argparse.ArgumentParser(description=description)
         cls.add_commands(
-            parser, default=default, shortest_prefix=shortest_prefix,
+            parser,
+            default=default,
+            shortest_prefix=shortest_prefix,
         )
         ns = parser.parse_args(args=args)
         return ns.func(ns)
