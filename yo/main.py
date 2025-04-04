@@ -2340,14 +2340,19 @@ class LaunchCmd(YoCmd):
             or self.c.config.allow_legacy_imds_endpoints
         )
 
+        # Load tasks before we launch. That way an invalid configuration is
+        # detected ASAP, and the user could correct the config before we've
+        # actually launched.
+        tasks = set(profile.tasks + self.args.tasks)
+
         self.c.con.log(f"Launching instance [blue]{name}[/blue]")
         if self.args.dry_run:
             self.c.con.log("DRY RUN. Args below:")
             self.c.con.log(create_args)
+            self.c.con.log(f"Will launch tasks: {tasks}")
             return
         inst = self.c.launch_instance(create_args)
 
-        tasks = set(profile.tasks + self.args.tasks)
         self.standardize_wait(bool(tasks))
 
         if not self.args.wait:
