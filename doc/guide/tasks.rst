@@ -68,8 +68,12 @@ find the script when you ask to use it.
 Special Task Syntax
 -------------------
 
-While tasks are generally normal bash scripts, there are a few special bash
-functions which are available to you:
+While tasks are generally normal bash scripts, there are a few special syntactic
+elements which are available to you. These are implemented in a rather unique
+way: as Yo loads your script, it reads each line and detects the use of the
+following keywords, somewhat like a macro processor. Most of these keywords also
+have a corresponding bash function that Yo provides to implement the necessary
+functionality.
 
 - ``DEPENDS_ON <task name here>`` - this declares that your task depends on
   another one. Yo will search for these lines in your script and automatically
@@ -105,13 +109,45 @@ functions which are available to you:
     ensure that A runs to completion before task ``B`` begins.
 
 These functions can be used anywhere in your script, however bash syntax such as
-quoting or variable expansion is not respected when Yo locates them. So, while
-the following is valid bash, it won't work with Yo:
+quoting or variable expansion is not respected where Yo interprets them. So,
+while the following is valid bash, it won't work with Yo:
 
 .. code:: bash
 
    TASK=drgn
    DEPENDS_ON $TASK
+
+
+Other Task Variables and Functions
+----------------------------------
+
+Additionally, Yo's bash task library makes a few conveniences available to you.
+It sources the contents of ``/etc/os-release`` so that you can use common
+variables from this file, such as ``$NAME``, ``$VERSION_ID``, etc.  In addition,
+Yo provides the following variables:
+
+- ``$ORAVER`` - an integer representing the current Oracle Linux release. The
+  variable is undefined if not running on Oracle Linux. You can detect when
+  Oracle Linux is running by matching the ``NAME`` variable against ``Oracle*``
+
+- ``$UBUVER`` - an integer representing the Ubuntu version (e.g. for 24.10, this
+  would be "24"). If you would like the full version (e.g. to distinguish 24.04
+  and 24.10), use the ``$VERSION_ID`` field directly.
+
+- ``$FEDVER`` - an integer representing the Fedora version
+
+- ``$DEBVER`` - an integer representing the Debian version
+
+- ``$PKGMGR`` - the name of the system package manager (only detected for the
+  above operating systems)
+
+And below are the simple bash functions (not interpreted by Yo) provided in the
+task library:
+
+- ``PKG_INSTALL [package [...]]`` install one or more packages. This relies on
+  the detected ``$PKGMGR`` from above, and ensures that the correct options are
+  used for the specific package manager, especially to avoid interactive
+  confirmation.
 
 Managing Tasks
 --------------
