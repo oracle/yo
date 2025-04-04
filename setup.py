@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Oracle and/or its affiliates.
+# Copyright (c) 2023, 2025, Oracle and/or its affiliates.
 #
 # The Universal Permissive License (UPL), Version 1.0
 #
@@ -32,12 +32,20 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import sys
+
 from setuptools import find_packages
 from setuptools import setup
 
 long_description = open("README.md").read()
 
 VERSION = "1.9.0"
+
+additional_requires = []  # type: ignore
+
+# Add backport for dataclasses, only if we need it
+if sys.version_info < (3, 7):
+    additional_requires.append("dataclasses")
 
 setup(
     name="yo",
@@ -57,8 +65,8 @@ setup(
         "subc>=0.8.0",
         "setuptools",
         "argcomplete",
-        "dataclasses",
-    ],
+    ]
+    + additional_requires,
     url="https://github.com/oracle/yo",
     author="Oracle",
     author_email="stephen.s.brennan@oracle.com",
