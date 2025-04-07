@@ -115,10 +115,10 @@ from yo.ssh import SSH_MINIMUM_TIME
 from yo.ssh import SSH_OPTIONS
 from yo.ssh import wait_for_ssh_access
 from yo.tasks import list_tasks
-from yo.tasks import run_all_tasks
 from yo.tasks import task_get_status
 from yo.tasks import task_join
 from yo.tasks import task_status_to_table
+from yo.tasks import TaskPlan
 from yo.tasks import YoTask
 from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
@@ -1232,11 +1232,21 @@ class TaskRunCmd(SingleInstanceCommand):
             action="store_true",
             help="should we wait until the task is finished?",
         )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="just print what would happen",
+        )
 
     def run_for_instance(self, inst: YoInstance) -> None:
-        run_all_tasks(self.c, inst, self.args.task)
+        plan = TaskPlan(self.args.task)
+        plan.prepare()
+        if self.args.dry_run:
+            plan.dry_run_print()
+            return
+        plan.run(self.c, inst)
         if self.args.wait:
-            task_join(self.c, inst, wait_tasks=self.args.task)
+            plan.join(self.c, inst)
             send_notification(
                 self.c,
                 f"Task {self.args.task} complete on instance {inst.name}",
@@ -1842,17 +1852,18 @@ class LaunchCmd(YoCmd):
         # Load tasks before we launch. That way an invalid configuration is
         # detected ASAP, and the user could correct the config before we've
         # actually launched.
-        tasks = set(profile.tasks + self.args.tasks)
+        task_plan = TaskPlan(profile.tasks + self.args.tasks)
+        task_plan.prepare()
 
         self.c.con.log(f"Launching instance [blue]{name}[/blue]")
         if self.args.dry_run:
             self.c.con.log("DRY RUN. Args below:")
             self.c.con.log(create_args)
-            self.c.con.log(f"Will launch tasks: {tasks}")
+            task_plan.dry_run_print()
             return
         inst = self.c.launch_instance(create_args)
 
-        self.standardize_wait(bool(tasks))
+        self.standardize_wait(task_plan.have_tasks())
 
         if not self.args.wait:
             return
@@ -1868,9 +1879,9 @@ class LaunchCmd(YoCmd):
                 self.c.con.log("Maybe you're not connected to VPN?")
                 return
 
-        run_all_tasks(self.c, inst, tasks)
-        if tasks:
-            task_join(self.c, inst)
+        task_plan.run(self.c, inst)
+        if task_plan.have_tasks():
+            task_plan.join(self.c, inst)
 
         send_notification(self.c, f"Instance {inst.name} is ready!")
 
