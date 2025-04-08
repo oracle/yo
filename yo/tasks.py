@@ -43,16 +43,21 @@ import os
 import random
 import re
 import shlex
+import stat
 import string
+import subprocess
+import tempfile
 import time
 import typing as t
 from functools import lru_cache
+from pathlib import Path
 
 import rich
 from rich.live import Live
 
 from yo.api import YoCtx
 from yo.api import YoInstance
+from yo.ssh import ssh_args
 from yo.ssh import ssh_into
 from yo.util import YoExc
 
@@ -65,6 +70,96 @@ TASK_DIRECTORIES = [
 ]
 
 
+GlobList = t.List[t.Tuple[str, str, bool]]
+
+
+def standardize_globs(include_files: GlobList) -> t.Tuple[GlobList, GlobList]:
+    user = []
+    system = []
+    for pattern, dest, optional in include_files:
+        pattern = os.path.expanduser(pattern)
+        if not pattern.startswith("/"):
+            raise YoExc(
+                f"Only absolute or user-relative paths are allowed: {pattern}"
+            )
+        if dest.startswith("~/"):
+            user.append((pattern, dest[2:].lstrip("/"), optional))
+        elif dest.startswith("/"):
+            system.append((pattern, dest.lstrip("/"), optional))
+        else:
+            raise YoExc(
+                f"Only absolute or user-relative paths are allowed: {dest}"
+            )
+    return user, system
+
+
+def build_tarball(
+    ctx: "YoCtx",
+    include_files: GlobList,
+    root: Path,
+    tarball: Path,
+    task_name: str,
+) -> None:
+    # First, build our list of files & directories to include. Raise any errors
+    # regarding destination directories or missing files.
+    pairs = []
+    for pattern, dest, optional in include_files:
+        destpath = Path(dest)
+        maybe_file = Path(pattern)
+        if maybe_file.is_file():
+            if not dest or dest[-1] == "/":
+                destpath = destpath / maybe_file.name
+            pairs.append((maybe_file, destpath))
+        elif maybe_file.is_dir():
+            pairs.append((maybe_file, destpath))
+        else:
+            # Patterns must be either home or rooted, but globs must be
+            # relative.  Determine the correct root directory for the glob, and
+            # then glob against it after we've transformed the path to a
+            # relative one.
+            globroot = Path.home() if pattern.startswith("~/") else Path("/")
+            matches = list(globroot.glob(pattern[1:].lstrip("/")))
+            if not matches and not optional:
+                raise YoExc(f"file or pattern not found: {pattern}")
+            if pattern == dest:
+                raise YoExc(
+                    f"glob results need to have a destination directory: {pattern}"
+                )
+            for match in matches:
+                pairs.append((match, destpath / match.name))
+
+    verb = "building"
+    if tarball.exists():
+        verb = "rebuilding"
+        mtime = tarball.stat().st_mtime
+        for file_or_dir, _ in pairs:
+            statbuf = file_or_dir.lstat()
+            if statbuf.st_mtime > mtime:
+                break  # need rebuild
+            if stat.S_ISDIR(statbuf.st_mode):
+                if any(
+                    any(
+                        (file_or_dir / d / p).stat().st_mtime > mtime
+                        for p in ps + ds
+                    )
+                    for d, ps, ds in os.walk(file_or_dir)
+                ):
+                    break
+        else:
+            return  # no need to build tarball
+
+    ctx.con.log(f"Task {task_name}: {verb} {tarball.name}")
+    cmd: t.List[str | Path] = ["tar", "-czhf", tarball]
+    with tempfile.TemporaryDirectory() as td:
+        tdpath = Path(td)
+        for src, dst in pairs:
+            tmp_path = tdpath / dst
+            tmp_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path.symlink_to(src)
+            cmd.append(str(dst))
+        subprocess.run(cmd, cwd=tdpath)
+
+
 @dataclasses.dataclass
 class YoTask:
     name: str
@@ -73,6 +168,16 @@ class YoTask:
     dependencies: t.List[str]
     conflicts: t.List[str]
     prereq_for: t.List[str]
+
+    include_files: GlobList
+    """
+    A list of (glob pattern, optional) tuples specifying files
+    """
+
+    sendfiles: t.List[Path]
+    """
+    A list of absolute filenames to copy into $TASK_DATA_DIR
+    """
 
     @classmethod
     def create_from_string(
@@ -83,6 +188,8 @@ class YoTask:
         prereq_for = []
         all_tasks = list_tasks()
         lines = script.split("\n")
+        include_files = []
+        sendfiles = []
         for i in range(len(lines)):
             line = lines[i].strip()
             if line.startswith("DEPENDS_ON"):
@@ -101,8 +208,45 @@ class YoTask:
                 lines[i] = line
             elif line.startswith("PREREQ_FOR"):
                 prereq_for.append(line.split(None, maxsplit=1)[1])
+            elif line.startswith("INCLUDE_FILE"):
+                args = shlex.split(line)
+                if len(args) == 3:
+                    include_files.append((args[1], args[2], False))
+                elif len(args) == 2:
+                    include_files.append((args[1], args[1], False))
+                else:
+                    raise YoExc(
+                        f"INCLUDE_FILE expects 1-2 args, got {len(args) - 1}\n{line}"
+                    )
+                lines[i] = "# " + line
+            elif line.startswith("MAYBE_INCLUDE_FILE"):
+                args = shlex.split(line)
+                if len(args) == 3:
+                    include_files.append((args[1], args[2], True))
+                elif len(args) == 2:
+                    include_files.append((args[1], args[1], True))
+                else:
+                    raise YoExc(
+                        f"MAYBE_INCLUDE_FILE expects 1-2 args, got {len(args) - 1}\n{line}"
+                    )
+                lines[i] = "# " + line
+            elif line.startswith("SENDFILE"):
+                args = shlex.split(line)
+                if len(args) != 2:
+                    raise YoExc(
+                        f"SENDFILE expects 1 arg, got {len(args) - 1}\n{line}"
+                    )
+                sendfiles.append(Path(os.path.expanduser(args[1])))
+                lines[i] = "# " + line
         return YoTask(
-            name, path, "\n".join(lines), dependencies, conflicts, prereq_for
+            name,
+            path,
+            "\n".join(lines),
+            dependencies,
+            conflicts,
+            prereq_for,
+            include_files,
+            sendfiles,
         )
 
     @classmethod
@@ -129,6 +273,25 @@ class YoTask:
     def insert_prereq(self, other: str) -> None:
         self.dependencies.append(other)
         self.script = f"DEPENDS_ON {other}\n{self.script}"
+
+    def prepare_files(self, ctx: "YoCtx") -> None:
+        if not self.include_files:
+            return
+        staging_dir = Path.home() / ".cache/yo/task-files" / self.name
+        staging_dir.mkdir(parents=True, exist_ok=True)
+
+        user, system = standardize_globs(self.include_files)
+        if user:
+            build_tarball(
+                ctx, user, Path.home(), staging_dir / "user.tar.gz", self.name
+            )
+            self.sendfiles.append(staging_dir / "user.tar.gz")
+        if system:
+            build_tarball(
+                ctx, system, Path("/"), staging_dir / "system.tar.gz", self.name
+            )
+            self.sendfiles.append(staging_dir / "system.tar.gz")
+        self.include_files.clear()
 
 
 @lru_cache(maxsize=1)
@@ -169,20 +332,21 @@ def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
     script_text = get_tasklib(task_dir_safe) + task.script
     commands = inspect.cleandoc(
         """
-    task_dir={task_dir}
-    name={name}
-    dir="$task_dir/$name"
-    if [ -f "$dir/status" ]; then
-        mv "$dir/status" "$dir/../$name.status"
-        rm -rf "$dir"
-        mkdir -p "$dir"
-        mv "$dir/../$name.status" "$dir/status.old"
+    export TASK_BASE_DIR={task_dir}
+    export TASK_NAME={name}
+    export TASK_DIR="$TASK_BASE_DIR/$TASK_NAME"
+    mkdir -p "$TASK_DIR"
+    cd "$TASK_DIR"
+    if [ -f "status" ]; then
+        rm -f "output" "pid"
+        mv "status" "status.old"
     fi
-    mkdir -p "$dir"
-    cd "$dir"
     cat <<'{heredoc}' > ./script
     {script_text}
     {heredoc}
+    export TASK_DATA_DIR="$TASK_DIR/files"
+    [ -f "$TASK_DATA_DIR/system.tar.gz" ] && sudo tar -C / -xf "$TASK_DATA_DIR/system.tar.gz"
+    [ -f "$TASK_DATA_DIR/user.tar.gz" ] && tar -C ~ -xf "$TASK_DATA_DIR/user.tar.gz"
     if [ -f ./pid ]; then
         echo Task is already running!
         exit
@@ -199,6 +363,31 @@ def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
         task_dir=task_dir_safe,
         name=shlex.quote(task.name),
     )
+    if task.sendfiles:
+        mkdir_p_cmd = inspect.cleandoc(
+            """
+            task_dir={task_dir}
+            name={name}
+            mkdir -p "$task_dir/$name/files"
+            echo -n "$task_dir/$name/files"
+            """
+        ).format(
+            task_dir=task_dir_safe,
+            name=shlex.quote(task.name),
+        )
+        proc = ssh_into(
+            ip,
+            user,
+            ctx,
+            extra_args=["-q"],
+            cmds=[mkdir_p_cmd],
+            quiet=True,
+            capture_output=True,
+        )
+        scp_cmd = ["scp"] + ssh_args(ctx, False)
+        scp_cmd.extend(map(str, task.sendfiles))
+        scp_cmd.append(f"{user}@{ip}:{proc.stdout.decode()}/")
+        subprocess.run(scp_cmd)
     ssh_into(ip, user, ctx, extra_args=["-q"], cmds=[commands], quiet=True)
 
 
@@ -253,6 +442,17 @@ class TaskPlan:
         for task in self.name_to_task.values():
             visit(task)
 
+    def _prepare_files(self, ctx: "YoCtx") -> None:
+        for task in self.ordered_tasks:
+            if task.include_files:
+                task.prepare_files(ctx)
+            missing = [f for f in task.sendfiles if not f.is_file()]
+            if missing:
+                missing_str = ", ".join(map(str, missing))
+                raise YoExc(
+                    f"missing files for task {task.name}: {missing_str}"
+                )
+
     def __init__(self, tasks: t.Iterable[t.Union[YoTask, str]]) -> None:
         # The caller may specify tasks as either strings or YoTask instances, for
         # convenience. Let's get everything into a "name_to_task" dict.
@@ -275,9 +475,10 @@ class TaskPlan:
 
         self.ordered_tasks = []
 
-    def prepare(self) -> None:
+    def prepare(self, ctx: "YoCtx") -> None:
         self._prepare_prereqs_check_conflicts()
         self._create_execution_order()
+        self._prepare_files(ctx)
 
     def have_tasks(self) -> bool:
         return bool(self.ordered_tasks)
