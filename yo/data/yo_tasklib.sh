@@ -75,9 +75,9 @@ esac
 
 PKG_INSTALL() {
     if [ "$PKGMGR" = "pacman" ]; then
-        pacman -Sy --noconfirm "$@"
+        sudo pacman -Sy --noconfirm "$@"
     elif [ -n "$PKGMGR" ]; then
-        $PKGMGR install -y "$@"
+        sudo $PKGMGR install -y "$@"
     else
         echo "error: package manager is unknown"
         exit 1
