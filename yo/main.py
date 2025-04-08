@@ -1810,6 +1810,14 @@ class LaunchCmd(YoCmd):
             action="store_true",
             help="Allows IMDS v1 endpoints (overrides configured value)",
         )
+        parser.add_argument(
+            "--install",
+            "-I",
+            default=[],
+            action="append",
+            help="Install packages after instance creation (may be specified "
+            "multiple times)",
+        )
 
     def standardize_wait(self, tasks: bool) -> None:
         # There are several conditions where we may need to wait. Of course,
@@ -1821,6 +1829,22 @@ class LaunchCmd(YoCmd):
             self.args.wait_ssh = True
         if self.args.wait_ssh:
             self.args.wait = True
+
+    def maybe_install_packages(
+        self, profile: InstanceProfile, tasks: t.List[t.Union[str, YoTask]]
+    ) -> None:
+        packages = []
+        packages.extend(profile.install)
+        for pkgspec in self.args.install:
+            packages.extend(pkgspec.split(","))
+        if packages:
+            args = " ".join(packages)
+            tasks.append(
+                YoTask.create_from_string(
+                    "yo-install-packages",
+                    f"MAYBE_DEPENDS_ON networking\nPKG_INSTALL {args}",
+                )
+            )
 
     def run(self) -> None:
         create_args = self.c.get_launch_config(
@@ -1852,7 +1876,9 @@ class LaunchCmd(YoCmd):
         # Load tasks before we launch. That way an invalid configuration is
         # detected ASAP, and the user could correct the config before we've
         # actually launched.
-        task_plan = TaskPlan(profile.tasks + self.args.tasks)
+        task_list = profile.tasks + self.args.tasks
+        self.maybe_install_packages(profile, task_list)
+        task_plan = TaskPlan(task_list)
         task_plan.prepare(self.c)
 
         self.c.con.log(f"Launching instance [blue]{name}[/blue]")

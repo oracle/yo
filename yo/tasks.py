@@ -492,7 +492,9 @@ class TaskPlan:
             deps = ""
             if task.dependencies:
                 deps = f" (depends on: {', '.join(task.dependencies)})"
-            print(f" 1. {task.name}{deps}")
+            print(f" - {task.name}{deps}")
+            if task.name == "yo-install-packages":
+                print("   " + "\n   ".join(task.script.split("\n")))
 
     def run(self, ctx: "YoCtx", inst: YoInstance) -> None:
         # Now ordered_tasks contains the order in which we should launch them.  This

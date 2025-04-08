@@ -214,6 +214,7 @@ class InstanceProfile:
     mem: t.Optional[float] = None
     load_image: ImageLoad = ImageLoad.UNIQUE
     username: t.Optional[str] = None
+    install: t.List[str] = dataclasses.field(default_factory=list)
 
     def create_arg_dict(self, ctx: "YoCtx") -> t.Dict[str, t.Any]:
         return {
@@ -240,6 +241,7 @@ class InstanceProfile:
             "mem": float,
             "load_image": ImageLoad,
             "tasks": flex_list,
+            "install": flex_list,
         }
         for field, tp in types.items():
             if field in d:
