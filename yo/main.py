@@ -1240,7 +1240,7 @@ class TaskRunCmd(SingleInstanceCommand):
 
     def run_for_instance(self, inst: YoInstance) -> None:
         plan = TaskPlan(self.args.task)
-        plan.prepare()
+        plan.prepare(self.c)
         if self.args.dry_run:
             plan.dry_run_print()
             return
@@ -1853,7 +1853,7 @@ class LaunchCmd(YoCmd):
         # detected ASAP, and the user could correct the config before we've
         # actually launched.
         task_plan = TaskPlan(profile.tasks + self.args.tasks)
-        task_plan.prepare()
+        task_plan.prepare(self.c)
 
         self.c.con.log(f"Launching instance [blue]{name}[/blue]")
         if self.args.dry_run:
