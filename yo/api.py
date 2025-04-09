@@ -194,8 +194,9 @@ class ImageLoad(enum.Enum):
 
 
 def flex_list(arg: t.Union[str, t.List[str]]) -> t.List[str]:
+    splitter = re.compile(r"[,\s]+")
     if isinstance(arg, str):
-        return arg.split(",")
+        return splitter.split(arg)
     else:
         return arg
 
