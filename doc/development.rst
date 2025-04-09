@@ -104,9 +104,9 @@ review request via the UI.
 
 Here's a checklist for things you may want to include in your changes.
 
-- If you've added a command, be sure to document it in
-  ``doc/guide/commands.md``.
+- If you've added a command or CLI flag, be sure to use
+  ``scripts/rebuild_docs.py`` to regenerate the command documentation.
 - If you've added a configuration option, be sure to document it in
   ``doc/guide/configuration.rst``.
 - If your change is user-facing at all (fixing a bug, adding a feature), then
-  document it in the "Unreleased" section of the ``CHANGELOG.md``.
+  document it in the "Unreleased" section of the ``CHANGELOG.rst``.

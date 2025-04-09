@@ -80,10 +80,10 @@ _release_sanity_check:
 	    echo error: It looks like you have not bumped the version since last release.; \
 	    exit 1; \
 	fi
-	@if [ -z "$$(grep "^## "$(shell echo $(VERSION) | sed 's/\./\\./g') CHANGELOG.md)" ]; then \
-	    echo error: It looks like you have not documented this release in CHANGELOG.md; \
+	if [ -z "$$(grep -Pzo $(shell echo $(VERSION) | sed 's/\./\\./g')"[^\n]+\n-+\n" CHANGELOG.rst)" ]; then \
+	    echo error: It looks like you have not documented this release in CHANGELOG.rst; \
 	    exit 1; \
-	fi
+	fi 2>/dev/null
 	@if [ -f dist/yo-$(VERSION).tar.gz ]; then \
 	    echo error: There is already a built tarball: dist/yo-$(VERSION).tar.gz; \
 	    echo Either verify you have bumped the version, or delete the; \
