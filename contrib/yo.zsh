@@ -153,6 +153,7 @@ _yo_launch_command() {
   local -a _yo_launch_options=(
     '(-n --name)'{-n+,--name=}'[Name to give the instance]'
     '--os=[Operating system and version]'
+    \*{-I+,--install=}'[Install packages after instance creation]:package list:( )'
     '--image=[Display name of a custom image in the compartment]:image:_yo_images'
     '(-V --volume)'{-V+,--volume=}'[Specify a boot volume]:volume:_yo_volumes'
     '(-S --shape)'{-S+,--shape=}'[Specify the shape to use]:shape:_yo_shapes'
