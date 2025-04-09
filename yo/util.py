@@ -46,6 +46,13 @@ from pathlib import Path
 
 T = t.TypeVar("T")
 
+_PKGMAN_FILE = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), "data/pkgman"
+)
+PKGMAN = (
+    open(_PKGMAN_FILE).read().strip() if os.path.exists(_PKGMAN_FILE) else "pip"
+)
+
 
 class YoExc(Exception):
     pass
