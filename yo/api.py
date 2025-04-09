@@ -62,6 +62,7 @@ from yo.util import hasherr
 from yo.util import latest_yo_version
 from yo.util import natural_sort
 from yo.util import one
+from yo.util import PKGMAN
 from yo.util import standardize_name
 from yo.util import YoConfig
 from yo.util import YoExc
@@ -1276,6 +1277,9 @@ class YoCtx:
         check and notify users to update, but do so without making any command
         run longer than it would have.
         """
+        if PKGMAN != "pip":
+            yield
+            return
         # Only check every N hours
         since_last_check = now() - self.last_checked_for_update
         hours = since_last_check.total_seconds() / 3600

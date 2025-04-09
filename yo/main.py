@@ -125,6 +125,7 @@ from yo.util import fmt_allow_deny
 from yo.util import hasherr
 from yo.util import latest_yo_version
 from yo.util import natural_sort
+from yo.util import PKGMAN
 from yo.util import shlex_join
 from yo.util import standardize_name
 from yo.util import strftime
@@ -144,7 +145,6 @@ V = t.TypeVar("V")
 REPOSITORY_URL = "https://github.com/oracle/yo"
 DOCUMENTATION_URL = "https://oracle.github.io/yo/"
 INITIAL_CONFIG_LINK = REPOSITORY_URL
-
 
 COMMAND_GROUP_ORDER = [
     "Basic Commands",
@@ -2652,17 +2652,21 @@ class VersionCmd(YoCmd):
         print(f"Development & issues: {REPOSITORY_URL}")
         print()
 
-        latest_ver = latest_yo_version()
-        if not latest_ver:
-            print("Error loading the latest version!")
-            return
-        elif latest_ver == ver:
-            print("You are up-to-date!")
-            return
-        print("Latest version: {}.{}.{}".format(*latest_ver))
-        print("To update:")
-        print(f"  {yo.util.UPGRADE_COMMAND}")
-        print("Then verify by re-running yo version")
+        if PKGMAN == "pip":
+            latest_ver = latest_yo_version()
+            if not latest_ver:
+                print("Error loading the latest version!")
+                return
+            elif latest_ver == ver:
+                print("You are up-to-date!")
+                return
+            print("Latest version: {}.{}.{}".format(*latest_ver))
+            print("To update:")
+            print(f"  {yo.util.UPGRADE_COMMAND}")
+            print("Then verify by re-running yo version")
+        else:
+            print(f"Yo's installation is managed by {PKGMAN}")
+            print("Please use that to find & install updates.")
 
 
 class VolumeListCmd(YoCmd):

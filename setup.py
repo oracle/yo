@@ -88,6 +88,7 @@ setup(
             "data/yo-tasks/*",
             "data/sample.yo.ini",
             "data/yo_tasklib.sh",
+            "data/pkgman",
         ],
     },
 )
