@@ -10,7 +10,7 @@ import re
 # -- Project information -----------------------------------------------------
 
 project = "yo"
-copyright = "2020-2023, Oracle and/or its affiliates"
+copyright = "2020-2025, Oracle and/or its affiliates"
 author = "Oracle"
 
 # The full version, including alpha/beta/rc tags
@@ -26,7 +26,6 @@ with open(os.path.join(os.path.dirname(__file__), "..", "setup.py")) as f:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "myst_parser",
     "sphinxarg.ext",
 ]
 autodoc_typehints = "description"
@@ -66,10 +65,4 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "matplotlib": ("https://matplotlib.org", None),
-}
-
-# Allow markdown files
-source_suffix = {
-    ".rst": "restructuredtext",
-    ".md": "markdown",
 }

@@ -32,7 +32,7 @@ repos:
     hooks:
     -   id: reorder-python-imports
 -   repo: https://github.com/netromdk/vermin
-    rev: v1.5.2
+    rev: v1.6.0
     hooks:
     -   id: vermin
         args: ['-t=3.6-', '--violations', '--backport', 'dataclasses', '--eval-annotations']
