@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; yo v1.9.0 documentation</title>
+    <title>Configuration &#8212; yo v1.10.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
-    <script src="../_static/documentation_options.js?v=3f7fcc04"></script>
+    <script src="../_static/documentation_options.js?v=b60e386f"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
@@ -212,15 +212,26 @@ use this configuration option to list additional compartment IDs to search.</p>
 <p>The configuration is specified as a string list, and the compartment IDs are
 delimited by commas, whitespace, or even both. It may be convenient to list each
 on separate lines, such as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>image_compartment_ids =
-    ocid.compartment.oc1..foobarsomelongstringhere
-    ocid.compartment.oc1..someotherstringgoeshere!
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">image_compartment_ids</span> <span class="o">=</span>
+    <span class="n">ocid</span><span class="o">.</span><span class="n">compartment</span><span class="o">.</span><span class="n">oc1</span><span class="o">..</span><span class="n">foobarsomelongstringhere</span>
+    <span class="n">ocid</span><span class="o">.</span><span class="n">compartment</span><span class="o">.</span><span class="n">oc1</span><span class="o">..</span><span class="n">someotherstringgoesherex</span>
 </pre></div>
 </div>
 <p>Please note that when you change this configuration (either by adding or
 removing a value), yo’s cache becomes out-of-date in a way which it cannot
 detect. Once you’ve updated this configuration value, please run <code class="docutils literal notranslate"><span class="pre">yo</span>
 <span class="pre">cache-clean</span></code> to force yo to fetch the latest image list next time you run it.</p>
+<p>In cases where there are conflicting images between compartments, a notation
+can be appended to an image compartment <code class="docutils literal notranslate"><span class="pre">os</span></code> name. Using the extension of
+<code class="docutils literal notranslate"><span class="pre">:&lt;token&gt;</span></code> to specify a differentiator, the adjusted configuration would be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">image_compartment_ids</span> <span class="o">=</span>
+    <span class="n">ocid</span><span class="o">.</span><span class="n">compartment</span><span class="o">.</span><span class="n">oc1</span><span class="o">..</span><span class="n">foobarsomelongstringhere</span>
+    <span class="n">ocid</span><span class="o">.</span><span class="n">compartment</span><span class="o">.</span><span class="n">oc1</span><span class="o">..</span><span class="n">theqadeptimageareafortst</span><span class="p">:</span><span class="n">QA</span>
+</pre></div>
+</div>
+<p>For the images found in the second compartment, each <code class="docutils literal notranslate"><span class="pre">os</span></code> name will have
+<code class="docutils literal notranslate"><span class="pre">QA</span></code> appended to allow them to be identifiable independently from the similar
+images found in the first compartment.</p>
 </section>
 <section id="silence-automatic-tag-warning">
 <span id="silence-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">silence_automatic_tag_warning</span></code><a class="headerlink" href="#silence-automatic-tag-warning" title="Link to this heading">¶</a></h3>
@@ -942,7 +953,7 @@ of copy/paste.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2020-2023, Oracle and/or its affiliates.
+      &#169;2020-2025, Oracle and/or its affiliates.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>

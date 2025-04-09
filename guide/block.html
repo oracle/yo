@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Block Volume Management &#8212; yo v1.9.0 documentation</title>
+    <title>Block Volume Management &#8212; yo v1.10.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
-    <script src="../_static/documentation_options.js?v=3f7fcc04"></script>
+    <script src="../_static/documentation_options.js?v=b60e386f"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
@@ -35,115 +35,129 @@
             
   <section id="block-volume-management">
 <h1>Block Volume Management<a class="headerlink" href="#block-volume-management" title="Link to this heading">¶</a></h1>
-<p>Yo now allows you to manage block volumes. These are useful for a variety of
-reasons, such as keeping long-term data around after you’ve terminated an
-instance, or for having a larger storage area without expanding a root device,
-or possibly for filesystem testing.</p>
-<p>OCI has two kinds of volumes: boot volumes, and block volumes. Boot volumes are
-created from the image you selected when you launch the instance. Block volumes
-are blank when created, and must be manually attached to the instance.</p>
-<p>Once created, volumes can be “attached” in a few ways, but the most common are:</p>
+<p>Yo now allows you to manage block volumes. These are useful for a
+variety of reasons, such as keeping long-term data around after you’ve
+terminated an instance, or for having a larger storage area without
+expanding a root device, or possibly for filesystem testing.</p>
+<p>OCI has two kinds of volumes: boot volumes, and block volumes. Boot
+volumes are created from the image you selected when you launch the
+instance. Block volumes are blank when created, and must be manually
+attached to the instance.</p>
+<p>Once created, volumes can be “attached” in a few ways, but the most
+common are:</p>
 <ul class="simple">
-<li><p>“Paravirtualized” - meaning that the hypervisor will create a virtualized disk
-and notify your instance’s OS that a new disk is available. This is the
-simplest way to attach block devices, and it’s the default. It shouldn’t
-require any setup on the instance. However, paravirtualized disks are only
-available for VM instances, because BM instances don’t have hypervisors.</p></li>
-<li><p>“iSCSI” - meaning that the disk is made available over the iSCSI protocol, but
-first your instance must be configured to connect to it.</p></li>
+<li><p>“Paravirtualized” - meaning that the hypervisor will create a
+virtualized disk and notify your instance’s OS that a new disk is
+available. This is the simplest way to attach block devices, and it’s
+the default. It shouldn’t require any setup on the instance. However,
+paravirtualized disks are only available for VM instances, because BM
+instances don’t have hypervisors.</p></li>
+<li><p>“iSCSI” - meaning that the disk is made available over the iSCSI
+protocol, but first your instance must be configured to connect to
+it.</p></li>
 </ul>
-<p>A volume can be attached to more than one instance (if attached in shared mode)
-and instances may of course be attached to more than one volume.</p>
-<p>Yo provides commands to create, list, attach, detach, and delete block devices.
-For iSCSI disks, these commands can also automatically run commands which will
-connect the disk.</p>
+<p>A volume can be attached to more than one instance (if attached in
+shared mode) and instances may of course be attached to more than one
+volume.</p>
+<p>Yo provides commands to create, list, attach, detach, and delete block
+devices. For iSCSI disks, these commands can also automatically run
+commands which will connect the disk.</p>
 <section id="a-note-about-volume-names">
 <h2>A note about volume names<a class="headerlink" href="#a-note-about-volume-names" title="Link to this heading">¶</a></h2>
-<p>If you use yo frequently, you know that it has strong opinions about how to name
-instances. Yo is the same about block volumes as well: you should prefix them
-with your global username.</p>
-<p>Yo will automatically add that prefix if it isn’t found, and there is currently
-no <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code> argument to disable this behavior (but it can be added if
-absolutely necessary).</p>
-<p>However, yo <strong>will not</strong> attempt to enforce unique naming for your volumes. So,
-if you create an instance named “stepbren-volume1” and then create a second one
-named “stepbren-volume1”, yo will not prevent this. The reason is mainly for
-efficiency: refreshing the volume list is quite slow, even with multiple
-threads. Thus, you should be careful to avoid duplicate names. If you do create
-a duplicate, you may need to visit the OCI Web Console to remedy the situation.</p>
+<p>If you use yo frequently, you know that it has strong opinions about how
+to name instances. Yo is the same about block volumes as well: you
+should prefix them with your global username.</p>
+<p>Yo will automatically add that prefix if it isn’t found, and there is
+currently no <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code> argument to disable this behavior (but it
+can be added if absolutely necessary).</p>
+<p>However, yo <strong>will not</strong> attempt to enforce unique naming for your
+volumes. So, if you create an instance named “stepbren-volume1” and then
+create a second one named “stepbren-volume1”, yo will not prevent this.
+The reason is mainly for efficiency: refreshing the volume list is quite
+slow, even with multiple threads. Thus, you should be careful to avoid
+duplicate names. If you do create a duplicate, you may need to visit the
+OCI Web Console to remedy the situation.</p>
 </section>
 <section id="yo-volume-create">
 <h2>yo volume-create<a class="headerlink" href="#yo-volume-create" title="Link to this heading">¶</a></h2>
-<p>Creates a new, blank block volume. You need to provide at least three arguments:</p>
+<p>Creates a new, blank block volume. You need to provide at least three
+arguments:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> - we will use this to refer to your volume. This will get automatically
-prefixed by your username (if not already done), but yo <em>will not</em> check for
-duplicate names, nor automatically increment trailing numbers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> - we will use this to refer to your volume. This will get
+automatically prefixed by your username (if not already done), but yo
+<em>will not</em> check for duplicate names, nor automatically increment
+trailing numbers.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">size_gbs</span></code> - the size, in gigabytes, of your volume.</p></li>
-<li><p>OCI places volumes into a particular availability domain, and they can be
-accessed only by instances in the same AD. By default, yo uses your default
-instance profile’s AD. However, you can customize it with the <code class="docutils literal notranslate"><span class="pre">--ad</span> <span class="pre">AVAILABILITY_DOMAIN</span></code> flag. More usefully, you can instead provide <code class="docutils literal notranslate"><span class="pre">--for</span> <span class="pre">INSTANCE_NAME</span></code> to tell yo to use the same availability domain as that
-instance.</p></li>
+<li><p>OCI places volumes into a particular availability domain, and they
+can be accessed only by instances in the same AD. By default, yo uses
+your default instance profile’s AD. However, you can customize it
+with the <code class="docutils literal notranslate"><span class="pre">--ad</span>&#160;&#160; <span class="pre">AVAILABILITY_DOMAIN</span></code> flag. More usefully, you can
+instead provide <code class="docutils literal notranslate"><span class="pre">--for</span>&#160;&#160; <span class="pre">INSTANCE_NAME</span></code> to tell yo to use the same
+availability domain as that instance.</p></li>
 </ul>
-<p>Unlike some of the other commands, yo will always wait for your volume to become
-ready.</p>
-<p>Creating a volume is frequently followed by attaching a volume. So, you can also
-use the <code class="docutils literal notranslate"><span class="pre">--attach</span></code> option to attach the volume to an instance after it is
-created. If you do so, you <em>must</em> use <code class="docutils literal notranslate"><span class="pre">--for</span></code> to tell yo which instance to
-attach it to. You can also provide the attachment arguments accepted by <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">attach</span></code>.</p>
+<p>Unlike some of the other commands, yo will always wait for your volume
+to become ready.</p>
+<p>Creating a volume is frequently followed by attaching a volume. So, you
+can also use the <code class="docutils literal notranslate"><span class="pre">--attach</span></code> option to attach the volume to an instance
+after it is created. If you do so, you <em>must</em> use <code class="docutils literal notranslate"><span class="pre">--for</span></code> to tell yo
+which instance to attach it to. You can also provide the attachment
+arguments accepted by <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">attach</span></code>.</p>
 </section>
 <section id="yo-attach">
 <h2>yo attach<a class="headerlink" href="#yo-attach" title="Link to this heading">¶</a></h2>
-<p>Given a volume, attach it to a running instance. You need to provide at least
-two things:</p>
+<p>Given a volume, attach it to a running instance. You need to provide at
+least two things:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">volume_name</span></code> - the name of the volume</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">instance_name</span></code> - which instance to attach to</p></li>
 </ul>
-<p>The operation won’t succeed if the instances are in different ADs. This command
-will wait until the attachment succeeds. You can provide the following arguments
-to customize the block volume attachment (which can also be provided to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">volume-create</span> <span class="pre">--attach</span></code>):</p>
+<p>The operation won’t succeed if the instances are in different ADs. This
+command will wait until the attachment succeeds. You can provide the
+following arguments to customize the block volume attachment (which can
+also be provided to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">volume-create</span> <span class="pre">--attach</span></code>):</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--ro</span></code> - attach read-only</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">--shared</span></code> - use shared mode, to support attaching to multiple instances</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--shared</span></code> - use shared mode, to support attaching to multiple
+instances</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--no-setup</span></code> - do not run setup commands for iSCSI</p></li>
-<li><p>Select the attachment method with one of <code class="docutils literal notranslate"><span class="pre">--iscsi</span></code>, <code class="docutils literal notranslate"><span class="pre">--pv</span></code> (default),
-<code class="docutils literal notranslate"><span class="pre">--emulated</span></code>, <code class="docutils literal notranslate"><span class="pre">--service-determined</span></code>. The last two options are provided by the
-API, but they are not recommended. Please use either <code class="docutils literal notranslate"><span class="pre">--iscsi</span></code> or <code class="docutils literal notranslate"><span class="pre">--pv</span></code> for
-best results.</p></li>
+<li><p>Select the attachment method with one of <code class="docutils literal notranslate"><span class="pre">--iscsi</span></code>, <code class="docutils literal notranslate"><span class="pre">--pv</span></code>
+(default), <code class="docutils literal notranslate"><span class="pre">--emulated</span></code>, <code class="docutils literal notranslate"><span class="pre">--service-determined</span></code>. The last two
+options are provided by the API, but they are not recommended. Please
+use either <code class="docutils literal notranslate"><span class="pre">--iscsi</span></code> or <code class="docutils literal notranslate"><span class="pre">--pv</span></code> for best results.</p></li>
 </ul>
 </section>
 <section id="yo-detach">
 <h2>yo detach<a class="headerlink" href="#yo-detach" title="Link to this heading">¶</a></h2>
-<p>Given a volume, attach it from a specific instance, or all. You should provide
-at least the volume name, as the first argument. You can specify what to detach
-by providing one of the two options:</p>
+<p>Given a volume, attach it from a specific instance, or all. You should
+provide at least the volume name, as the first argument. You can specify
+what to detach by providing one of the two options:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--from</span> <span class="pre">INSTANCE</span></code> - detach from a particular instance</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--all</span></code> - detach from all instances</p></li>
 </ul>
-<p>By default, yo will run detachment commands from iSCSI instances. To avoid this,
-use <code class="docutils literal notranslate"><span class="pre">--no-teardown</span></code>.</p>
+<p>By default, yo will run detachment commands from iSCSI instances. To
+avoid this, use <code class="docutils literal notranslate"><span class="pre">--no-teardown</span></code>.</p>
 </section>
 <section id="yo-volume-delete">
 <h2>yo volume-delete<a class="headerlink" href="#yo-volume-delete" title="Link to this heading">¶</a></h2>
-<p>Delete a volume. Since you typically want to ensure that the volume is detached
-from all instances prior to this, yo will automatically detach each attachment,
-that is still connected, including the iSCSI commands as necessary. These can
-be controlled by <code class="docutils literal notranslate"><span class="pre">--no-detach</span></code> and <code class="docutils literal notranslate"><span class="pre">--no-teardown</span></code> respectively.</p>
+<p>Delete a volume. Since you typically want to ensure that the volume is
+detached from all instances prior to this, yo will automatically detach
+each attachment, that is still connected, including the iSCSI commands
+as necessary. These can be controlled by <code class="docutils literal notranslate"><span class="pre">--no-detach</span></code> and
+<code class="docutils literal notranslate"><span class="pre">--no-teardown</span></code> respectively.</p>
 </section>
 <section id="yo-volume-list">
 <h2>yo volume-list<a class="headerlink" href="#yo-volume-list" title="Link to this heading">¶</a></h2>
-<p>List all volumes. This command gives an overview of all volumes, regardless of
-whether they are attached to anything. The view includes both boot and block
-volumes.</p>
+<p>List all volumes. This command gives an overview of all volumes,
+regardless of whether they are attached to anything. The view includes
+both boot and block volumes.</p>
 </section>
 <section id="yo-attached">
 <h2>yo attached<a class="headerlink" href="#yo-attached" title="Link to this heading">¶</a></h2>
-<p>This is the slightly more useful volume listing command, though it is also a bit
-slower. This lists each instance which has attached boot or block devices
-(which, of course, is all instances), and then shows their attached devices.
-Here is an example of the output.</p>
+<p>This is the slightly more useful volume listing command, though it is
+also a bit slower. This lists each instance which has attached boot or
+block devices (which, of course, is all instances), and then shows their
+attached devices. Here is an example of the output.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
 ┃ Instance/Volume                     ┃ Kind  ┃ GiB ┃ Volume State ┃ Att. State ┃ Att. Kind       ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
@@ -239,14 +253,14 @@ Here is an example of the output.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2020-2023, Oracle and/or its affiliates.
+      &#169;2020-2025, Oracle and/or its affiliates.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
-      <a href="../_sources/guide/block.md.txt"
+      <a href="../_sources/guide/block.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

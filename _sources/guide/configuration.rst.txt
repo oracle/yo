@@ -239,12 +239,26 @@ on separate lines, such as:
 
    image_compartment_ids =
        ocid.compartment.oc1..foobarsomelongstringhere
-       ocid.compartment.oc1..someotherstringgoeshere!
+       ocid.compartment.oc1..someotherstringgoesherex
 
 Please note that when you change this configuration (either by adding or
 removing a value), yo's cache becomes out-of-date in a way which it cannot
 detect. Once you've updated this configuration value, please run ``yo
 cache-clean`` to force yo to fetch the latest image list next time you run it.
+
+In cases where there are conflicting images between compartments, a notation
+can be appended to an image compartment ``os`` name. Using the extension of
+``:<token>`` to specify a differentiator, the adjusted configuration would be:
+
+.. code-block::
+
+   image_compartment_ids =
+       ocid.compartment.oc1..foobarsomelongstringhere
+       ocid.compartment.oc1..theqadeptimageareafortst:QA
+
+For the images found in the second compartment, each ``os`` name will have
+``QA`` appended to allow them to be identifiable independently from the similar
+images found in the first compartment.
 
 .. _silence_tag:
 

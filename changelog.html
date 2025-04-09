@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; yo v1.9.0 documentation</title>
+    <title>Changelog &#8212; yo v1.10.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
-    <script src="_static/documentation_options.js?v=3f7fcc04"></script>
+    <script src="_static/documentation_options.js?v=b60e386f"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="_static/yo.png"/>
@@ -36,15 +36,50 @@
 <h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">¶</a></h1>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">¶</a></h2>
-<p>Any changes which are committed, but not yet present in a released version,
-should appear here.</p>
+<p>Any changes which are committed, but not yet present in a released
+version, should appear here.</p>
+</section>
+<section id="wed-apr-9-2025">
+<h2>1.10.0 - Wed, Apr 9, 2025<a class="headerlink" href="#wed-apr-9-2025" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Several improvements to the library of bash variables &amp; functions available to
+tasks:</p>
+<ul>
+<li><p>Oracle Linux version (<code class="docutils literal notranslate"><span class="pre">$ORAVER</span></code>) detection is improved - it now supports
+OL10 and any future version.</p></li>
+<li><p>Added detection for Ubuntu, Debian, Fedora, and Arch.</p></li>
+<li><p>Added variable <code class="docutils literal notranslate"><span class="pre">$PKGMGR</span></code> which refers to the system package manager</p></li>
+<li><p>Added function <code class="docutils literal notranslate"><span class="pre">PKG_INSTALL</span></code> which runs the correct installation command
+for the system package manager.</p></li>
+</ul>
+</li>
+<li><p>A major improvement to Yo tasks in general:</p>
+<ul>
+<li><p>Tasks may now include files from the client system onto the instance. See
+the documentation for <code class="docutils literal notranslate"><span class="pre">INCLUDE_FILE</span></code> and <code class="docutils literal notranslate"><span class="pre">SENDFILE</span></code> for more details on
+this quite useful feature.</p></li>
+<li><p>Tasks are now loaded and checked prior to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> so that errors are
+detected before the instance is available. As a result, Yo’s task execution
+plan is now also printed with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span> <span class="pre">--dry-run</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Built on the new functionality in Yo’s tasks, we have also added the argument
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span> <span class="pre">--install</span></code> (or just <code class="docutils literal notranslate"><span class="pre">-I</span></code>). This allows you to list
+comma or space separated package names, which will be installed to your
+instance at startup. This is achieved with a dynamically generated task named
+<code class="docutils literal notranslate"><span class="pre">yo-install-packages</span></code> which uses the new <code class="docutils literal notranslate"><span class="pre">PKG_INSTALL</span></code> function.</p></li>
+<li><p>Create RPM package (OL9 and later are supported)</p></li>
+<li><p>Add the ability to tag images from a specific compartment so that they don’t
+pollute the existing namespace of operating systems.</p></li>
+<li><p>Drop &amp; vendor unnecessary dependencies (to support RPM packaging)</p></li>
+</ul>
 </section>
 <section id="wed-apr-2-2025">
 <h2>1.9.0 - Wed, Apr 2, 2025<a class="headerlink" href="#wed-apr-2-2025" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Added “PREREQ_FOR” relationship for tasks.</p></li>
-<li><p>Improved the operation of <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">task</span> <span class="pre">join</span></code> and other commands that wait for task
-completion.</p></li>
+<li><p>Improved the operation of <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">task</span> <span class="pre">join</span></code> and other commands that
+wait for task completion.</p></li>
 <li><p>Fixed the drgn task to install drgn without enabling EPEL.</p></li>
 <li><p>Removed “test-” tasks from the Yo task directory.</p></li>
 <li><p>Bug fix: whenever configs are modified, Yo now invalidates its cache.</p></li>
@@ -53,8 +88,8 @@ completion.</p></li>
 <section id="tue-feb-18-2025">
 <h2>1.8.1 - Tue, Feb 18, 2025<a class="headerlink" href="#tue-feb-18-2025" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Fixed an issue with renaming an instance when there is a terminated instance
-of the same name.</p></li>
+<li><p>Fixed an issue with renaming an instance when there is a terminated
+instance of the same name.</p></li>
 <li><p>Included updated ZSH completions, thanks to &#64;rpigott again!</p></li>
 </ul>
 </section>
@@ -63,21 +98,23 @@ of the same name.</p></li>
 <ul class="simple">
 <li><p>Yo now automatically disables the less secure, legacy <a class="reference external" href="https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/gettingmetadata.htm#upgrading-v2">IMDS v1
 endpoints</a>
-by default. The configuration <code class="docutils literal notranslate"><span class="pre">allow_legacy_imds_endpoints</span></code> and corresponding
-<code class="docutils literal notranslate"><span class="pre">--allow-legacy-imds-endpoints</span></code> flag for <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> have been added to
-disable this feature, but in most situations there should be no reason to
-change this.</p></li>
-<li><p>A new, experimental command called <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">script</span></code> allows you to write a Python
-script using Yo’s helpers. Some of Yo’s internals have been refactored in a
-way to make it easier to do basic operations like launching an instance
-programatically. Please note that the internal APIs of Yo aren’t considered
-stable, so future updates may break compatibility with such scripts.</p></li>
-<li><p>OCI Service Errors are now caught and handled in a slightly nicer way. While a
-traceback is still shown, we try to de-emphasize it, and show the actual OCI
-error message. This way, users may be able to easily see what went wrong, in
-case it was a user error rather than Yo client error.</p></li>
-<li><p>Add some code to handle rate-limiting from the OCI API by backing off, in the
-<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--ip</span></code> command.</p></li>
+by default. The configuration <code class="docutils literal notranslate"><span class="pre">allow_legacy_imds_endpoints</span></code> and
+corresponding <code class="docutils literal notranslate"><span class="pre">--allow-legacy-imds-endpoints</span></code> flag for
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> have been added to disable this feature, but in most
+situations there should be no reason to change this.</p></li>
+<li><p>A new, experimental command called <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">script</span></code> allows you to write
+a Python script using Yo’s helpers. Some of Yo’s internals have been
+refactored in a way to make it easier to do basic operations like
+launching an instance programatically. Please note that the internal
+APIs of Yo aren’t considered stable, so future updates may break
+compatibility with such scripts.</p></li>
+<li><p>OCI Service Errors are now caught and handled in a slightly nicer
+way. While a traceback is still shown, we try to de-emphasize it, and
+show the actual OCI error message. This way, users may be able to
+easily see what went wrong, in case it was a user error rather than
+Yo client error.</p></li>
+<li><p>Add some code to handle rate-limiting from the OCI API by backing
+off, in the <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--ip</span></code> command.</p></li>
 <li><p>Boot volumes can now be attached and detached.</p></li>
 <li><p>Improved zsh completion scripts, courtesy of &#64;rpigott.</p></li>
 </ul>
@@ -86,23 +123,26 @@ case it was a user error rather than Yo client error.</p></li>
 <h2>1.7.3 - Wed, Sep 11, 2024<a class="headerlink" href="#wed-sep-11-2024" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed crash in <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">images</span></code> parsing an OS value without colon.</p></li>
-<li><p>Added user-friendly catch for a common error: adding a comment at the end of a
-<code class="docutils literal notranslate"><span class="pre">~/.oci/yo.ini</span></code> value.</p></li>
+<li><p>Added user-friendly catch for a common error: adding a comment at the
+end of a <code class="docutils literal notranslate"><span class="pre">~/.oci/yo.ini</span></code> value.</p></li>
 </ul>
 </section>
 <section id="mon-sep-9-2024">
 <h2>1.7.2 - Mon, Sep 9, 2024<a class="headerlink" href="#mon-sep-9-2024" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Added zsh completion script, thanks &#64;rpigott!</p></li>
-<li><p>Fixed race condition in launching tasks on some <code class="docutils literal notranslate"><span class="pre">ssh</span></code> / OS versions.</p></li>
-<li><p>Fixed copy/paste error in argument description of <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">compat</span> <span class="pre">--image-names</span></code></p></li>
+<li><p>Fixed race condition in launching tasks on some <code class="docutils literal notranslate"><span class="pre">ssh</span></code> / OS
+versions.</p></li>
+<li><p>Fixed copy/paste error in argument description of
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">compat</span> <span class="pre">--image-names</span></code></p></li>
 </ul>
 </section>
 <section id="fri-aug-30-2024">
 <h2>1.7.1 - Fri, Aug 30, 2024<a class="headerlink" href="#fri-aug-30-2024" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed a cache contamination bug when switching between OCI regions.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">cache-clean</span></code> now cleans caches from all region, and the old legacy cache</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">cache-clean</span></code> now cleans caches from all region, and the old
+legacy cache</p></li>
 <li><p>Allow extensions to customize the default config file.</p></li>
 <li><p>Improve the initial configuration phases a bit.</p></li>
 </ul>
@@ -112,24 +152,26 @@ case it was a user error rather than Yo client error.</p></li>
 <ul class="simple">
 <li><p>Yo now has support for multiple OCI regions!</p>
 <ul>
-<li><p>Previously, if you wanted to run yo against another OCI region, you needed
-to edit your config, run <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">cache-clean</span></code>, and then run your commands.</p></li>
-<li><p>Now, Yo allows you to store configuration for several OCI regions into your
-config. You set a default region in your config file, but you can override
-it with the <code class="docutils literal notranslate"><span class="pre">YO_REGION</span></code> environment variable, or <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">-r</span> <span class="pre">REGION</span></code> on the
-command line.</p></li>
+<li><p>Previously, if you wanted to run yo against another OCI region,
+you needed to edit your config, run <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">cache-clean</span></code>, and then
+run your commands.</p></li>
+<li><p>Now, Yo allows you to store configuration for several OCI regions
+into your config. You set a default region in your config file,
+but you can override it with the <code class="docutils literal notranslate"><span class="pre">YO_REGION</span></code> environment
+variable, or <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">-r</span> <span class="pre">REGION</span></code> on the command line.</p></li>
 <li><p>Please see the documentation for a migration guide:
-https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-support</p></li>
+<a class="reference external" href="https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-support">https://oracle.github.io/yo/guide/region.html#migrating-yo-ini-to-multi-region-support</a></p></li>
 </ul>
 </li>
 <li><p>Switched Yo’s default setup dialog to use <code class="docutils literal notranslate"><span class="pre">oci</span> <span class="pre">setup</span> <span class="pre">keys</span></code>. Updated
 documentation accordingly.</p></li>
-<li><p>Yo can now use OCI API keys which have a passphrase. It will automatically
-detect that a passphrase is required, and prompt only when attempting to use
-the API. Since many API results are cached, prompts aren’t terribly frequent.</p></li>
-<li><p>The Yo image list now uses “natural sort”. This ensures that images with
-numbers like “8.10” sort after “8.9”, which is important if you have an
-operating system image with that version number :P</p></li>
+<li><p>Yo can now use OCI API keys which have a passphrase. It will
+automatically detect that a passphrase is required, and prompt only
+when attempting to use the API. Since many API results are cached,
+prompts aren’t terribly frequent.</p></li>
+<li><p>The Yo image list now uses “natural sort”. This ensures that images
+with numbers like “8.10” sort after “8.9”, which is important if you
+have an operating system image with that version number :P</p></li>
 </ul>
 </section>
 <section id="wed-apr-17-2024">
@@ -138,13 +180,16 @@ operating system image with that version number :P</p></li>
 <ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> command now has a completely configurable table.</p>
 <ul>
-<li><p>Columns may be specified as a list in the config file (<code class="docutils literal notranslate"><span class="pre">list_columns</span></code>)</p></li>
+<li><p>Columns may be specified as a list in the config file
+(<code class="docutils literal notranslate"><span class="pre">list_columns</span></code>)</p></li>
 <li><p>An alternative list may be specified via <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">-C</span> <span class="pre">a,b,c</span></code></p></li>
-<li><p>Columns can be added to the end of the table with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">-x</span> <span class="pre">Column</span></code></p></li>
+<li><p>Columns can be added to the end of the table with
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">-x</span> <span class="pre">Column</span></code></p></li>
 </ul>
 </li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> command includes a new column, <code class="docutils literal notranslate"><span class="pre">ResourceType</span></code>, which corresponds
-to the value of the <code class="docutils literal notranslate"><span class="pre">Oracle-Recommended-Tags.ResourceType</span></code> tag.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> command includes a new column, <code class="docutils literal notranslate"><span class="pre">ResourceType</span></code>,
+which corresponds to the value of the
+<code class="docutils literal notranslate"><span class="pre">Oracle-Recommended-Tags.ResourceType</span></code> tag.</p></li>
 </ul>
 </section>
 <section id="tue-apr-9-2024">
@@ -153,7 +198,8 @@ to the value of the <code class="docutils literal notranslate"><span class="pre"
 <p>Fixes:</p>
 <ul class="simple">
 <li><p>Fixed a crash with <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">nmi</span></code></p></li>
-<li><p>Added <code class="docutils literal notranslate"><span class="pre">--ad</span></code> option to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> which was a bit of an oversight</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">--ad</span></code> option to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> which was a bit of an
+oversight</p></li>
 </ul>
 </section>
 <section id="mon-feb-5-2024">
@@ -166,10 +212,11 @@ to the value of the <code class="docutils literal notranslate"><span class="pre"
 <p>Fixes:</p>
 <ul class="simple">
 <li><p>Allow “yo teardown” operation to occur in states other than RUNNING.
-Specifically, it should be possible to teardown STOPPED instances. The
-operation isn’t permitted in TERMINATED or TERMINATING states.</p></li>
-<li><p>Respect the termination protection option for “yo teardown”. Previously, “yo
-teardown” would happily terminate a protected instance.</p></li>
+Specifically, it should be possible to teardown STOPPED instances.
+The operation isn’t permitted in TERMINATED or TERMINATING states.</p></li>
+<li><p>Respect the termination protection option for “yo teardown”.
+Previously, “yo teardown” would happily terminate a protected
+instance.</p></li>
 </ul>
 </section>
 <section id="fri-dec-15-2023">
@@ -177,58 +224,67 @@ teardown” would happily terminate a protected instance.</p></li>
 <p>This version of Yo comes with some major improvements.</p>
 <p>New Features:</p>
 <ul class="simple">
-<li><p>Two new instance actions are added: “teardown” and “rebuild”. The teardown
-operation terminates the instance, but preserves the boot volume, and attaches
-some metadata to the instance so that Yo will know how to rebuild it the way
-it was. The “rebuild” operation does exactly that.</p>
+<li><p>Two new instance actions are added: “teardown” and “rebuild”. The
+teardown operation terminates the instance, but preserves the boot
+volume, and attaches some metadata to the instance so that Yo will
+know how to rebuild it the way it was. The “rebuild” operation does
+exactly that.</p>
 <ul>
-<li><p>This operation might be preferred instead of “stop” and “start” in cases
-where your tenancy is encountering service limits. Stopped instances still
-count toward your service limits, while terminated instances do not.</p></li>
-<li><p>Please note that for now, “teardown” cannot remember what block volumes were
-attached to your instance, and so “rebuild” will not reattach block volumes
-(aside from the boot volume, of course). This feature could be added if
-there is demand for it.</p></li>
+<li><p>This operation might be preferred instead of “stop” and “start” in
+cases where your tenancy is encountering service limits. Stopped
+instances still count toward your service limits, while terminated
+instances do not.</p></li>
+<li><p>Please note that for now, “teardown” cannot remember what block
+volumes were attached to your instance, and so “rebuild” will not
+reattach block volumes (aside from the boot volume, of course).
+This feature could be added if there is demand for it.</p></li>
 </ul>
 </li>
 <li><p>You may now specify a custom username for your instances! This can be
-specified in your instance profile configuration, or on the <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code>
-command line. Yo will automatically keep track of the username for each
-instance using a tag, so you don’t need to remember which you chose. So the
-existing <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ssh</span></code> commands will work regardless of your username choice.</p></li>
+specified in your instance profile configuration, or on the
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> command line. Yo will automatically keep track of the
+username for each instance using a tag, so you don’t need to remember
+which you chose. So the existing <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ssh</span></code> commands will work
+regardless of your username choice.</p></li>
 <li><p>You may now specify a boot volume to launch an instance from. If you
-terminated a volume with (<code class="docutils literal notranslate"><span class="pre">--preserve-root</span></code>), then you can launch an instance
-from the same boot volume. This operation is similar to “rebuild”, except that
-you must manually specify the instance shape, name, etc.</p></li>
-<li><p>There is a new command, <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">copy-id</span></code>, which wraps <code class="docutils literal notranslate"><span class="pre">ssh-copy-id</span></code>. Use it to
-copy SSH keys over to an instance. For the most part, you shouldn’t need this
-because Yo passes your key in anyway, but it could be useful to add more keys.</p></li>
+terminated a volume with (<code class="docutils literal notranslate"><span class="pre">--preserve-root</span></code>), then you can launch
+an instance from the same boot volume. This operation is similar to
+“rebuild”, except that you must manually specify the instance shape,
+name, etc.</p></li>
+<li><p>There is a new command, <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">copy-id</span></code>, which wraps <code class="docutils literal notranslate"><span class="pre">ssh-copy-id</span></code>.
+Use it to copy SSH keys over to an instance. For the most part, you
+shouldn’t need this because Yo passes your key in anyway, but it
+could be useful to add more keys.</p></li>
 </ul>
 <p>Changes:</p>
 <ul class="simple">
-<li><p>The default configuration of Yo now specifies the <code class="docutils literal notranslate"><span class="pre">VM.Standard.x86.Generic</span></code>
-shape with 1 CPU and 8 GiB of memory.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> command no longer shows instances in <code class="docutils literal notranslate"><span class="pre">TERMINATING</span></code> state.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">-h</span></code> help output is now organized into logical categories with
-well-written command summaries.</p></li>
-<li><p>Documentation for each Yo sub-command is now automatically generated to match
-the CLI.</p></li>
-<li><p>Sub-commands are now permitted: commands like <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">volume-list</span></code> are now <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">volume</span> <span class="pre">list</span></code>. However, the old spellings are still permitted, as we don’t want
-to break anybody’s muscle memory.</p></li>
+<li><p>The default configuration of Yo now specifies the
+<code class="docutils literal notranslate"><span class="pre">VM.Standard.x86.Generic</span></code> shape with 1 CPU and 8 GiB of memory.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> command no longer shows instances in <code class="docutils literal notranslate"><span class="pre">TERMINATING</span></code>
+state.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">-h</span></code> help output is now organized into logical categories
+with well-written command summaries.</p></li>
+<li><p>Documentation for each Yo sub-command is now automatically generated
+to match the CLI.</p></li>
+<li><p>Sub-commands are now permitted: commands like <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">volume-list</span></code> are
+now <code class="docutils literal notranslate"><span class="pre">yo</span>&#160;&#160; <span class="pre">volume</span> <span class="pre">list</span></code>. However, the old spellings are still
+permitted, as we don’t want to break anybody’s muscle memory.</p></li>
 <li><p>Yo’s command aliasing is now improved. Prior to this release, Yo used
-shortest-prefix aliasing, but if you wanted to specify your own alias mapping,
-then shortest-prefix mappings were disabled. This limitation has now been
-removed. If you specify custom aliases, then Yo will use them, and will still
-create shortest-prefix aliases for the rest of the commands.</p></li>
+shortest-prefix aliasing, but if you wanted to specify your own alias
+mapping, then shortest-prefix mappings were disabled. This limitation
+has now been removed. If you specify custom aliases, then Yo will use
+them, and will still create shortest-prefix aliases for the rest of
+the commands.</p></li>
 </ul>
 <p>Fixes:</p>
 <ul class="simple">
-<li><p>Fixes an error due to a missing minimum version of the <code class="docutils literal notranslate"><span class="pre">rich</span></code> library.</p></li>
-<li><p>If you have provided memory / cpu configurations in an instance profile, but
-you then override the profile with a non-flex shape, Yo used to raise an
-error. However, this isn’t a very helpful error: it’s clear the user wants the
-non-flex shape and forgot about the default flex configuration. So we’ve
-removed this unnecessary error.</p></li>
+<li><p>Fixes an error due to a missing minimum version of the <code class="docutils literal notranslate"><span class="pre">rich</span></code>
+library.</p></li>
+<li><p>If you have provided memory / cpu configurations in an instance
+profile, but you then override the profile with a non-flex shape, Yo
+used to raise an error. However, this isn’t a very helpful error:
+it’s clear the user wants the non-flex shape and forgot about the
+default flex configuration. So we’ve removed this unnecessary error.</p></li>
 </ul>
 </section>
 <section id="wed-sept-6-2023">
@@ -242,91 +298,97 @@ removed this unnecessary error.</p></li>
 <h2>1.3.0 - Fri, Sept 1, 2023<a class="headerlink" href="#fri-sept-1-2023" title="Link to this heading">¶</a></h2>
 <p>Changes:</p>
 <ul class="simple">
-<li><p>The look &amp; feel of Yo has been updated a bit. Progress bars have been removed
-in favor of spinners, since we can’t accurately predict progress most of the
-time anyway. The spinners also show the time elapsed even after completion, so
-that you know how long Yo spent waiting for each action. Most of the printouts
-now also include a timestamp.</p></li>
+<li><p>The look &amp; feel of Yo has been updated a bit. Progress bars have been
+removed in favor of spinners, since we can’t accurately predict
+progress most of the time anyway. The spinners also show the time
+elapsed even after completion, so that you know how long Yo spent
+waiting for each action. Most of the printouts now also include a
+timestamp.</p></li>
 <li><p>Yo now catches Ctrl-C gracefully and exits without a traceback.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">creator_tags</span></code> configuration option is added. This configuration is
-related to how Yo tracks instances which you’ve created. If Yo is already
-working for you, there’s no need to care about it.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">creator_tags</span></code> configuration option is added. This
+configuration is related to how Yo tracks instances which you’ve
+created. If Yo is already working for you, there’s no need to care
+about it.</p></li>
 </ul>
 <p>Fixes:</p>
 <ul class="simple">
 <li><p>Fixed some bugs related to parsing information in InstanceProfile.</p></li>
 <li><p>Fixed a very rare bug related to the automatic update checking.</p></li>
-<li><p>Fixed a bug related to the default configuration of memory for flexible CPU
-instances.</p></li>
+<li><p>Fixed a bug related to the default configuration of memory for
+flexible CPU instances.</p></li>
 </ul>
 </section>
 <section id="wed-aug-9-2023">
 <h2>1.2.0 - Wed, Aug 9, 2023<a class="headerlink" href="#wed-aug-9-2023" title="Link to this heading">¶</a></h2>
 <p>New features:</p>
 <ul class="simple">
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span> <span class="pre">--wait-ssh</span></code>, which waits for SSH to come up, but doesn’t
-actually connect you to SSH.</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--ip</span></code>, which adds an IP address column for <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>.</p></li>
-<li><p>Improved the speed of IP address lookups, when loading IPs for several
-instances at a time (e.g. <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--ip</span></code> or <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ip</span></code>).</p></li>
-<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--all</span></code>, which prints info about all instances in the compartment,
-not just your own. Yo still is not capable of managing these instances, it is
-just an informational view.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span> <span class="pre">--wait-ssh</span></code>, which waits for SSH to come up, but
+doesn’t actually connect you to SSH.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--ip</span></code>, which adds an IP address column for
+<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>.</p></li>
+<li><p>Improved the speed of IP address lookups, when loading IPs for
+several instances at a time (e.g. <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--ip</span></code> or <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">ip</span></code>).</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">--all</span></code>, which prints info about all instances in the
+compartment, not just your own. Yo still is not capable of managing
+these instances, it is just an informational view.</p></li>
 <li><p>The short argument <code class="docutils literal notranslate"><span class="pre">-E</span></code> is now usable in place of <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code>.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">--exact-name</span> <span class="pre">-E</span></code> arguments are now added to the block volume management
-commands. They apply both to the name of the instance, and the block volume.</p></li>
-<li><p>A new configuration, <code class="docutils literal notranslate"><span class="pre">exact_name</span></code>, is added to the <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code>. This has the
-effect of implying <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code> on every command without you needing to type
-it.</p></li>
-<li><p>A new argument, <code class="docutils literal notranslate"><span class="pre">--no-exact-name</span></code>, allows you to override <code class="docutils literal notranslate"><span class="pre">exact_name</span> <span class="pre">=</span> <span class="pre">true</span></code>
-in your configuration on a case-by-case basis.</p></li>
-<li><p>A new configuration, <code class="docutils literal notranslate"><span class="pre">resource_filtering</span></code>, is added to <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code>. This allows
-Yo to view and manage all resources in your compartment, not just the ones
-you’ve created. This is not a recommended configuration, please be careful
-when using this.</p></li>
-<li><p>During <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>, Yo will now automatically check for newer versions in the
-background. If it finds a newer version, it will print a notice. As a default,
-the version checks are a minimum of 6 hours apart, but this can be configured
-with the config <code class="docutils literal notranslate"><span class="pre">check_for_update_every</span></code>. Setting the configuration to 0 will
+<li><p>The <code class="docutils literal notranslate"><span class="pre">--exact-name</span> <span class="pre">-E</span></code> arguments are now added to the block volume
+management commands. They apply both to the name of the instance, and
+the block volume.</p></li>
+<li><p>A new configuration, <code class="docutils literal notranslate"><span class="pre">exact_name</span></code>, is added to the <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code>. This
+has the effect of implying <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code> on every command without
+you needing to type it.</p></li>
+<li><p>A new argument, <code class="docutils literal notranslate"><span class="pre">--no-exact-name</span></code>, allows you to override
+<code class="docutils literal notranslate"><span class="pre">exact_name</span> <span class="pre">=</span> <span class="pre">true</span></code> in your configuration on a case-by-case basis.</p></li>
+<li><p>A new configuration, <code class="docutils literal notranslate"><span class="pre">resource_filtering</span></code>, is added to <code class="docutils literal notranslate"><span class="pre">yo.ini</span></code>.
+This allows Yo to view and manage all resources in your compartment,
+not just the ones you’ve created. This is not a recommended
+configuration, please be careful when using this.</p></li>
+<li><p>During <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code>, Yo will now automatically check for newer
+versions in the background. If it finds a newer version, it will
+print a notice. As a default, the version checks are a minimum of 6
+hours apart, but this can be configured with the config
+<code class="docutils literal notranslate"><span class="pre">check_for_update_every</span></code>. Setting the configuration to 0 will
 disable the feature.</p></li>
 </ul>
 <p>Changes:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> now sorts your instances by creation time, rather than the default
-(presumably undefined) ordering returned by the API.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span></code> now sorts your instances by creation time, rather than
+the default (presumably undefined) ordering returned by the API.</p></li>
 </ul>
 <p>Fixes:</p>
 <ul class="simple">
-<li><p>A rare issue with concurrent accesses to the Yo cache has been resolved.
-Cache updates are now atomic.</p></li>
-<li><p>Yo now refreshes the instance list prior to running the start, stop, reboot,
-terminate commands. This ensures that it is operating on the correct set of
-instances, avoiding rare but important caching bugs.</p></li>
-<li><p>Improved error messages that occur when looking up an instance by name, so
-that the message includes the actual instance that Yo tried to search for (as
-impacted by <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code>).</p></li>
+<li><p>A rare issue with concurrent accesses to the Yo cache has been
+resolved. Cache updates are now atomic.</p></li>
+<li><p>Yo now refreshes the instance list prior to running the start, stop,
+reboot, terminate commands. This ensures that it is operating on the
+correct set of instances, avoiding rare but important caching bugs.</p></li>
+<li><p>Improved error messages that occur when looking up an instance by
+name, so that the message includes the actual instance that Yo tried
+to search for (as impacted by <code class="docutils literal notranslate"><span class="pre">--exact-name</span></code>).</p></li>
 <li><p>Fixed a compatibility issue with Windows due to the use of “fchmod()”</p></li>
-<li><p>Fixed a silly bug in which <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">cache-clean</span></code> failed if the cache file does not
-exist.</p></li>
+<li><p>Fixed a silly bug in which <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">cache-clean</span></code> failed if the cache
+file does not exist.</p></li>
 </ul>
 </section>
 <section id="tue-july-18-2023">
 <h2>1.1.0 - Tue, July 18, 2023<a class="headerlink" href="#tue-july-18-2023" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Yo now adds the freeform tag: <code class="docutils literal notranslate"><span class="pre">{&quot;yo-created-by&quot;:</span> <span class="pre">&quot;your.email&#64;example.com&quot;}</span></code> to
-every instance it launches.</p>
+<li><p>Yo now adds the freeform tag:
+<code class="docutils literal notranslate"><span class="pre">{&quot;yo-created-by&quot;:</span> <span class="pre">&quot;your.email&#64;example.com&quot;}</span></code> to every instance it
+launches.</p>
 <ul>
 <li><p>In cases where the tenancy does not automatically add a
-<code class="docutils literal notranslate"><span class="pre">Oracle-Tags.CreatedBy</span></code> tag, we fall back to the above freeform tag to
-identify instances launched by the current Yo user.</p></li>
-<li><p>If the <code class="docutils literal notranslate"><span class="pre">Oracle-Tags.CreatedBy</span></code> tag is not present on instances in your
-tenancy, Yo prints a loud warning with more information. You can silence
-this warning by setting <code class="docutils literal notranslate"><span class="pre">silence_automatic_tag_warning</span> <span class="pre">=</span> <span class="pre">true</span></code> in the
-config.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Oracle-Tags.CreatedBy</span></code> tag, we fall back to the above freeform
+tag to identify instances launched by the current Yo user.</p></li>
+<li><p>If the <code class="docutils literal notranslate"><span class="pre">Oracle-Tags.CreatedBy</span></code> tag is not present on instances
+in your tenancy, Yo prints a loud warning with more information.
+You can silence this warning by setting
+<code class="docutils literal notranslate"><span class="pre">silence_automatic_tag_warning</span> <span class="pre">=</span> <span class="pre">true</span></code> in the config.</p></li>
 </ul>
 </li>
-<li><p>Yo can now handle instances of <code class="docutils literal notranslate"><span class="pre">Oracle-Tags.CreatedBy</span></code> which contain a prefix
-ending in a slash (<code class="docutils literal notranslate"><span class="pre">/</span></code>) before the email address.</p></li>
+<li><p>Yo can now handle instances of <code class="docutils literal notranslate"><span class="pre">Oracle-Tags.CreatedBy</span></code> which
+contain a prefix ending in a slash (<code class="docutils literal notranslate"><span class="pre">/</span></code>) before the email address.</p></li>
 </ul>
 </section>
 <section id="mon-june-5-2023">
@@ -338,39 +400,44 @@ ending in a slash (<code class="docutils literal notranslate"><span class="pre">
 <section id="fri-june-2-2023">
 <h2>1.0.3 - Fri, June 2, 2023<a class="headerlink" href="#fri-june-2-2023" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>A minor change to an internal extension API, which was omitted in 1.0.2.</p></li>
+<li><p>A minor change to an internal extension API, which was omitted in
+1.0.2.</p></li>
 </ul>
 </section>
-<section id="id1">
-<h2>1.0.2 - Fri, June 2, 2023<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<section id="fri-june-2-2023-1">
+<span id="id1"></span><h2>1.0.2 - Fri, June 2, 2023<a class="headerlink" href="#fri-june-2-2023-1" title="Link to this heading">¶</a></h2>
 <ul>
-<li><p>The SSH options added in 1.0.1 have been updated to improve compatibility with
-older SSH versions. If you encountered the following error during a <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">console</span></code>, then it’s likely this fix will resolve your issue:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>command-line: line 0: Bad configuration option: pubkeyacceptedalgorithms
+<li><p>The SSH options added in 1.0.1 have been updated to improve
+compatibility with older SSH versions. If you encountered the
+following error during a <code class="docutils literal notranslate"><span class="pre">yo</span>&#160;&#160; <span class="pre">console</span></code>, then it’s likely this fix
+will resolve your issue:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">command</span><span class="o">-</span><span class="n">line</span><span class="p">:</span> <span class="n">line</span> <span class="mi">0</span><span class="p">:</span> <span class="n">Bad</span> <span class="n">configuration</span> <span class="n">option</span><span class="p">:</span> <span class="n">pubkeyacceptedalgorithms</span>
 </pre></div>
 </div>
 </li>
 <li><p>Yo no longer crashes when encountering an instance with multiple VNIC
-attachments. Instead, it just warns that it is blindly taking the first VNIC.
-We’ll need more user feedback to inform the correct behavior.</p></li>
+attachments. Instead, it just warns that it is blindly taking the
+first VNIC. We’ll need more user feedback to inform the correct
+behavior.</p></li>
 </ul>
 </section>
 <section id="tue-may-9-2023">
 <h2>1.0.1 - Tue, May 9, 2023<a class="headerlink" href="#tue-may-9-2023" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Yo is now located at <code class="docutils literal notranslate"><span class="pre">https://github.com/oracle/yo</span></code>, and documentation is now
-located at <code class="docutils literal notranslate"><span class="pre">https://oracle.github.io/yo/</span></code>. This will be its permanent home,
-please update any bookmarks.</p></li>
-<li><p>Some SSH options have been added for the Instance Console Connection, in order
-to make it work on newer OpenSSH versions.</p></li>
-<li><p>The documentation has been improved in a few places: namely regarding SSH
-configuration.</p></li>
+<li><p>Yo is now located at <code class="docutils literal notranslate"><span class="pre">https://github.com/oracle/yo</span></code>, and
+documentation is now located at <code class="docutils literal notranslate"><span class="pre">https://oracle.github.io/yo/</span></code>.
+This will be its permanent home, please update any bookmarks.</p></li>
+<li><p>Some SSH options have been added for the Instance Console Connection,
+in order to make it work on newer OpenSSH versions.</p></li>
+<li><p>The documentation has been improved in a few places: namely regarding
+SSH configuration.</p></li>
 </ul>
 </section>
 <section id="tue-april-18-2023">
 <h2>1.0.0 - Tue, April 18, 2023<a class="headerlink" href="#tue-april-18-2023" title="Link to this heading">¶</a></h2>
-<p>This is the initial public release of Yo! It’s the culmination of 26 minor
-internal releases over 2.5 years, and we’re pleased to present it to the public.</p>
+<p>This is the initial public release of Yo! It’s the culmination of 26
+minor internal releases over 2.5 years, and we’re pleased to present it
+to the public.</p>
 </section>
 </section>
 
@@ -436,14 +503,14 @@ internal releases over 2.5 years, and we’re pleased to present it to the publi
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2020-2023, Oracle and/or its affiliates.
+      &#169;2020-2025, Oracle and/or its affiliates.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
-      <a href="_sources/changelog.md.txt"
+      <a href="_sources/changelog.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

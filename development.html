@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Development &#8212; yo v1.9.0 documentation</title>
+    <title>Development &#8212; yo v1.10.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
-    <script src="_static/documentation_options.js?v=3f7fcc04"></script>
+    <script src="_static/documentation_options.js?v=b60e386f"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="_static/yo.png"/>
@@ -93,6 +93,37 @@ this method!</p>
 </div>
 </section>
 </section>
+<section id="building-an-rpm">
+<h2>Building an RPM<a class="headerlink" href="#building-an-rpm" title="Link to this heading">¶</a></h2>
+<p>Yo has an RPM spec file at <code class="docutils literal notranslate"><span class="pre">buildrpm/yo.spec</span></code>, which can be used to build an
+RPM on Oracle Linux 9+, and likely Fedora as well. The RPMs themselves are not
+currently officially built or distributed, but they can be built easily. These
+instructions are for Oracle Linux 9. Similar instructions will likely work for
+Oracle Linux 10, but Oracle Linux 8 does not contain necessary dependencies.</p>
+<p>First, install the build requirements:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>oracle-epel-release-el9<span class="w"> </span><span class="se">\</span>
+<span class="w">                    </span>oraclelinux-developer-release-el9<span class="w"> </span><span class="se">\</span>
+<span class="w">                    </span>pyproject-rpm-macros
+sudo<span class="w"> </span>dnf<span class="w"> </span>builddep<span class="w"> </span>-y<span class="w"> </span>buildrpm/yo.spec
+</pre></div>
+</div>
+<p>There are two ways to build the RPM. First is by using the current git tree to
+build, and the second is to fetch the latest release from Github and build from
+that source.</p>
+<p>To use the current git tree, first ensure that all your changes are committed.
+The source distribution is built using <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">archive</span></code>, so only committed
+changes are included. You may also want to update the spec file to tweak the
+“Release” value, if you do not have a release tag checked out. Then:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>rpm
+</pre></div>
+</div>
+<p>To download the source tarball from Github and then build:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>buildrpm
+spectool<span class="w"> </span>-gS<span class="w"> </span>yo.spec
+rpmbuild<span class="w"> </span>--define<span class="w"> </span><span class="s2">&quot;_sourcedir `pwd`&quot;</span><span class="w"> </span>--define<span class="w"> </span><span class="s2">&quot;_topdir `pwd`/tmp&quot;</span><span class="w"> </span>-ba<span class="w"> </span>yo.spec
+</pre></div>
+</div>
+</section>
 <section id="creating-and-testing-changes">
 <h2>Creating and Testing Changes<a class="headerlink" href="#creating-and-testing-changes" title="Link to this heading">¶</a></h2>
 <p>If you want to contribute a change, then make sure you create a fork, and set
@@ -127,12 +158,12 @@ and note what the issue was.</p>
 review request via the UI.</p>
 <p>Here’s a checklist for things you may want to include in your changes.</p>
 <ul class="simple">
-<li><p>If you’ve added a command, be sure to document it in
-<code class="docutils literal notranslate"><span class="pre">doc/guide/commands.md</span></code>.</p></li>
+<li><p>If you’ve added a command or CLI flag, be sure to use
+<code class="docutils literal notranslate"><span class="pre">scripts/rebuild_docs.py</span></code> to regenerate the command documentation.</p></li>
 <li><p>If you’ve added a configuration option, be sure to document it in
 <code class="docutils literal notranslate"><span class="pre">doc/guide/configuration.rst</span></code>.</p></li>
 <li><p>If your change is user-facing at all (fixing a bug, adding a feature), then
-document it in the “Unreleased” section of the <code class="docutils literal notranslate"><span class="pre">CHANGELOG.md</span></code>.</p></li>
+document it in the “Unreleased” section of the <code class="docutils literal notranslate"><span class="pre">CHANGELOG.rst</span></code>.</p></li>
 </ul>
 </section>
 </section>
@@ -164,6 +195,7 @@ document it in the “Unreleased” section of the <code class="docutils literal
 <li class="toctree-l1"><a class="reference internal" href="optional_setup.html">Optional Features</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Development</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#environment-setup">Environment Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-an-rpm">Building an RPM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-and-testing-changes">Creating and Testing Changes</a></li>
 </ul>
 </li>
@@ -204,7 +236,7 @@ document it in the “Unreleased” section of the <code class="docutils literal
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2020-2023, Oracle and/or its affiliates.
+      &#169;2020-2025, Oracle and/or its affiliates.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
