@@ -1816,7 +1816,7 @@ class LaunchCmd(YoCmd):
             default=[],
             action="append",
             help="Install packages after instance creation (may be specified "
-            "multiple times)",
+            "multiple times, or with space/comma separated values)",
         )
 
     def standardize_wait(self, tasks: bool) -> None:
@@ -1835,8 +1835,9 @@ class LaunchCmd(YoCmd):
     ) -> None:
         packages = []
         packages.extend(profile.install)
+        splitter = re.compile(r"[,\s]+")
         for pkgspec in self.args.install:
-            packages.extend(pkgspec.split(","))
+            packages.extend(splitter.split(pkgspec))
         if packages:
             args = " ".join(packages)
             tasks.append(
