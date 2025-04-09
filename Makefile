@@ -80,7 +80,11 @@ _release_sanity_check:
 	    echo error: It looks like you have not bumped the version since last release.; \
 	    exit 1; \
 	fi
-	if [ -z "$$(grep -Pzo $(shell echo $(VERSION) | sed 's/\./\\./g')"[^\n]+\n-+\n" CHANGELOG.rst)" ]; then \
+	@if [ -z "$$(grep -P "^Version:\s+$(shell echo $(VERSION) | sed 's/\./\\./g')" buildrpm/yo.spec)" ]; then \
+	    echo error: It looks like you have not updated buildrpm/yo.spec; \
+	    exit 1; \
+	fi 2>/dev/null
+	@if [ -z "$$(grep -Pzo $(shell echo $(VERSION) | sed 's/\./\\./g')"[^\n]+\n-+\n" CHANGELOG.rst)" ]; then \
 	    echo error: It looks like you have not documented this release in CHANGELOG.rst; \
 	    exit 1; \
 	fi 2>/dev/null
@@ -95,8 +99,15 @@ _release_sanity_check:
 prerelease: _release_sanity_check test
 	@echo "Safe to release $(VERSION)"
 
+.PHONY: rpm
+rpm:
+	git archive HEAD --format=tar.gz --prefix=yo-$(VERSION)/ -o buildrpm/v$(VERSION).tar.gz
+	rpmbuild --define "_sourcedir $$(pwd)/buildrpm" \
+	         --define "_topdir $$(pwd)/buildrpm/tmp" \
+	         -ba buildrpm/yo.spec
+
 .PHONY: release
-release: _release_sanity_check test
+release: _release_sanity_check test rpm
 	@if [ ! $$(git symbolic-ref -q HEAD) = "refs/heads/main"  ]; then \
 	    echo error: You must be on main to release a new version.; \
 	    exit 1; \
