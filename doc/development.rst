@@ -65,6 +65,47 @@ Simply run the following command from the root of the git repo:
    on your whole system. If you'd prefer not to have this risk, then don't use
    this method!
 
+Building an RPM
+---------------
+
+Yo has an RPM spec file at ``buildrpm/yo.spec``, which can be used to build an
+RPM on Oracle Linux 9+, and likely Fedora as well. The RPMs themselves are not
+currently officially built or distributed, but they can be built easily. These
+instructions are for Oracle Linux 9. Similar instructions will likely work for
+Oracle Linux 10, but Oracle Linux 8 does not contain necessary dependencies.
+
+First, install the build requirements:
+
+.. code:: bash
+
+   sudo dnf install -y oracle-epel-release-el9 \
+                       oraclelinux-developer-release-el9 \
+                       pyproject-rpm-macros
+   sudo dnf builddep -y buildrpm/yo.spec
+
+
+There are two ways to build the RPM. First is by using the current git tree to
+build, and the second is to fetch the latest release from Github and build from
+that source.
+
+To use the current git tree, first ensure that all your changes are committed.
+The source distribution is built using ``git archive``, so only committed
+changes are included. You may also want to update the spec file to tweak the
+"Release" value, if you do not have a release tag checked out. Then:
+
+.. code:: bash
+
+    make rpm
+
+To download the source tarball from Github and then build:
+
+.. code:: bash
+
+    cd buildrpm
+    spectool -gS yo.spec
+    rpmbuild --define "_sourcedir `pwd`" --define "_topdir `pwd`/tmp" -ba yo.spec
+
+
 Creating and Testing Changes
 ----------------------------
 
