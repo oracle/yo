@@ -7,6 +7,38 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
+1.10.0 - Wed, Apr 9, 2025
+-------------------------
+
+- Several improvements to the library of bash variables & functions available to
+  tasks:
+
+  - Oracle Linux version (``$ORAVER``) detection is improved - it now supports
+    OL10 and any future version.
+  - Added detection for Ubuntu, Debian, Fedora, and Arch.
+  - Added variable ``$PKGMGR`` which refers to the system package manager
+  - Added function ``PKG_INSTALL`` which runs the correct installation command
+    for the system package manager.
+
+- A major improvement to Yo tasks in general:
+
+  - Tasks may now include files from the client system onto the instance. See
+    the documentation for ``INCLUDE_FILE`` and ``SENDFILE`` for more details on
+    this quite useful feature.
+  - Tasks are now loaded and checked prior to ``yo launch`` so that errors are
+    detected before the instance is available. As a result, Yo's task execution
+    plan is now also printed with ``yo launch --dry-run``.
+
+- Built on the new functionality in Yo's tasks, we have also added the argument
+  ``yo launch --install`` (or just ``-I``). This allows you to list
+  comma or space separated package names, which will be installed to your
+  instance at startup. This is achieved with a dynamically generated task named
+  ``yo-install-packages`` which uses the new ``PKG_INSTALL`` function.
+- Create RPM package (OL9 and later are supported)
+- Add the ability to tag images from a specific compartment so that they don't
+  pollute the existing namespace of operating systems.
+- Drop & vendor unnecessary dependencies (to support RPM packaging)
+
 1.9.0 - Wed, Apr 2, 2025
 ------------------------
 

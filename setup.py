@@ -39,7 +39,7 @@ from setuptools import setup
 
 long_description = open("README.md").read()
 
-VERSION = "1.9.0"
+VERSION = "1.10.0"
 
 additional_requires = []  # type: ignore
 
