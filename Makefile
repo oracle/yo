@@ -94,6 +94,7 @@ _release_sanity_check:
 	    echo distributions you have built for $(VERSION); \
 	    exit 1; \
 	fi
+	@rm -rf buildrpm/tmp
 
 .PHONY: prerelease
 prerelease: _release_sanity_check test
@@ -114,6 +115,7 @@ release: _release_sanity_check test rpm
 	fi
 	$(PYTHON) setup.py sdist
 	$(PYTHON) setup.py bdist_wheel
+	mv buildrpm/tmp/RPMS/noarch/yo-$(VERSION)*.rpm buildrpm/tmp/SRPMS/yo-$(VERSION)*.rpm dist/
 	@echo "Built the following artifacts for yo $(VERSION):"
 	@ls -l dist/yo-$(VERSION)*
 	@echo "Point of no return: time to tag and upload this release"
