@@ -1788,7 +1788,7 @@ class LaunchCmd(YoCmd):
             action="append",
             dest="tasks",
             default=[],
-            choices=arg_choices(list_tasks()),
+            choices=arg_choices(list_tasks() + ["-"]),
             help="Tasks to run once the instance is up and accessible",
         )
         parser.add_argument(
@@ -1847,6 +1847,24 @@ class LaunchCmd(YoCmd):
                 )
             )
 
+    def build_task_plan(self, profile: InstanceProfile) -> TaskPlan:
+        # Load tasks before we launch. That way an invalid configuration is
+        # detected ASAP, and the user could correct the config before we've
+        # actually launched.
+        task_list = []
+        use_profile_tasks = True
+        for task in self.args.tasks:
+            if task == "-":
+                use_profile_tasks = False
+                continue
+            task_list.append(task)
+        if use_profile_tasks:
+            task_list.extend(profile.tasks)
+        self.maybe_install_packages(profile, task_list)
+        task_plan = TaskPlan(task_list)
+        task_plan.prepare(self.c)
+        return task_plan
+
     def run(self) -> None:
         create_args = self.c.get_launch_config(
             self.args.profile,
@@ -1874,13 +1892,7 @@ class LaunchCmd(YoCmd):
             or self.c.config.allow_legacy_imds_endpoints
         )
 
-        # Load tasks before we launch. That way an invalid configuration is
-        # detected ASAP, and the user could correct the config before we've
-        # actually launched.
-        task_list = profile.tasks + self.args.tasks
-        self.maybe_install_packages(profile, task_list)
-        task_plan = TaskPlan(task_list)
-        task_plan.prepare(self.c)
+        task_plan = self.build_task_plan(profile)
 
         self.c.con.log(f"Launching instance [blue]{name}[/blue]")
         if self.args.dry_run:
