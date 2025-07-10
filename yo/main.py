@@ -710,11 +710,7 @@ class MultiInstanceCommand(YoCmd):
         # is not required.
         pass
 
-    def run_for_instance(
-        self,
-        instance: YoInstance,
-        progress: Progress,
-    ) -> None:
+    def run_for_instance(self, instance: YoInstance) -> None:
         raise NotImplementedError(
             "Implement me if you don't implement run_for_all()"
         )
@@ -768,16 +764,21 @@ class MultiInstanceCommand(YoCmd):
         if not self.confirm("Is this ok?"):
             return
 
-        progress = Progress(
-            rich.progress.TextColumn("{task.description}"),
-            rich.progress.TaskProgressColumn(),
-            rich.progress.SpinnerColumn(),
-            rich.progress.TimeElapsedColumn(),
-            console=self.c.con,
-        )
-        with progress:
-            for instance in progress.track(instances):
-                self.run_for_instance(instance, progress)
+        with contextlib.ExitStack() as es:
+            if len(instances) > 1:
+                progress = Progress(
+                    rich.progress.TextColumn("{task.description}"),
+                    rich.progress.TaskProgressColumn(),
+                    rich.progress.SpinnerColumn(),
+                    rich.progress.TimeElapsedColumn(),
+                    console=self.c.con,
+                )
+                es.enter_context(progress)
+                instance_iter = progress.track(instances)
+            else:
+                instance_iter = iter(instances)
+            for instance in instance_iter:
+                self.run_for_instance(instance)
         for instance in instances:
             self.post_for_instance(instance)
 
@@ -1987,17 +1988,17 @@ class TerminateCmd(MultiInstanceCommand):
             return self.c.config.preserve_volume_on_terminate
         return False
 
-    def run_for_instance(self, inst: YoInstance, progress: Progress) -> None:
+    def run_for_instance(self, inst: YoInstance) -> None:
         # This just makes me feel good, but it's duplication. The real
         # protection is in self.run_for_all()
         if inst.termination_protected:
             raise YoExc(f"instance {inst.name} is termination protected")
         if self.args.dry_run:
-            progress.log(f"DRY RUN: Would terminate {inst.id}")
+            self.c.con.log(f"DRY RUN: Would terminate {inst.id}")
             if self.should_preserve_volume():
-                progress.log("DRY RUN: would preserve root volume!")
+                self.c.con.log("DRY RUN: would preserve root volume!")
             else:
-                progress.log("DRY RUN: would delete root volume!")
+                self.c.con.log("DRY RUN: would delete root volume!")
             return
         self.c.terminate_instance(
             inst.id,
@@ -2069,12 +2070,12 @@ class InstanceActionCommand(MultiInstanceCommand):
     def do_action(self, inst: YoInstance, action: str) -> None:
         self.c.instance_action(inst.id, action)
 
-    def run_for_instance(self, inst: YoInstance, progress: Progress) -> None:
+    def run_for_instance(self, inst: YoInstance) -> None:
         action = self.action
         if self.force_action and self.args.force:
             action = self.force_action
         if self.args.dry_run:
-            progress.log(f"DRY RUN: Would {action} {inst.id}")
+            self.c.con.log(f"DRY RUN: Would {action} {inst.id}")
             return
         self.do_action(inst, action)
 
