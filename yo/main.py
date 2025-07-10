@@ -2184,7 +2184,7 @@ class ResizeCmd(InstanceActionMaybeSsh):
     action_message = "resize"
     action = "RESIZE"  # this is a fake action
     target_state = "RUNNING"
-    needs_confirmation = True
+    needs_confirmation = False  # implemented at a lower level
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         super().add_args(parser)
@@ -2194,16 +2194,29 @@ class ResizeCmd(InstanceActionMaybeSsh):
             "--shape",
             "-S",
             type=str,
-            help="Instance shape to select (REQUIRED)",
+            default=None,
+            help="Instance shape to select",
+        )
+        parser.add_argument(
+            "--mem",
+            type=float,
+            default=None,
+            help="Specify the amount of memory (unit is GiB)",
+        )
+        parser.add_argument(
+            "--cpu",
+            type=float,
+            default=None,
+            help="Specify the amount of OCPUs",
         )
 
-    def validate_args(self, args: argparse.Namespace) -> None:
-        super().validate_args(args)
-        if not args.shape:
-            raise YoExc("You must provide --shape")
-
     def do_action(self, inst: YoInstance, _: str) -> None:
-        self.c.resize_instance(inst.id, self.args.shape)
+        if not (self.args.shape or self.args.mem or self.args.cpu):
+            raise YoExc("no change requested! exiting.")
+        # Default the shape to the current one, in case the user just wants to
+        # adjust memory or CPU.
+        shape = self.args.shape or inst.shape
+        self.c.resize_instance(inst, shape, self.args.cpu, self.args.mem)
 
 
 class TeardownCmd(SingleInstanceCommand):

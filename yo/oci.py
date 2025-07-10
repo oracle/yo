@@ -76,6 +76,7 @@ from oci.core.models import LaunchInstanceDetails  # noqa
 from oci.core.models import LaunchInstanceShapeConfigDetails  # noqa
 from oci.core.models import UpdateBootVolumeDetails  # noqa
 from oci.core.models import UpdateInstanceDetails  # noqa
+from oci.core.models import UpdateInstanceShapeConfigDetails  # noqa
 from oci.core.models import UpdateVolumeDetails  # noqa
 from oci.exceptions import ServiceError  # noqa
 from oci.exceptions import TransientServiceError  # noqa

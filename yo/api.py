@@ -53,6 +53,7 @@ import typing as t
 from collections import defaultdict
 
 import rich.console
+from rich.prompt import Confirm
 
 import yo.util
 from yo.util import check_args_dataclass
@@ -1945,7 +1946,7 @@ class YoCtx:
 
     def _launch_config_mem_cpu(
         self,
-        profile: InstanceProfile,
+        profile: t.Optional[InstanceProfile],
         image: t.Optional[YoImage],
         shape: YoShape,
         cpu: t.Optional[float],
@@ -1974,8 +1975,9 @@ class YoCtx:
             # somewhat hard for a user to avoid.
             return
 
-        mem = mem or profile.mem
-        cpu = cpu or profile.cpu
+        if profile is not None:
+            mem = mem or profile.mem
+            cpu = cpu or profile.cpu
 
         # ENSURE CPU CONFIGURED, VERIFY SHAPE COMPAT
         if not cpu:
@@ -2250,11 +2252,63 @@ class YoCtx:
         self.save_cache()
         return inst
 
-    def resize_instance(self, inst_id: str, shape: str) -> YoInstance:
-        deets = self.oci.UpdateInstanceDetails(shape=shape)
-        newinst = YoInstance.from_oci(
-            self.compute.update_instance(inst_id, deets).data
+    def resize_instance(
+        self,
+        inst: YoInstance,
+        shape: str,
+        cpu: t.Optional[float],
+        mem: t.Optional[float],
+    ) -> YoInstance:
+        # This is a bit unusual, but we put the confirmation here so that we can
+        # centralize all the API calls and related logic.
+        image = self.get_image(inst.image_id)
+        oldshape = self.get_shape_by_name(inst.shape)
+        yoshape = self.get_shape_by_name(shape)
+        if oldshape.is_flexible:
+            self.con.log(
+                f"Instance is currently shape [blue]{inst.shape}[/blue]"
+                f" with [blue]{inst.ocpu} CPU[/blue] and [blue]"
+                f"{inst.memory_gb} GiB[/blue] of memory."
+            )
+        else:
+            self.con.log(
+                f"Instance is currently shape [blue]{inst.shape}[/blue]"
+            )
+        if oldshape.name != shape:
+            self.con.log(f"Updating to shape: {shape}")
+        cpu = cpu or inst.ocpu
+        mem = mem or inst.memory_gb
+        create_args: t.Dict[str, t.Dict[str, t.Any]] = {"shape_config": {}}
+        # This prints a "configured shape with ..." message.
+        self._launch_config_mem_cpu(None, image, yoshape, cpu, mem, create_args)
+        shape_config = self.oci.UpdateInstanceShapeConfigDetails(
+            **create_args["shape_config"]
         )
+        deets = self.oci.UpdateInstanceDetails(
+            shape=shape, shape_config=shape_config
+        )
+        if not Confirm.ask(
+            "This will reboot your instance! Is this ok?", console=self.con
+        ):
+            self.con.print("[green]Ok, cancelled.")
+            return inst
+        self.con.print("[bold red]Confirmed.")
+        try:
+            newinst = YoInstance.from_oci(
+                self.compute.update_instance(inst.id, deets).data
+            )
+        except self.oci.ServiceError as e:
+            if e.status == 404:
+                raise YoExc(
+                    "OCI Returned: Not Authorized or Not Found (404)\n"
+                    "Please note that when this happens while resizing an instance, "
+                    "it frequently means that the target shape is not supported or "
+                    "valid for resize. Please check the following document for a "
+                    "list of supported shapes and general information:\n"
+                    "https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/resizinginstances.htm"
+                )
+            else:
+                raise
         self._instances.insert(newinst)
         self.save_cache()
         return newinst
