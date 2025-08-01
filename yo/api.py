@@ -2469,7 +2469,7 @@ class YoCtx:
             )
             newvol = YoVolume.from_oci_boot(new.data)
         else:
-            new = self.block.update_block_volume(
+            new = self.block.update_volume(
                 vol.id,
                 self.oci.UpdateVolumeDetails(
                     display_name=new_name,
