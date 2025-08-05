@@ -39,6 +39,7 @@ import datetime
 import os.path
 import re
 import shlex
+import sys
 import typing as t
 import urllib.request
 import warnings
@@ -381,10 +382,20 @@ def latest_yo_version() -> t.Optional[t.Tuple[int, int, int]]:
         return None
 
 
-def current_yo_version() -> t.Tuple[int, int, int]:
-    import pkg_resources
+def get_version_string(dist: str) -> str:
+    # See the comments in main.py for this same pattern
+    if sys.version_info >= (3, 10):
+        import importlib.metadata  # novermin
 
-    ver_str = pkg_resources.get_distribution("yo").version
+        return importlib.metadata.version(dist)
+    else:
+        import pkg_resources
+
+        return pkg_resources.get_distribution(dist).version
+
+
+def current_yo_version() -> t.Tuple[int, int, int]:
+    ver_str = get_version_string("yo")
     g1, g2, g3 = ver_str.split(".")
     return (int(g1), int(g2), int(g3))
 
