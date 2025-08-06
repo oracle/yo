@@ -11,9 +11,14 @@ Source:         https://github.com/oracle/yo/archive/refs/tags/v%{version}.tar.g
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
+BuildRequires:  python3dist(pytest)
+
+# If built with docs, then we need yo's dependencies too
 BuildRequires:  python3dist(sphinx)
 BuildRequires:  python3dist(sphinx-argparse)
-BuildRequires:  python3dist(pytest)
+BuildRequires:  python3dist(rich)
+BuildRequires:  python3dist(oci)
+BuildRequires:  python3dist(argcomplete)
 
 %global _description %{expand:
 yo is a command-line client for managing OCI instances. It makes launching OCI
@@ -35,7 +40,12 @@ echo -n "dnf" >yo/data/pkgman
 %install
 %pyproject_install
 %pyproject_save_files yo
-sphinx-build --color -W -bhtml doc %{buildroot}/%{_docdir}/yo
+
+# If building with docs, be sure to set PYTHONPATH so we auto-generate docs
+# based on THIS version of yo, not any installed to the system.
+PYTHONPATH=$(pwd) \
+    sphinx-build --color -W -bhtml doc %{buildroot}/%{_docdir}/yo
+cp README.* %{buildroot}/%{_docdir}/yo/
 
 
 %check
@@ -44,7 +54,6 @@ sphinx-build --color -W -bhtml doc %{buildroot}/%{_docdir}/yo
 
 %files -n yo -f %{pyproject_files}
 %doc %{_docdir}/yo
-%doc README.*
 %{_bindir}/yo
 
 
