@@ -7,7 +7,7 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
-1.11.0 - Wed, Aug 6, 2025
+1.11.1 - Wed, Aug 6, 2025
 -------------------------
 
 This release contains a number of small fixes and improvements.
