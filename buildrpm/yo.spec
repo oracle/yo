@@ -54,6 +54,8 @@ cp README.* %{buildroot}/%{_docdir}/yo/
 
 %files -n yo -f %{pyproject_files}
 %doc %{_docdir}/yo
+%license LICENSE.txt
+%license THIRD_PARTY_LICENSES.txt
 %{_bindir}/yo
 
 
