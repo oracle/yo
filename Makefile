@@ -120,8 +120,8 @@ release: _release_sanity_check test rpm
 	@echo "Point of no return: time to tag and upload this release"
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@echo Confirmed
-	twine upload -r yo dist/yo-$(VERSION)*
-	twine upload -r oracle dist/yo-$(VERSION)*
+	twine upload -r yo dist/yo-$(VERSION)*.tar.gz dist/yo-$(VERSION)*.whl
+	twine upload -r oracle dist/yo-$(VERSION)*.tar.gz dist/yo-$(VERSION)*.whl
 	git push upstream main
 	git tag v$(VERSION)
 	git push upstream v$(VERSION)
