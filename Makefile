@@ -103,9 +103,8 @@ prerelease: _release_sanity_check test
 .PHONY: rpm
 rpm:
 	git archive HEAD --format=tar.gz --prefix=yo-$(VERSION)/ -o buildrpm/v$(VERSION).tar.gz
-	rpmbuild --define "_sourcedir $$(pwd)/buildrpm" \
-	         --define "_topdir $$(pwd)/buildrpm/tmp" \
-	         -ba buildrpm/yo.spec
+	masa uek shell --ol 10 --uek 8 bash -x buildrpm/do-build.sh
+	masa uek shell --ol 9  --uek 8 bash -x buildrpm/do-build.sh
 
 .PHONY: release
 release: _release_sanity_check test rpm
@@ -115,7 +114,7 @@ release: _release_sanity_check test rpm
 	fi
 	$(PYTHON) setup.py sdist
 	$(PYTHON) setup.py bdist_wheel
-	mv buildrpm/tmp/RPMS/noarch/yo-$(VERSION)*.rpm buildrpm/tmp/SRPMS/yo-$(VERSION)*.rpm dist/
+	mv buildrpm/yo-$(VERSION)*.rpm dist/
 	@echo "Built the following artifacts for yo $(VERSION):"
 	@ls -l dist/yo-$(VERSION)*
 	@echo "Point of no return: time to tag and upload this release"
