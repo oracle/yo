@@ -5,11 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Instance Management &#8212; yo v1.10.0 documentation</title>
+    <title>Instance Management &#8212; yo v1.11.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
-    <script src="../_static/documentation_options.js?v=b60e386f"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=63a3f62f"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -44,21 +45,21 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">nmi</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_nmi_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_nmi_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>instances</kbd></dt>
 <dd><p>Instance names to interrupt</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_nmi_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_nmi_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--all</kbd></dt>
 <dd><p>Interrupt all of my instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--exact-name, -E</kbd></dt>
 <dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
@@ -68,11 +69,11 @@
 </dd>
 <dt><kbd>--yes, -y</kbd></dt>
 <dd><p>Do not prompt for confirmation, assume yes</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--dry-run</kbd></dt>
 <dd><p>Do not actually interrupt the instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -84,8 +85,8 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">protect</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span> <span class="p">{</span><span class="n">on</span><span class="p">,</span><span class="n">off</span><span class="p">}</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_protect_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_protect_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>name_pos</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
@@ -96,8 +97,8 @@
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_protect_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_protect_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--name, -n</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
@@ -118,21 +119,21 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">reboot</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">force</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_reboot_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_reboot_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>instances</kbd></dt>
 <dd><p>Instance names to reboot</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_reboot_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_reboot_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--all</kbd></dt>
 <dd><p>Reboot all of my instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--exact-name, -E</kbd></dt>
 <dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
@@ -142,23 +143,23 @@
 </dd>
 <dt><kbd>--yes, -y</kbd></dt>
 <dd><p>Do not prompt for confirmation, assume yes</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--force</kbd></dt>
 <dd><p>Forcibly perform the action without notifying the OS. This risks losing data, but it is best for handling a machine whose OS is hung.</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--dry-run</kbd></dt>
 <dd><p>Do not actually reboot the instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--wait, -w</kbd></dt>
 <dd><p>Wait for instance state RUNNING</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--ssh, -s</kbd></dt>
 <dd><p>SSH to the instance once it is running (implies –wait)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -170,27 +171,27 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">rebuild</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="n">name</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_rebuild_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_rebuild_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>name</kbd></dt>
 <dd><p>Name of instance in SAVED state</p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_rebuild_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_rebuild_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--exact-name, -E</kbd></dt>
 <dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
 </dd>
 <dt><kbd>--wait, -w</kbd></dt>
 <dd><p>Wait for the instance to start running</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--ssh, -s</kbd></dt>
 <dd><p>SSH to the instance once it is running (implies –wait)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -202,8 +203,8 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">rename</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span> <span class="n">new_name</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_rename_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_rename_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>name_pos</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
@@ -213,8 +214,8 @@
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_rename_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_rename_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--name, -n</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
@@ -232,24 +233,24 @@
 <span id="id6"></span><h2>yo resize<a class="headerlink" href="#yo-resize" title="Link to this heading">¶</a></h2>
 <p><p>Resize (change shape) and reboot an OCI instance.</p>
 </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">resize</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shape</span> <span class="n">SHAPE</span><span class="p">]</span> <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">resize</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shape</span> <span class="n">SHAPE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">mem</span> <span class="n">MEM</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cpu</span> <span class="n">CPU</span><span class="p">]</span> <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_resize_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_resize_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>instances</kbd></dt>
 <dd><p>Instance names to resize</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_resize_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_resize_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--all</kbd></dt>
 <dd><p>Resize all of my instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--exact-name, -E</kbd></dt>
 <dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
@@ -259,22 +260,28 @@
 </dd>
 <dt><kbd>--yes, -y</kbd></dt>
 <dd><p>Do not prompt for confirmation, assume yes</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--dry-run</kbd></dt>
 <dd><p>Do not actually resize the instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--wait, -w</kbd></dt>
 <dd><p>Wait for instance state RUNNING</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--ssh, -s</kbd></dt>
 <dd><p>SSH to the instance once it is running (implies –wait)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--shape, -S</kbd></dt>
-<dd><p>Instance shape to select (REQUIRED)</p>
+<dd><p>Instance shape to select</p>
+</dd>
+<dt><kbd>--mem</kbd></dt>
+<dd><p>Specify the amount of memory (unit is GiB)</p>
+</dd>
+<dt><kbd>--cpu</kbd></dt>
+<dd><p>Specify the amount of OCPUs</p>
 </dd>
 </dl>
 </section>
@@ -286,21 +293,21 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">start</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_start_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_start_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>instances</kbd></dt>
 <dd><p>Instance names to start</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_start_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_start_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--all</kbd></dt>
 <dd><p>Start all of my instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--exact-name, -E</kbd></dt>
 <dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
@@ -310,19 +317,19 @@
 </dd>
 <dt><kbd>--yes, -y</kbd></dt>
 <dd><p>Do not prompt for confirmation, assume yes</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--dry-run</kbd></dt>
 <dd><p>Do not actually start the instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--wait, -w</kbd></dt>
 <dd><p>Wait for instance state RUNNING</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--ssh, -s</kbd></dt>
 <dd><p>SSH to the instance once it is running (implies –wait)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -334,21 +341,21 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">stop</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">force</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_stop_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_stop_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>instances</kbd></dt>
 <dd><p>Instance names to stop</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_stop_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_stop_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--all</kbd></dt>
 <dd><p>Stop all of my instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--exact-name, -E</kbd></dt>
 <dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
@@ -358,19 +365,19 @@
 </dd>
 <dt><kbd>--yes, -y</kbd></dt>
 <dd><p>Do not prompt for confirmation, assume yes</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--force</kbd></dt>
 <dd><p>Forcibly perform the action without notifying the OS. This risks losing data, but it is best for handling a machine whose OS is hung.</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--dry-run</kbd></dt>
 <dd><p>Do not actually stop the instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--wait, -w</kbd></dt>
 <dd><p>Wait for instance state STOPPED</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -382,16 +389,16 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">teardown</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_teardown_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_teardown_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>name_pos</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_teardown_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_teardown_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--name, -n</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
@@ -404,7 +411,7 @@
 </dd>
 <dt><kbd>--yes, -y</kbd></dt>
 <dd><p>Do not prompt for confirmation, assume yes</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -425,21 +432,21 @@ launch -V”.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">terminate</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">yes</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">preserve</span><span class="o">-</span><span class="n">volume</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">preserve</span><span class="o">-</span><span class="n">volume</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="n">instances</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_terminate_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_terminate_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>instances</kbd></dt>
 <dd><p>Instance names to terminate</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_terminate_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_terminate_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--all</kbd></dt>
 <dd><p>Terminate all of my instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--exact-name, -E</kbd></dt>
 <dd><p>Do not standardize the name by prefixing it with your system username if necessary.</p>
@@ -449,7 +456,7 @@ launch -V”.</p>
 </dd>
 <dt><kbd>--yes, -y</kbd></dt>
 <dd><p>Do not prompt for confirmation, assume yes</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--preserve-volume, -p</kbd></dt>
 <dd><p>Do not remove the root volume for this instance</p>
@@ -459,11 +466,11 @@ launch -V”.</p>
 </dd>
 <dt><kbd>--dry-run</kbd></dt>
 <dd><p>Do not actually terminate the instances</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--wait, -w</kbd></dt>
 <dd><p>Wait for instance state TERMINATED</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -475,16 +482,16 @@ launch -V”.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">wait</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">state</span> <span class="n">STATE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">timeout</span> <span class="n">TIMEOUT</span><span class="p">]</span> <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_wait_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_wait_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>name_pos</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_wait_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_wait_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--name, -n</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
@@ -497,11 +504,11 @@ launch -V”.</p>
 </dd>
 <dt><kbd>--state, -s</kbd></dt>
 <dd><p>State to wait for the instance to enter</p>
-<p>Default: “RUNNING”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'RUNNING'</span></code></p>
 </dd>
 <dt><kbd>--timeout</kbd></dt>
 <dd><p>How long to wait (in seconds)</p>
-<p>Default: 600</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">600</span></code></p>
 </dd>
 </dl>
 </section>
@@ -527,7 +534,16 @@ launch -V”.</p>
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
@@ -554,16 +570,6 @@ launch -V”.</p>
   </ul></li>
 </ul>
 </div>
-<search id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -580,8 +586,8 @@ launch -V”.</p>
       &#169;2020-2025, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
       <a href="../_sources/cmds/cmd01.rst.txt"

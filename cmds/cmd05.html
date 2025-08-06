@@ -5,11 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Informative Commands &#8212; yo v1.10.0 documentation</title>
+    <title>Informative Commands &#8212; yo v1.11.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
-    <script src="../_static/documentation_options.js?v=b60e386f"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=63a3f62f"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -52,28 +53,28 @@ details.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">compat</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shape</span> <span class="n">SHAPE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">os</span> <span class="n">OS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">image</span> <span class="n">IMAGE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">image</span><span class="o">-</span><span class="n">names</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">width</span> <span class="n">WIDTH</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_compat_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_compat_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--shape, -S</kbd></dt>
 <dd><p>shape name or fnmatch(3) pattern: filters shapes in table</p>
-<p>Default: “*”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'*'</span></code></p>
 </dd>
 <dt><kbd>--os</kbd></dt>
 <dd><p>OS name or fnmatch(3) pattern: filters OS in table</p>
-<p>Default: “*”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'*'</span></code></p>
 </dd>
 <dt><kbd>--image</kbd></dt>
 <dd><p>image name or fnmatch(3) pattern to filter by image name (only used when –image-names is specified)</p>
-<p>Default: “*”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'*'</span></code></p>
 </dd>
 <dt><kbd>--image-names</kbd></dt>
 <dd><p>display the image name rather than the OS name</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--width</kbd></dt>
 <dd><p>Width of column for shape names</p>
-<p>Default: 24</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">24</span></code></p>
 </dd>
 </dl>
 </section>
@@ -98,20 +99,20 @@ than searching for an image name here.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">images</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span> <span class="p">[</span><span class="n">os</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_images_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_images_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>os</kbd></dt>
 <dd><p>Operating system and version, separated by colon (:)</p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_images_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_images_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--verbose, -v</kbd></dt>
 <dd><p>Print detailed image information</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -123,13 +124,13 @@ than searching for an image name here.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">limits</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">service</span> <span class="p">{</span><span class="n">compute</span><span class="p">,</span><span class="n">block</span><span class="o">-</span><span class="n">storage</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">shape</span> <span class="n">SHAPE</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_limits_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_limits_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--service, -s</kbd></dt>
 <dd><p>Possible choices: compute, block-storage</p>
 <p>which service to view limits of</p>
-<p>Default: “compute”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'compute'</span></code></p>
 </dd>
 <dt><kbd>--shape, -S</kbd></dt>
 <dd><p>shape to get info about</p>
@@ -152,8 +153,8 @@ than searching for an image name here.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">shape</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="n">shape</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_shape_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_shape_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>shape</kbd></dt>
 <dd><p>shape to get info about</p>
@@ -168,28 +169,28 @@ than searching for an image name here.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">shapes</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">verbose</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cpu</span> <span class="o">|</span> <span class="o">--</span><span class="n">disk</span> <span class="o">|</span> <span class="o">--</span><span class="n">gpu</span> <span class="o">|</span> <span class="o">--</span><span class="n">availability</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">filter</span> <span class="p">{</span><span class="n">bm</span><span class="p">,</span><span class="n">vm</span><span class="p">,</span><span class="n">amd</span><span class="p">,</span><span class="n">intel</span><span class="p">,</span><span class="n">arm</span><span class="p">,</span><span class="n">flex</span><span class="p">,</span><span class="n">gpu</span><span class="p">,</span><span class="n">disk</span><span class="p">}]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_shapes_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_shapes_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--verbose, -v</kbd></dt>
 <dd><p>print detailed shape information</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--cpu</kbd></dt>
 <dd><p>display detailed CPU information (default)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--disk</kbd></dt>
 <dd><p>display detailed disk information</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--gpu</kbd></dt>
 <dd><p>display detailed gpu information</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--availability, -a</kbd></dt>
 <dd><p>display availability across domains (long load time)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--filter, -f</kbd></dt>
 <dd><p>Possible choices: bm, vm, amd, intel, arm, flex, gpu, disk</p>
@@ -219,7 +220,16 @@ than searching for an image name here.</p>
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
@@ -246,16 +256,6 @@ than searching for an image name here.</p>
   </ul></li>
 </ul>
 </div>
-<search id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -272,8 +272,8 @@ than searching for an image name here.</p>
       &#169;2020-2025, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
       <a href="../_sources/cmds/cmd05.rst.txt"

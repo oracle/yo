@@ -5,11 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Volume Management Commands &#8212; yo v1.10.0 documentation</title>
+    <title>Volume Management Commands &#8212; yo v1.11.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
-    <script src="../_static/documentation_options.js?v=b60e386f"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=63a3f62f"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -39,11 +40,12 @@
 <span id="id1"></span><h2>yo volume attach<a class="headerlink" href="#yo-volume-attach" title="Link to this heading">¶</a></h2>
 <p><p>Attach a block or boot volume to an instance.</p>
 </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">volume</span> <span class="n">attach</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ro</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shared</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">setup</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">iscsi</span> <span class="o">|</span> <span class="o">--</span><span class="n">pv</span> <span class="o">|</span> <span class="o">--</span><span class="n">emulated</span> <span class="o">|</span> <span class="o">--</span><span class="n">service</span><span class="o">-</span><span class="n">determined</span> <span class="o">|</span> <span class="o">--</span><span class="k">as</span><span class="o">-</span><span class="n">boot</span><span class="p">]</span> <span class="n">volume_name</span> <span class="n">instance_name</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">volume</span> <span class="n">attach</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ro</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shared</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">setup</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">iscsi</span> <span class="o">|</span> <span class="o">--</span><span class="n">pv</span> <span class="o">|</span> <span class="o">--</span><span class="n">emulated</span> <span class="o">|</span> <span class="o">--</span><span class="n">service</span><span class="o">-</span><span class="n">determined</span> <span class="o">|</span> <span class="o">--</span><span class="k">as</span><span class="o">-</span><span class="n">boot</span><span class="p">]</span>
+                        <span class="n">volume_name</span> <span class="n">instance_name</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_attach_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_volume_attach_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>volume_name</kbd></dt>
 <dd><p>name of volume</p>
@@ -53,8 +55,8 @@
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_attach_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_volume_attach_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--no-exact-name</kbd></dt>
 <dd><p>follow Yo’s normal rules on standardizing instance &amp; volume names (this is the default, but can be used to override the config file)</p>
@@ -64,40 +66,40 @@
 </dd>
 </dl>
 </section>
-<section id="volume-attachment-arguments">
-<h3>Volume Attachment Arguments<a class="headerlink" href="#volume-attachment-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_attach_args-volume-attachment-arguments">
+<h3>Volume Attachment Arguments<a class="headerlink" href="#yo.main-cmd_volume_attach_args-volume-attachment-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--ro</kbd></dt>
 <dd><p>Attach volume read-only</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--shared</kbd></dt>
 <dd><p>Attach volume in shared mode</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--no-setup</kbd></dt>
 <dd><p>Do not automatically run iSCSI setup commands over SSH</p>
-<p>Default: True</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
 <dt><kbd>--iscsi</kbd></dt>
 <dd><p>use iSCSI to attach</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 <dt><kbd>--pv</kbd></dt>
 <dd><p>use paravirtualized to attach (default)</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 <dt><kbd>--emulated</kbd></dt>
 <dd><p>use emulated to attach</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 <dt><kbd>--service-determined</kbd></dt>
 <dd><p>Let OCI decide the right attachment type</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 <dt><kbd>--as-boot</kbd></dt>
 <dd><p>Attach to the instance as a BOOT VOLUME. The instance must not already be attached to a boot volume.</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 </dl>
 </section>
@@ -114,11 +116,13 @@
 <span id="id3"></span><h2>yo volume create<a class="headerlink" href="#yo-volume-create" title="Link to this heading">¶</a></h2>
 <p><p>Create a block volume.</p>
 </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">volume</span> <span class="n">create</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ad</span> <span class="n">AD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="k">for</span> <span class="n">INST_NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">attach</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ro</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shared</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">setup</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">iscsi</span> <span class="o">|</span> <span class="o">--</span><span class="n">pv</span> <span class="o">|</span> <span class="o">--</span><span class="n">emulated</span> <span class="o">|</span> <span class="o">--</span><span class="n">service</span><span class="o">-</span><span class="n">determined</span><span class="p">]</span> <span class="n">name</span> <span class="n">size_gbs</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">volume</span> <span class="n">create</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ad</span> <span class="n">AD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="k">for</span> <span class="n">INST_NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">attach</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ro</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shared</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">setup</span><span class="p">]</span>
+                        <span class="p">[</span><span class="o">--</span><span class="n">iscsi</span> <span class="o">|</span> <span class="o">--</span><span class="n">pv</span> <span class="o">|</span> <span class="o">--</span><span class="n">emulated</span> <span class="o">|</span> <span class="o">--</span><span class="n">service</span><span class="o">-</span><span class="n">determined</span><span class="p">]</span>
+                        <span class="n">name</span> <span class="n">size_gbs</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_create_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_volume_create_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>name</kbd></dt>
 <dd><p>name of block volume (unique names strongly preferred)</p>
@@ -128,8 +132,8 @@
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_create_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_volume_create_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--ad</kbd></dt>
 <dd><p>availability domain (not needed if you use –for)</p>
@@ -139,7 +143,7 @@
 </dd>
 <dt><kbd>--attach, -a</kbd></dt>
 <dd><p>attach to the instance after completion (requires –for)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--no-exact-name</kbd></dt>
 <dd><p>follow Yo’s normal rules on standardizing instance &amp; volume names (this is the default, but can be used to override the config file)</p>
@@ -149,36 +153,36 @@
 </dd>
 </dl>
 </section>
-<section id="volume-attachment-arguments">
-<h3>Volume Attachment Arguments<a class="headerlink" href="#volume-attachment-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_create_args-volume-attachment-arguments">
+<h3>Volume Attachment Arguments<a class="headerlink" href="#yo.main-cmd_volume_create_args-volume-attachment-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--ro</kbd></dt>
 <dd><p>Attach volume read-only</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--shared</kbd></dt>
 <dd><p>Attach volume in shared mode</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--no-setup</kbd></dt>
 <dd><p>Do not automatically run iSCSI setup commands over SSH</p>
-<p>Default: True</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
 <dt><kbd>--iscsi</kbd></dt>
 <dd><p>use iSCSI to attach</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 <dt><kbd>--pv</kbd></dt>
 <dd><p>use paravirtualized to attach (default)</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 <dt><kbd>--emulated</kbd></dt>
 <dd><p>use emulated to attach</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 <dt><kbd>--service-determined</kbd></dt>
 <dd><p>Let OCI decide the right attachment type</p>
-<p>Default: “pv”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'pv'</span></code></p>
 </dd>
 </dl>
 </section>
@@ -190,20 +194,20 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">volume</span> <span class="n">delete</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">detach</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">teardown</span><span class="p">]</span> <span class="n">name</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_delete_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_volume_delete_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>name</kbd></dt>
 <dd><p>name of volume to delete</p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_delete_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_volume_delete_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--no-detach, -D</kbd></dt>
 <dd><p>do not detach from all instances first</p>
-<p>Default: True</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
 <dt><kbd>--no-exact-name</kbd></dt>
 <dd><p>follow Yo’s normal rules on standardizing instance &amp; volume names (this is the default, but can be used to override the config file)</p>
@@ -213,7 +217,7 @@
 </dd>
 <dt><kbd>--no-teardown</kbd></dt>
 <dd><p>do not run iSCSI tear down commands</p>
-<p>Default: True</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
 </dl>
 </section>
@@ -225,23 +229,23 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">volume</span> <span class="n">detach</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="kn">from</span><span class="w"> </span><span class="nn">FROM_INSTANCE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">teardown</span><span class="p">]</span> <span class="n">volume</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_detach_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_volume_detach_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>volume</kbd></dt>
 <dd><p>name of volume to detach</p>
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_detach_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_volume_detach_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--from</kbd></dt>
 <dd><p>instance to detach from, if there are multiple</p>
 </dd>
 <dt><kbd>--all</kbd></dt>
 <dd><p>instance to detach from, if there are multiple</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--no-exact-name</kbd></dt>
 <dd><p>follow Yo’s normal rules on standardizing instance &amp; volume names (this is the default, but can be used to override the config file)</p>
@@ -251,7 +255,7 @@
 </dd>
 <dt><kbd>--no-teardown</kbd></dt>
 <dd><p>do not run iSCSI tear down commands</p>
-<p>Default: True</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
 </dl>
 </section>
@@ -271,8 +275,8 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">volume</span> <span class="n">rename</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="n">volume_name</span> <span class="n">new_name</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_rename_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_volume_rename_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>volume_name</kbd></dt>
 <dd><p>name of volume</p>
@@ -282,12 +286,12 @@
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_volume_rename_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_volume_rename_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--exact-name, -n</kbd></dt>
 <dd><p>do not try to standardize the volume names</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -313,7 +317,16 @@
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
@@ -340,16 +353,6 @@
   </ul></li>
 </ul>
 </div>
-<search id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -366,8 +369,8 @@
       &#169;2020-2025, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
       <a href="../_sources/cmds/cmd04.rst.txt"

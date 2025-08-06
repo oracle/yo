@@ -5,11 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Basic Commands &#8212; yo v1.10.0 documentation</title>
+    <title>Basic Commands &#8212; yo v1.11.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
-    <script src="../_static/documentation_options.js?v=b60e386f"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=63a3f62f"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -52,12 +53,13 @@ desktop notification when your instance is ready. Alternatively, use “-w” to
 wait until the instance is ready, but not connect via SSH.</p>
 </div></blockquote>
 </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">launch</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">os</span> <span class="n">OS</span> <span class="o">|</span> <span class="o">--</span><span class="n">image</span> <span class="n">IMAGE</span> <span class="o">|</span> <span class="o">--</span><span class="n">volume</span> <span class="n">VOLUME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shape</span> <span class="n">SHAPE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">boot</span><span class="o">-</span><span class="n">volume</span><span class="o">-</span><span class="n">size</span><span class="o">-</span><span class="n">gbs</span> <span class="n">BOOT_VOLUME_SIZE_GBS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">mem</span> <span class="n">MEM</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cpu</span> <span class="n">CPU</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ad</span> <span class="n">AD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="o">-</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">profile</span> <span class="n">PROFILE</span><span class="p">]</span>
-                 <span class="p">[</span><span class="o">--</span><span class="n">task</span> <span class="n">TASKS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">load</span><span class="o">-</span><span class="n">image</span> <span class="p">{</span><span class="n">UNIQUE</span><span class="p">,</span><span class="n">LATEST</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">username</span> <span class="n">USERNAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">allow</span><span class="o">-</span><span class="n">legacy</span><span class="o">-</span><span class="n">imds</span><span class="o">-</span><span class="n">endpoints</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">install</span> <span class="n">INSTALL</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">launch</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">os</span> <span class="n">OS</span> <span class="o">|</span> <span class="o">--</span><span class="n">image</span> <span class="n">IMAGE</span> <span class="o">|</span> <span class="o">--</span><span class="n">volume</span> <span class="n">VOLUME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">shape</span> <span class="n">SHAPE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">boot</span><span class="o">-</span><span class="n">volume</span><span class="o">-</span><span class="n">size</span><span class="o">-</span><span class="n">gbs</span> <span class="n">BOOT_VOLUME_SIZE_GBS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">mem</span> <span class="n">MEM</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">cpu</span> <span class="n">CPU</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ad</span> <span class="n">AD</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="o">-</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">profile</span> <span class="n">PROFILE</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">task</span> <span class="n">TASKS</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">load</span><span class="o">-</span><span class="n">image</span> <span class="p">{</span><span class="n">UNIQUE</span><span class="p">,</span><span class="n">LATEST</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">username</span> <span class="n">USERNAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">allow</span><span class="o">-</span><span class="n">legacy</span><span class="o">-</span><span class="n">imds</span><span class="o">-</span><span class="n">endpoints</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">install</span> <span class="n">INSTALL</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_launch_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_launch_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--name, -n</kbd></dt>
 <dd><p>Name to give the instance</p>
@@ -88,15 +90,15 @@ wait until the instance is ready, but not connect via SSH.</p>
 </dd>
 <dt><kbd>--wait, -w</kbd></dt>
 <dd><p>Wait for the instance to start running</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--wait-ssh</kbd></dt>
 <dd><p>Wait for the instance to be reachable via SSH (implies –wait)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--ssh, -s</kbd></dt>
 <dd><p>SSH to the instance once it is running (implies –wait-ssh)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--exact-name, -E</kbd></dt>
 <dd><p>When set, allows you to bypass the name rules implemented by this program. In particular: (1) allows non-unique instance names, and (2) allows you to use a name which is not prefixed by your username.</p>
@@ -106,15 +108,15 @@ wait until the instance is ready, but not connect via SSH.</p>
 </dd>
 <dt><kbd>--dry-run</kbd></dt>
 <dd><p>When set, don’t actually create the instance, just print what we would have done.</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--profile, -p</kbd></dt>
 <dd><p>Which profile (from your ~/.oci/yo.ini) should be used</p>
-<p>Default: “DEFAULT”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">'DEFAULT'</span></code></p>
 </dd>
 <dt><kbd>--task, -t</kbd></dt>
 <dd><p>Tasks to run once the instance is up and accessible</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 <dt><kbd>--load-image</kbd></dt>
 <dd><p>Possible choices: UNIQUE, LATEST</p>
@@ -125,11 +127,11 @@ wait until the instance is ready, but not connect via SSH.</p>
 </dd>
 <dt><kbd>--allow-legacy-imds-endpoints</kbd></dt>
 <dd><p>Allows IMDS v1 endpoints (overrides configured value)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--install, -I</kbd></dt>
 <dd><p>Install packages after instance creation (may be specified multiple times, or with space/comma separated values)</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 </dl>
 </section>
@@ -152,12 +154,12 @@ terminate, etc) unless you change your “yo.resource_filtering” configuration
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="nb">list</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">cached</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">columns</span> <span class="n">COLUMNS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">extra</span><span class="o">-</span><span class="n">column</span> <span class="p">{</span><span class="n">Name</span><span class="p">,</span><span class="n">Shape</span><span class="p">,</span><span class="n">CPU</span><span class="p">,</span><span class="n">Mem</span><span class="p">,</span><span class="n">State</span><span class="p">,</span><span class="n">AD</span><span class="p">,</span><span class="n">Created</span><span class="p">,</span><span class="n">IP</span><span class="p">,</span><span class="n">ResourceType</span><span class="p">}]</span> <span class="p">[</span><span class="o">--</span><span class="n">ip</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ad</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">all</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_list_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_list_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--cached, -c</kbd></dt>
 <dd><p>avoid loading and calling OCI if possible (list may beout of date)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--columns, -C</kbd></dt>
 <dd><p>specify all columns in the table</p>
@@ -165,19 +167,19 @@ terminate, etc) unless you change your “yo.resource_filtering” configuration
 <dt><kbd>--extra-column, -x</kbd></dt>
 <dd><p>Possible choices: Name, Shape, CPU, Mem, State, AD, Created, IP, ResourceType</p>
 <p>add a column to the table</p>
-<p>Default: []</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">[]</span></code></p>
 </dd>
 <dt><kbd>--ip, -i</kbd></dt>
 <dd><p>include IP addresses column (alias for: -x IP)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--ad</kbd></dt>
 <dd><p>display the availability domain column (alias for: -x AD)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--all, -a</kbd></dt>
 <dd><p>display all instances in the compartment (not just yours)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -189,8 +191,8 @@ terminate, etc) unless you change your “yo.resource_filtering” configuration
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">yo</span> <span class="n">ssh</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">name</span> <span class="n">NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">exact</span><span class="o">-</span><span class="n">name</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">wait</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">agent</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ssh</span><span class="o">-</span><span class="n">args</span> <span class="n">SSH_ARGS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">start</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">quiet</span><span class="p">]</span> <span class="p">[</span><span class="n">name_pos</span><span class="p">]</span> <span class="p">[</span><span class="n">cmds</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="positional-arguments">
-<h3>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_ssh_args-positional-arguments">
+<h3>Positional Arguments<a class="headerlink" href="#yo.main-cmd_ssh_args-positional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>name_pos</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
@@ -200,8 +202,8 @@ terminate, etc) unless you change your “yo.resource_filtering” configuration
 </dd>
 </dl>
 </section>
-<section id="named-arguments">
-<h3>Named Arguments<a class="headerlink" href="#named-arguments" title="Link to this heading">¶</a></h3>
+<section id="yo.main-cmd_ssh_args-named-arguments">
+<h3>Named Arguments<a class="headerlink" href="#yo.main-cmd_ssh_args-named-arguments" title="Link to this heading">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>--name, -n</kbd></dt>
 <dd><p>Name of the instance to filter by</p>
@@ -214,23 +216,23 @@ terminate, etc) unless you change your “yo.resource_filtering” configuration
 </dd>
 <dt><kbd>--wait, -w</kbd></dt>
 <dd><p>Wait for SSH access</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--agent, -A</kbd></dt>
 <dd><p>Forward SSH agent</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--ssh-args</kbd></dt>
 <dd><p>Arguments to pass to ssh</p>
-<p>Default: “”</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">''</span></code></p>
 </dd>
 <dt><kbd>--start, -s</kbd></dt>
 <dd><p>Start the instance if not already started and then ssh (implies –wait)</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--quiet, -q</kbd></dt>
 <dd><p>Reduce the informative output</p>
-<p>Default: False</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
 </section>
@@ -256,7 +258,16 @@ terminate, etc) unless you change your “yo.resource_filtering” configuration
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guide/index.html">User Guide</a></li>
@@ -283,16 +294,6 @@ terminate, etc) unless you change your “yo.resource_filtering” configuration
   </ul></li>
 </ul>
 </div>
-<search id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -309,8 +310,8 @@ terminate, etc) unless you change your “yo.resource_filtering” configuration
       &#169;2020-2025, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
       <a href="../_sources/cmds/cmd00.rst.txt"

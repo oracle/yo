@@ -7,6 +7,25 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
+1.11.1 - Wed, Aug 6, 2025
+-------------------------
+
+This release contains a number of small fixes and improvements.
+
+- Updated zsh completions with some newer options. Contributed by @rpigott,
+  thank you again!
+- Allow specifying a task named "-" which clears out any tasks indicated by your
+  instance profile.
+- Removed the use of the progress bar when only acting on one instance.
+- The "yo resize" command now can change the memory and cpu of a flex shape.
+  Though, beware that some resizes are not permitted with flex shapes, see `the
+  docs
+  <https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/resizinginstances.htm>`__
+  for details.
+- Fixed a bug in "yo volume rename" that made it fail on block volumes.
+- Fixed some instances of importing ``pkg_resources`` on Python 3.12+ which
+  trigger a deprecation warning.
+
 1.10.0 - Wed, Apr 9, 2025
 -------------------------
 
