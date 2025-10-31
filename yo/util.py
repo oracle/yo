@@ -263,6 +263,11 @@ class YoConfig:
         opt_strlist(d, "extension_modules")
         opt_strlist(d, "image_compartment_ids")
         opt_strlist(d, "creator_tags")
+        # This config item may have whitespace if users decide to indent it on
+        # a newline (just like image_compartment_ids). But it's not a strlist,
+        # so it doesn't get stripped. Do that here to avoid unexpected issues,
+        # which manifest as the ever-so-frustrating 404 error.
+        d["instance_compartment_id"] = d["instance_compartment_id"].strip()
         return YoConfig(**d)
 
     @property
