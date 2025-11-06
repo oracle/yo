@@ -3135,7 +3135,7 @@ class DetachCmd(YoCmd):
         if self.args.from_instance:
             inst = self.c.get_instance_by_name(
                 self.args.from_instance,
-                ("RUNNING",),
+                ("RUNNING", "STOPPING", "STOPPED"),
                 (),
                 exact_name=self.args.exact_name,
             )
