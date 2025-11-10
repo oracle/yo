@@ -1483,9 +1483,17 @@ class ImagesCmd(YoCmd):
             action="store_true",
             help="Print detailed image information",
         )
+        parser.add_argument(
+            "--official",
+            action="store_true",
+            help="Print only official (platform) images",
+        )
 
     def run(self) -> None:
-        images = self.c.list_all_images()
+        if self.args.official:
+            images = self.c.list_official_images()
+        else:
+            images = self.c.list_all_images()
         if self.args.os:
             try:
                 os, ver = self.args.os.split(":", 1)
@@ -1504,12 +1512,20 @@ class ImagesCmd(YoCmd):
                 raise YoExc("No matching images...")
             table = rich.table.Table()
             table.add_column("Name")
+            table.add_column("Compartment")
             table.add_column("OS")
             table.add_column("OS Ver.")
             table.add_column("Creator")
             for img in images:
+                cname = ""
+                if img.compartment_id:
+                    cname = self.c.get_compartment_name(img.compartment_id)
                 table.add_row(
-                    img.display_name, img.os, img.os_version, img.created_by
+                    img.display_name,
+                    cname,
+                    img.os,
+                    img.os_version,
+                    img.created_by,
                 )
             self.c.con.print(table)
             if self.args.os:

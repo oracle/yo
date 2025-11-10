@@ -306,6 +306,16 @@ class YoAd(YoCachedWithId):
 
 
 @dataclasses.dataclass
+class YoCompartment(YoCachedWithId):
+    name: str
+    description: str
+
+    @classmethod
+    def from_oci(cls, oci: "AvailabilityDomain") -> "YoCompartment":
+        return cls(id=oci.id, name=oci.name, description=oci.description)
+
+
+@dataclasses.dataclass
 class YoInstance(YoCachedWithId):
     ad: str
     state: str
@@ -1024,6 +1034,9 @@ class YoCtx:
     _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 5)
     _vas: YoCache[YoVolumeAttachment] = YoCache(YoVolumeAttachment, "vas", 3)
     _ads: YoCache[YoAd] = YoCache(YoAd, "ads", 1, stale_hours=24 * 7)
+    _compartments: YoCache[YoCompartment] = YoCache(
+        YoCompartment, "compartments", 1, stale_hours=24 * 7
+    )
 
     # Put all cache names from above here too so we automatically manage them
     _caches = [
@@ -1035,6 +1048,7 @@ class YoCtx:
         "_vols",
         "_vas",
         "_ads",
+        "_compartments",
     ]
 
     _compute: t.Optional["ComputeClient"] = None
@@ -1145,7 +1159,7 @@ class YoCtx:
 
     @property
     def tenancy_id(self) -> str:
-        if not self._oci_cfg:
+        if getattr(self, "_oci_cfg", None) is None:
             self._setup_oci()
         return t.cast(str, self._oci_cfg["tenancy"])
 
@@ -1709,9 +1723,8 @@ class YoCtx:
         """
         images = []
         for img in self.list_all_images():
-            if img.created_by:
-                continue
-            images.append(img)
+            if img.compartment_id is None:
+                images.append(img)
         return images
 
     def get_image_by_name(self, name: str, load_image: ImageLoad) -> YoImage:
@@ -2970,3 +2983,23 @@ class YoCtx:
             return _numeric(int(m.group(1)))
 
         raise YoExc(f"could not interpret availability domain '{value}'")
+
+    def _load_compartments(self) -> None:
+        if not self._compartments.is_current():
+            results = self.oci.list_call_get_all_results_generator(
+                self.iam.list_compartments,
+                "record",
+                compartment_id=self.tenancy_id,
+                compartment_id_in_subtree=True,
+            )
+            compartments = list(map(YoCompartment.from_oci, results))
+            self._compartments.set(compartments)
+
+    def get_compartment_name(self, id: str) -> str:
+        if ".tenancy." in id:
+            return "(root)"
+        self._load_compartments()
+        compartment = self._compartments.get_by_id(id)
+        if compartment is None:
+            return id
+        return compartment.name
