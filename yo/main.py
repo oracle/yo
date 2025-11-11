@@ -94,6 +94,7 @@ import rich.table
 from oci.exceptions import ServiceError
 from rich.progress import Progress
 from rich.prompt import Confirm
+from rich.style import Style
 from rich.text import Text
 
 import yo.subc as subc
@@ -1592,31 +1593,45 @@ class CompatCmd(YoCmd):
                 for i in images
                 if fnmatch(f"{i.os}:{i.os_version}", self.args.os)
             ]
-        images.sort(key=lambda i: i.name)
+        if self.args.image_names:
+            images.sort(key=lambda i: i.name)
+        else:
+            images.sort(key=lambda i: f"{i.os}:{i.os_version}")
 
         shapes = self.c.list_shapes()
         shapes = [s for s in shapes if fnmatch(s.shape, self.args.shape)]
         shapes.sort(key=lambda s: s.shape)
 
-        def style_by_image(index: int, text: str) -> str:
-            if index % 2 == 1:
-                text = f"[bold]{text}[/bold]"
-            if "aarch64" in images[index].name:
-                text = f"[blue]{text}[/blue]"
-            elif "DenseIO" in images[index].name:
-                text = f"[green]{text}[/green]"
-            return text
+        styles = []
+        for i, image in enumerate(images):
+            color = "#000000"
+            if "aarch64" in image.name:
+                bgcolor = [192, 192, 215]
+            elif "DenseIO" in image.name:
+                bgcolor = [192, 215, 192]
+            elif "GPU" in image.name:
+                bgcolor = [215, 192, 192]
+            else:
+                bgcolor = [215, 215, 215]
+            if i % 2 == 0:
+                bgcolor[0] += 40
+                bgcolor[1] += 40
+                bgcolor[2] += 40
+            bgcolor_s = "#" + "".join(f"{n:02x}" for n in bgcolor)
+            styles.append(Style(color=color, bgcolor=bgcolor_s))
+        default_style = Style(color="#000000", bgcolor="#ffffff")
 
         namelen = self.args.width
         spc = 2
-        for shape in shapes:
+        for j, shape in enumerate(shapes):
+            add_style = Style(underline=True)
             shape_name = shape.shape[:namelen].rjust(namelen)
-            compat = []
+            line = Text(shape_name + " " * spc)
+            line.stylize(default_style + add_style)
             for i, image in enumerate(images):
                 char = "X" if shape.shape in image.compatibility else " "
-                char = style_by_image(i, char)
-                compat.append(char)
-            self.c.con.print(shape_name + " " * spc + "".join(compat))
+                line.append(char, styles[i] + add_style)
+            self.c.con.print(line)
 
         if self.args.image_names:
             os_ver_count = [(i.name, 1) for i in images]
@@ -1628,30 +1643,39 @@ class CompatCmd(YoCmd):
             )
         total = 0
 
-        def residual_bar(index: int) -> str:
-            return "".join(
-                style_by_image(i, "|") for i in range(index, len(images))
-            )
+        def residual_bar(text: Text, index: int) -> None:
+            for i in range(index, len(images)):
+                text.append(" ", styles[i])
 
         for text, count in os_ver_count:
+            hl_line = Text()
+            line = Text()
             spc_before = namelen + spc + total
             if len(text) > spc_before + count:
                 text = text[-spc_before + count :]
-            text = text.rjust(spc_before + count)
-            hl = " " * spc_before
+            line.append(
+                text.rjust(spc_before + count),
+                style=(
+                    styles[total] if self.args.image_names else default_style
+                ),
+            )
+            hl_line.append(" " * spc_before, style=default_style)
             for i in range(total, total + count):
-                hl += style_by_image(i, "^")
-            bar = residual_bar(total + count)
-            hl += bar
-            text += bar
+                hl_line.append("^", styles[i])
+            residual_bar(line, total + count)
+            residual_bar(hl_line, total + count)
             if not self.args.image_names:
-                self.c.con.print(hl)
-            self.c.con.print(text)
+                self.c.con.print(hl_line)
+            self.c.con.print(line)
             total += count
 
-        self.c.con.print(
-            "Color Legend: [blue]aarch64[/blue], [green]DenseIO[/green]"
-        )
+        legend = Text("Color Legend: ")
+        legend.append("aarch64", style="#000000 on rgb(192,192,215)")
+        legend.append(", ")
+        legend.append("DenseIO", style="#000000 on rgb(192,215,192)")
+        legend.append(", ")
+        legend.append("GPU", style="#000000 on rgb(215,192,192)")
+        self.c.con.print(legend)
 
 
 class LaunchCmd(YoCmd):
