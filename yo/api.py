@@ -440,9 +440,7 @@ class YoImage(YoCachedWithId):
         return cls(**d)
 
     @classmethod
-    def from_oci(
-        cls, img: "Image", tag: t.Union[str, None] = None
-    ) -> "YoImage":
+    def from_oci(cls, img: "Image") -> "YoImage":
         os_version = img.operating_system_version
         # Hack: I don't have good support for matching a GPU instance to the
         # appropriate image with GPU support. "Detect" GPU support in the image name
@@ -451,8 +449,6 @@ class YoImage(YoCachedWithId):
             os_version += " GPU"
 
         op_sys = img.operating_system
-        if tag:
-            op_sys += " " + tag
 
         created_by = img.defined_tags.get("Oracle-Tags", {}).get("CreatedBy")
         if not created_by:
@@ -1028,7 +1024,7 @@ class YoCtx:
 
     _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 5)
     _vnics: YoCache[YoVnic] = YoCache(YoVnic, "vnics", 2)
-    _images: YoCache[YoImage] = YoCache(YoImage, "images", 6)
+    _images: YoCache[YoImage] = YoCache(YoImage, "images", 7)
     _consoles: YoCache[YoConsole] = YoCache(YoConsole, "consoles", 2)
     _shapes: YoCache[YoShape] = YoCache(YoShape, "shapes", 5)
     _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 5)
@@ -1699,9 +1695,7 @@ class YoCtx:
             self.con.log("Refreshing cached image list")
             seen_ids = set()
             for cid in compartments:
-                tag = None
-                if ":" in cid:
-                    cid, tag = cid.split(":", maxsplit=1)
+                cid = cid.split(":")[0]
                 img_gen = self.oci.list_call_get_all_results_generator(
                     self.compute.list_images,
                     "record",
@@ -1709,7 +1703,7 @@ class YoCtx:
                 )
                 for img in img_gen:
                     if img.id not in seen_ids:
-                        images.append(YoImage.from_oci(img, tag))
+                        images.append(YoImage.from_oci(img))
                         seen_ids.add(img.id)
             self.con.log("Loading image compatibility")
             list(self._tpe.map(self._load_image_compatibility, images))
@@ -1727,11 +1721,20 @@ class YoCtx:
                 images.append(img)
         return images
 
-    def get_image_by_name(self, name: str, load_image: ImageLoad) -> YoImage:
+    def get_image_by_name(self, spec: str, load_image: ImageLoad) -> YoImage:
+        fields = spec.split(":")
+        if len(fields) == 2:
+            c, name = fields
+            compartment_id = self.identify_compartment(c)
+        elif len(fields) == 1:
+            compartment_id = None
+            name = spec
+        else:
+            raise YoExc(f"Invalid image name specification: {spec}")
         matches = []
         refresh = load_image == ImageLoad.LATEST
         for img in self.list_all_images(refresh):
-            if img.name == name:
+            if img.name == name and img.compartment_id == compartment_id:
                 matches.append(img)
         if load_image == ImageLoad.UNIQUE:
             # Assume images are unique, expect one per name. This is the legacy
@@ -1754,16 +1757,25 @@ class YoCtx:
             return matches[0]
 
     def get_image_by_os(self, os_cfg: str, shape: str) -> YoImage:
-        os, ver = os_cfg.split(":", 1)
+        fields = os_cfg.split(":")
+        if len(fields) == 3:
+            c, os, ver = fields
+            compartment_id = self.identify_compartment(c)
+        elif len(fields) == 2:
+            compartment_id = None
+            os, ver = fields
+        else:
+            raise YoExc(f"Invalid OS specification: {os_cfg}")
 
         def compatible(image: YoImage) -> bool:
             return (
                 image.os == os
                 and image.os_version == ver
+                and image.compartment_id == compartment_id
                 and image.compatibility.get(shape) is not None
             )
 
-        images = self.list_official_images()
+        images = self.list_all_images()
         images = list(filter(compatible, images))
         images.sort(key=lambda i: natural_sort(i.name), reverse=True)
         if not images:
@@ -2986,6 +2998,7 @@ class YoCtx:
 
     def _load_compartments(self) -> None:
         if not self._compartments.is_current():
+            self.con.log("Refreshing cached compartment info")
             results = self.oci.list_call_get_all_results_generator(
                 self.iam.list_compartments,
                 "record",
@@ -2993,13 +3006,34 @@ class YoCtx:
                 compartment_id_in_subtree=True,
             )
             compartments = list(map(YoCompartment.from_oci, results))
+            tenancy = self.iam.get_tenancy(self.tenancy_id)
+            compartments.append(YoCompartment.from_oci(tenancy.data))
             self._compartments.set(compartments)
+            self.save_cache()
 
     def get_compartment_name(self, id: str) -> str:
-        if ".tenancy." in id:
-            return "(root)"
         self._load_compartments()
         compartment = self._compartments.get_by_id(id)
         if compartment is None:
             return id
         return compartment.name
+
+    def identify_compartment(self, name: str) -> str:
+        if name == "":
+            return self.config.instance_compartment_id
+        elif name.startswith("ocid."):
+            return name
+
+        compartments = [
+            self.config.instance_compartment_id
+        ] + self.config.image_compartment_ids
+        for entry in compartments:
+            if ":" in entry:
+                cid, entry_name = entry.split(":", 1)
+                if entry_name == name:
+                    return cid
+            else:
+                cid = entry
+            if self.get_compartment_name(cid) == name:
+                return cid
+        raise YoExc(f"unknown compartment: {name}")

@@ -1460,12 +1460,12 @@ class ImagesCmd(YoCmd):
     compartment you create instances within) as well as any value from
     "yo.image_compartment_ids".
 
-    Custom images will have a "Creator" field, while official images will have
-    this field blank. For official images, there are typically more than one
-    image for a particular "OS" and "version" combination: images get updated
-    with the latest packages regularly. It's easiest for you to simply specify
-    your desired OS and version in yo launch (or your instance profile) rather
-    than searching for an image name here.
+    Custom images will have a "Compartment" field, while official images will
+    have this field blank. For official images, there are typically more than
+    one image for a particular "OS" and "version" combination: images get
+    updated with the latest packages regularly. It's easiest for you to simply
+    specify your desired OS and version in yo launch (or your instance profile)
+    rather than searching for an image name here.
     """
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
@@ -1476,7 +1476,7 @@ class ImagesCmd(YoCmd):
             type=str,
             nargs="?",
             default=None,
-            help="Operating system and version, separated by colon (:)",
+            help="(Compartment name,) operating system, and version, separated by colon (:)",
         )
         parser.add_argument(
             "--verbose",
@@ -1496,14 +1496,24 @@ class ImagesCmd(YoCmd):
         else:
             images = self.c.list_all_images()
         if self.args.os:
-            try:
-                os, ver = self.args.os.split(":", 1)
-            except ValueError:
+            fields = self.args.os.split(":")
+            if len(fields) == 3:
+                c, os, ver = fields
+                cid = self.c.identify_compartment(c)
+            elif len(fields) == 2:
+                os, ver = fields
+                cid = None
+            else:
                 raise YoExc(
-                    f"OS name must be of the form name:version (got '{self.args.os}')"
+                    f"OS name must be of the form name:version or compartment:name:version (got '{self.args.os}')"
                 )
             images = list(
-                filter(lambda x: x.os == os and x.os_version == ver, images)
+                filter(
+                    lambda x: x.os == os
+                    and x.os_version == ver
+                    and x.compartment_id == cid,
+                    images,
+                )
             )
         images.sort(key=lambda i: natural_sort(i.name), reverse=True)
         if self.args.verbose:
@@ -1516,7 +1526,6 @@ class ImagesCmd(YoCmd):
             table.add_column("Compartment")
             table.add_column("OS")
             table.add_column("OS Ver.")
-            table.add_column("Creator")
             for img in images:
                 cname = ""
                 if img.compartment_id:
@@ -1526,7 +1535,6 @@ class ImagesCmd(YoCmd):
                     cname,
                     img.os,
                     img.os_version,
-                    img.created_by,
                 )
             self.c.con.print(table)
             if self.args.os:
@@ -2364,7 +2372,18 @@ class OsCmd(YoCmd):
     def run(self) -> None:
         images = self.c.list_official_images()
         names = sorted(set(f"{i.os}:{i.os_version}" for i in images))
-        self.c.con.print("\n".join(names))
+        custom_images = self.c.list_all_images()
+        custom_names = sorted(
+            set(
+                f"{self.c.get_compartment_name(i.compartment_id)}:{i.os}:{i.os_version}"
+                for i in custom_images
+                if i.compartment_id is not None
+            )
+        )
+        self.c.con.print("[bold]Platform Images[/bold]")
+        self.c.con.print(Text("\n".join(names)))
+        self.c.con.print("\n[bold]Custom Images (by OS):[/bold]")
+        self.c.con.print(Text("\n".join(custom_names)))
 
 
 class ShapesCmd(YoCmd):

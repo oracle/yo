@@ -7,6 +7,18 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
+- **Breaking Change:** custom images must now be prefixed by their compartment
+  name when specified via the ``os`` and ``image`` configs, or when specified
+  via the ``--os`` or ``--image`` arguments to ``yo launch``.
+
+  - For example: ``--image Compartment:CustomImageName`` for a custom image
+    specified by name, or ``--os "Compartment:Oracle Linux:10"`` for a custom
+    image specified by OS.
+  - For **platform images** (i.e. official images provided by Oracle) there is
+    no change, e.g.: ``--os "Oracle Linux:10"``.
+  - This change, while disruptive, ensures that custom images in your tenancy
+    can never take the place of a platform image.
+
 1.11.1 - Wed, Aug 6, 2025
 -------------------------
 

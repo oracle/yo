@@ -246,19 +246,25 @@ removing a value), yo's cache becomes out-of-date in a way which it cannot
 detect. Once you've updated this configuration value, please run ``yo
 cache-clean`` to force yo to fetch the latest image list next time you run it.
 
-In cases where there are conflicting images between compartments, a notation
-can be appended to an image compartment ``os`` name. Using the extension of
-``:<token>`` to specify a differentiator, the adjusted configuration would be:
+.. warning::
 
-.. code-block::
+   In prior versions of Yo, it was possible to add a "tag" to the end of a
+   compartment ID, separated by a colon. Yo would then append this tag to the
+   name of the OS name for every image contained in the compartment, which could
+   be used to help disambiguate images which had the same OS name but resided in
+   different compartments.
 
-   image_compartment_ids =
-       ocid.compartment.oc1..foobarsomelongstringhere
-       ocid.compartment.oc1..theqadeptimageareafortst:QA
+   This behavior is now deprecated. Yo no longer modifies OS names using this
+   tag. The tag may still be specified in the configuration file, in order to
+   allow existing configs to continue to function.
 
-For the images found in the second compartment, each ``os`` name will have
-``QA`` appended to allow them to be identifiable independently from the similar
-images found in the first compartment.
+   Instead, conflicting images must now be disambiguated by specifying the
+   compartment name prior to the image's OS or name. The compartment name is
+   required in all cases now, rather than only when names conflict.
+
+   The configured tag may still be used to specify an alternate name for the
+   compartment. This can be used for cases when the compartment names themselves
+   are duplicated.
 
 .. _silence_tag:
 
@@ -512,14 +518,29 @@ is selected.
 ``os``
 ~~~~~~
 
-(String, Optional) Which operating system to use to create the instance. This
-field is a combination of a name and a version, separated by a colon. For
-example, ``Oracle Linux:8``. You can list the available operating systems with
-``yo os``. Please note that ``os`` is not the only way to specify which image
-your instance boots with. The ``yo launch`` command also provides the option
-``--image``, which can override the OS selection with a custom image name.
-However, at this time there is no way to specify a custom image in an instance
-profile.
+(String, Optional) Select an operating system for the instance. This
+configuration has the effect of telling Yo how to select an OCI image. Yo will
+select the most recent image with the corresponding OS name and version.
+
+Images may be either **platform images** or **custom images**. Platform images
+are provided by Oracle. They don't reside in any OCI compartment -- they are
+simply part of the service. Custom images are uploaded by users to a compartment
+within their tenancy.
+
+All images may specify an operating system name and version as metadata. As
+such, there is a need to disambiguate the platform images from custom images.
+The OS configuration may be specified in two ways:
+
+- ``OS NAME:OS VERSION`` - specifies a **platform image** with the given name
+  and version.
+- ``COMPARTMENT:OS NAME:OS VERSION`` - specifies a **custom image** from a
+  specific compartment, with the given OS name and version. Note that the
+  compartment name here must either correspond to your
+  ``instance_compartment_id`` or be one of your ``image_compartment_ids``. You
+  cannot name an arbitrary compartment here.
+
+You can use the ``yo os`` command to list all the platform and custom images
+available to Yo by their OS name.
 
 This configuration value is optional: you may specify either ``os`` or ``image``
 (see below). You must specify exactly one of these values, otherwise an error
@@ -542,7 +563,7 @@ example:
 
     [instances.custom]
     inherit = base
-    image = my-custom-image
+    image = my-compartment:my-custom-image
     # leave blank without "=" to clear the value
     os
 
@@ -551,9 +572,19 @@ example:
 ``image``
 ~~~~~~~~~
 
-(String, Optional) The name of a custom image to use. Yo will search for this
-image inside the same compartment that it creates your instances
-(``instance_compartment_id``).
+(String, Optional) The name (and compartment) of an image to use.
+
+Similar to the ``os`` configuration, Yo uses this to select either a **platform
+image** or a **custom image**. Platform images do not have a compartment, and
+thus they are specified by name. Custom images reside in a compartment, and thus
+must be prefixed by this name. For example:
+
+- ``Oracle-Linux-10.0-2025.10.23-0`` specifies a platform image, while
+- ``My Custom Images:Oracle-Linux-Custom-10.0-2025.10.23-0`` specifies a named
+  image from the "My Custom Images" compartment of your tenancy.
+
+To use a custom image, the containing compartment must either be your
+``instance_compartment_id`` or one of your ``image_compartment_ids``.
 
 This configuration is optional, but exactly one of ``os`` or ``image`` must be
 specified. See the note directly above for more info.
