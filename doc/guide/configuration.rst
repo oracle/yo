@@ -697,6 +697,19 @@ alias section:
    con = console
    s = ssh
 
+Global Configuration Options
+----------------------------
+
+Yo uses the OCI Python SDK. Any environment variable which affects the behavior
+of the SDK will similarly affect Yo. In addition, Yo implements some environment
+variables which impact its behavior:
+
+- ``OCI_CLI_PASSPHRASE``: if the OCI API key is protected by a passphrase, this
+  variable can be used to provide the passphrase without an interactive prompt.
+
+- ``YO_LOG_WITHOUT_TIME``: if provided, yo's logged status messages will not
+  include a timestamp.
+
 Sample Configuration File
 -------------------------
 

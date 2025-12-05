@@ -1070,6 +1070,16 @@ class YoCtx:
         # region, VCN ID, and AD configuration, all in one place.
         self._oci_cfg["region"] = self.config.region
 
+        # Some API keys have passphrases, and the OCI CLI supports a
+        # "OCI_CLI_PASSPHRASE" environment variable. This is probably the most
+        # secure way to communicate the passphrase (short of a human entering
+        # it every time). Let's support this environment variable. Note that
+        # doing it this way is actually using OCI's deprecated "pass_phrase"
+        # configuration item, but that's how the CLI implements it as well, so
+        # this should be safe.
+        if "OCI_CLI_PASSPHRASE" in os.environ:
+            self._oci_cfg["pass_phrase"] = os.environ["OCI_CLI_PASSPHRASE"]
+
         # First try to load a client without using a passphrase. If that fails,
         # we need to prompt and retry with a passphrase. If that fails, the
         # passphrase was likely wrong, so we continue until we succeed in
