@@ -3093,6 +3093,51 @@ class VolumeRename(YoCmd):
         self.c.rename_volume(volume, new_name)
 
 
+class VolumeResize(YoCmd):
+    name = "volume resize"
+    group = "Volume Management Commands"
+    description = "Resize a block or boot volume."
+
+    def add_args(self, parser: argparse.ArgumentParser) -> None:
+        self.add_with_completer(
+            parser,
+            self.complete_volume,
+            "volume_name",
+            type=str,
+            help="name of volume",
+        )
+        parser.add_argument(
+            "new_size_gbs",
+            type=int,
+            help="new size of volume in GiB",
+        )
+        parser.add_argument(
+            "--no-exact-name",
+            action="store_false",
+            dest="exact_name",
+            default=None,
+            help="follow Yo's normal rules on standardizing volume names"
+            " (this is the default, but can be used to override the config file)",
+        )
+        parser.add_argument(
+            "--exact-name",
+            "-E",
+            action="store_true",
+            dest="exact_name",
+            default=None,
+            help="use the volume name exactly as given",
+        )
+
+    def run(self) -> None:
+        name = standardize_name(
+            self.args.volume_name, self.args.exact_name, self.c.config
+        )
+        volume = self.c.get_volume(name)
+        volume = self.c.resize_volume(volume, self.args.new_size_gbs)
+        self.c.wait_volume(volume, "AVAILABLE")
+        self.c.con.log("Resized!")
+
+
 def detach_volume_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--no-exact-name",

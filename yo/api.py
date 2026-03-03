@@ -2531,6 +2531,25 @@ class YoCtx:
         self.save_cache()
         return volume
 
+    def resize_volume(self, volume: YoVolume, new_size: int) -> YoVolume:
+        if new_size <= volume.size_in_gbs:
+            raise YoExc("The new size must be larger than the current size")
+        if volume.state != "AVAILABLE":
+            raise YoExc("Volume must be in AVAILABLE state to resize")
+        if volume.kind == VolumeKind.BOOT:
+            update_details = self.oci.UpdateBootVolumeDetails(
+                size_in_gbs=new_size
+            )
+            result = self.block.update_boot_volume(volume.id, update_details)
+            new_volume = YoVolume.from_oci_boot(result.data)
+        else:
+            update_details = self.oci.UpdateVolumeDetails(size_in_gbs=new_size)
+            result = self.block.update_volume(volume.id, update_details)
+            new_volume = YoVolume.from_oci_block(result.data)
+        self._vols.insert(new_volume)
+        self.save_cache()
+        return new_volume
+
     def delete_volume(self, volume: YoVolume) -> YoVolume:
         if volume.kind == VolumeKind.BLOCK:
             self.block.delete_volume(volume.id)
