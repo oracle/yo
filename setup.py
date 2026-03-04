@@ -67,6 +67,12 @@ setup(
         "argcomplete",
     ]
     + additional_requires,
+    extras_require={
+        "tests": [
+            "pytest",
+            "pytest-cov",
+        ],
+    },
     url="https://github.com/oracle/yo",
     author="Oracle",
     author_email="stephen.s.brennan@oracle.com",
