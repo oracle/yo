@@ -238,7 +238,7 @@ class YoConfig:
             "exact_name",
             "resource_filtering",
             "allow_hash_in_config_value",
-            "allow_legacy_imdc_endpoints",
+            "allow_legacy_imds_endpoints",
         ]
         for b in bools:
             if b in d:
