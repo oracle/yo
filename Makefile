@@ -103,8 +103,10 @@ prerelease: _release_sanity_check test
 .PHONY: rpm
 rpm:
 	git archive HEAD --format=tar.gz --prefix=yo-$(VERSION)/ -o buildrpm/v$(VERSION).tar.gz
-	masa uek shell --ol 10 --uek 8 bash -x buildrpm/do-build.sh
-	masa uek shell --ol 9  --uek 8 bash -x buildrpm/do-build.sh
+	podman run --pull=always --rm -v $$PWD/buildrpm:/io:rw -w /io \
+		container-registry.oracle.com/os/oraclelinux:10 /bin/sh /io/do-build.sh
+	podman run --pull=always --rm -v $$PWD/buildrpm:/io:rw -w /io \
+		container-registry.oracle.com/os/oraclelinux:9 /bin/sh /io/do-build.sh
 
 .PHONY: release
 release: _release_sanity_check test rpm
