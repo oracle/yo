@@ -170,6 +170,8 @@ _yo_launch_command() {
     \*{-t+,--task=}'[Tasks to run once the instance is up]:task:_yo_tasks'
     '--load-image=[Strategy for loading images]:strategy:(UNIQUE LATEST)'
     '(-u --username)'{-u+,--username=}'[Username for logging into the instance]:user:_users'
+    '--enable-cloudguard-wlp[Enable Cloud Guard Workload Protection agent plugin]'
+    '--disable-cloudguard-wlp[Disable Cloud Guard Workload Protection agent plugin]'
   )
   _arguments -S -A '*' $_yo_launch_options
 }

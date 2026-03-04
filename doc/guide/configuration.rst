@@ -681,6 +681,19 @@ support cloud-init user data differently, so this functionality is not
 guaranteed on all images. Please test this with your intended images before
 relying on it.
 
+``cloudguard_wlp``
+~~~~~~~~~~~~~~~~~~
+
+(Boolean, Optional, Default: false) Controls whether Yo adds an OCI
+``agent_config`` section that enables plugin ``Cloud Guard Workload
+Protection`` during launch.
+
+This can be overridden on the command line via
+``--enable-cloudguard-wlp`` or ``--disable-cloudguard-wlp``.
+
+For more details on OCI plugin management, see:
+https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/manage-plugins.htm
+
 Command Aliases
 ---------------
 

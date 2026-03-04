@@ -1859,6 +1859,21 @@ class LaunchCmd(YoCmd):
             action="store_true",
             help="Allows IMDS v1 endpoints (overrides configured value)",
         )
+        grp = parser.add_mutually_exclusive_group()
+        grp.add_argument(
+            "--enable-cloudguard-wlp",
+            dest="cloudguard_wlp",
+            action="store_true",
+            default=None,
+            help="Enable Cloud Guard Workload Protection agent plugin",
+        )
+        grp.add_argument(
+            "--disable-cloudguard-wlp",
+            dest="cloudguard_wlp",
+            action="store_false",
+            default=None,
+            help="Disable Cloud Guard Workload Protection agent plugin",
+        )
         parser.add_argument(
             "--install",
             "-I",
@@ -1929,6 +1944,7 @@ class LaunchCmd(YoCmd):
             cpu=self.args.cpu,
             username=self.args.username,
             boot_volume_size_gbs=self.args.boot_volume_size_gbs,
+            cloudguard_wlp=self.args.cloudguard_wlp,
         )
         profile = self.c.instance_profiles[self.args.profile]
         user = create_args["username"]

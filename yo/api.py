@@ -39,6 +39,7 @@ Yo context module - contains the code for interacting with/hiding OCI API
 import base64
 import collections
 import concurrent.futures
+import configparser
 import contextlib
 import dataclasses
 import datetime
@@ -115,6 +116,8 @@ AUTO_TAG_DOC_LINK = "https://docs.oracle.com/en-us/iaas/Content/Tagging/Concepts
 
 OS_TO_USER = collections.defaultdict(lambda: "opc")
 OS_TO_USER["Canonical Ubuntu"] = "ubuntu"
+DEFAULT_CLOUDGUARD_WLP_ENABLED = False
+CLOUDGUARD_WLP_PLUGIN_NAME = "Cloud Guard Workload Protection"
 
 
 def fromisoformat(s: str) -> datetime.datetime:
@@ -217,6 +220,7 @@ class InstanceProfile:
     mem: t.Optional[float] = None
     load_image: ImageLoad = ImageLoad.UNIQUE
     username: t.Optional[str] = None
+    cloudguard_wlp: t.Optional[bool] = None
     install: t.List[str] = dataclasses.field(default_factory=list)
 
     def create_arg_dict(self, ctx: "YoCtx") -> t.Dict[str, t.Any]:
@@ -238,11 +242,26 @@ class InstanceProfile:
         check_args_dataclass(
             InstanceProfile, d.keys(), f"~/.oci/yo.ini \\[{name}] section"
         )
+
+        def parse_bool(v: t.Any) -> bool:
+            if isinstance(v, bool):
+                return v
+            if isinstance(v, str):
+                lowered = v.lower()
+                if lowered in configparser.ConfigParser.BOOLEAN_STATES:
+                    return bool(
+                        configparser.ConfigParser.BOOLEAN_STATES[lowered]
+                    )
+            raise YoExc(
+                f'In {name}: configuration "cloudguard_wlp" must be true or false'
+            )
+
         types: t.Dict[str, t.Callable[[t.Any], t.Any]] = {
             "boot_volume_size_gbs": int,
             "cpu": float,
             "mem": float,
             "load_image": ImageLoad,
+            "cloudguard_wlp": parse_bool,
             "tasks": flex_list,
             "install": flex_list,
         }
@@ -1945,6 +1964,20 @@ class YoCtx:
             details["shape_config"] = self.oci.LaunchInstanceShapeConfigDetails(
                 **shape_config,
             )
+        cloudguard_wlp = details.pop(
+            "cloudguard_wlp", DEFAULT_CLOUDGUARD_WLP_ENABLED
+        )
+        if cloudguard_wlp:
+            details["agent_config"] = self.oci.LaunchInstanceAgentConfigDetails(
+                plugins_config=[
+                    self.oci.InstanceAgentPluginConfigDetails(
+                        name=CLOUDGUARD_WLP_PLUGIN_NAME,
+                        desired_state=(
+                            self.oci.InstanceAgentPluginConfigDetails.DESIRED_STATE_ENABLED
+                        ),
+                    )
+                ],
+            )
 
         # The IMDS is the instance metadata service. v1 endpoints are less
         # secure and most images support v2, so v1 should be disabled.
@@ -2191,6 +2224,7 @@ class YoCtx:
         cpu: t.Optional[float] = None,
         username: t.Optional[str] = None,
         boot_volume_size_gbs: t.Optional[int] = None,
+        cloudguard_wlp: t.Optional[bool] = None,
     ) -> t.Dict[str, t.Any]:
         """
         Create a launch config dictionary which for launch_instance().
@@ -2218,6 +2252,7 @@ class YoCtx:
         :param username: requested username
         :param exact_name: whether to use the "name" without modification
         :param boot_volume_size_gbs: size of boot volume
+        :param cloudguard_wlp: override Cloud Guard Workload Protection plugin
         """
         profile = self.instance_profiles[profile_name]
         create_args = profile.create_arg_dict(self)
@@ -2277,6 +2312,12 @@ class YoCtx:
         create_args["display_name"] = name
         if boot_volume_size_gbs is not None:
             create_args["boot_volume_size_gbs"] = boot_volume_size_gbs
+        if cloudguard_wlp is not None:
+            create_args["cloudguard_wlp"] = cloudguard_wlp
+        elif profile.cloudguard_wlp is not None:
+            create_args["cloudguard_wlp"] = profile.cloudguard_wlp
+        else:
+            create_args["cloudguard_wlp"] = DEFAULT_CLOUDGUARD_WLP_ENABLED
         return create_args
 
     def instance_action(self, inst_id: str, action: str) -> YoInstance:

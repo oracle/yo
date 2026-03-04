@@ -69,9 +69,11 @@ from oci.core.models import AttachServiceDeterminedVolumeDetails  # noqa
 from oci.core.models import CaptureConsoleHistoryDetails  # noqa
 from oci.core.models import CreateInstanceConsoleConnectionDetails  # noqa
 from oci.core.models import CreateVolumeDetails  # noqa
+from oci.core.models import InstanceAgentPluginConfigDetails  # noqa
 from oci.core.models import InstanceOptions  # noqa
 from oci.core.models import InstanceSourceViaBootVolumeDetails  # noqa
 from oci.core.models import InstanceSourceViaImageDetails  # noqa
+from oci.core.models import LaunchInstanceAgentConfigDetails  # noqa
 from oci.core.models import LaunchInstanceDetails  # noqa
 from oci.core.models import LaunchInstanceShapeConfigDetails  # noqa
 from oci.core.models import UpdateBootVolumeDetails  # noqa
