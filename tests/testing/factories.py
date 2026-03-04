@@ -38,10 +38,18 @@ import typing as t
 import uuid
 from types import SimpleNamespace
 
+from yo.api import AttachmentType
 from yo.api import now
+from yo.api import SAVEDATA
+from yo.api import ShapeMemoryOptions
+from yo.api import ShapeOcpuOptions
 from yo.api import TERMPROTECT
+from yo.api import VolumeKind
 from yo.api import YoImage
 from yo.api import YoInstance
+from yo.api import YoShape
+from yo.api import YoVolume
+from yo.api import YoVolumeAttachment
 from yo.util import YoConfig
 from yo.util import YoRegion
 
@@ -188,3 +196,170 @@ def oci_instance_fromyo(i: YoInstance) -> t.Any:
         ocpus=i.ocpu,
         freeform_tags={TERMPROTECT: str(i.termination_protected).lower()},
     )
+
+
+def shape_factory(**kwargs) -> YoShape:
+    defaults = {
+        "name": SHAPE,
+        "shape": SHAPE,
+        "processor_description": "",
+        "ocpus": 1,
+        "memory_in_gbs": 1,
+        "networking_bandwidth_in_gbps": 1,
+        "max_vnic_attachments": 1,
+        "gpus": 0,
+        "gpu_description": "",
+        "local_disks": 0,
+        "local_disks_total_size_in_gbs": 0,
+        "local_disk_description": "",
+        "is_flexible": False,
+        "quota_names": [],
+        "ocpu_options": None,
+        "memory_options": None,
+        "networking_bandwidth_options": None,
+        "max_vnic_attachment_options": None,
+    }
+    defaults.update(kwargs)
+    return YoShape(**defaults)  # type: ignore
+
+
+def flex_shape_factory(**kwargs) -> YoShape:
+    defaults = {
+        "name": "VM.Standard.A1.Flex",
+        "shape": "VM.Standard.A1.Flex",
+        "ocpus": 1,
+        "memory_in_gbs": 6,
+        "is_flexible": True,
+        "ocpu_options": ShapeOcpuOptions(min=1, max=4),
+        "memory_options": ShapeMemoryOptions(
+            default_per_ocpu_gbs=6,
+            min_gbs=6,
+            max_gbs=64,
+            min_per_ocpu_gbs=1,
+            max_per_ocpu_gbs=24,
+        ),
+    }
+    defaults.update(kwargs)
+    return shape_factory(**defaults)
+
+
+def volume_factory(**kwargs) -> YoVolume:
+    defaults = {
+        "id": _random_id(),
+        "name": _unique_name(),
+        "ad": AVAILABILITY_DOMAIN,
+        "state": "AVAILABLE",
+        "kind": VolumeKind.BLOCK,
+        "image_id": None,
+        "compartment_id": _random_id(),
+        "size_in_gbs": 100,
+        "time_created": now(),
+        "created_by": MY_EMAIL,
+        "alt_name": None,
+        "freeform_tags": {},
+    }
+    defaults.update(kwargs)
+    if defaults["kind"] == VolumeKind.BOOT and defaults["image_id"] is None:
+        defaults["image_id"] = _random_id()
+    if defaults["alt_name"] is None:
+        defaults["alt_name"] = str(defaults["name"]).replace(
+            " (Boot Volume)", ""
+        )
+    return YoVolume(**defaults)  # type: ignore
+
+
+def saved_boot_volume_factory(name: str, **kwargs) -> YoVolume:
+    saved = kwargs.pop(
+        "savedata",
+        f"1,VM.Standard.A1.Flex,2,12,opc,{name}",
+    )
+    tags = dict(kwargs.pop("freeform_tags", {}))
+    tags[SAVEDATA] = saved
+    defaults = {
+        "name": f"{name} (Boot Volume)",
+        "kind": VolumeKind.BOOT,
+        "image_id": _random_id(),
+        "alt_name": name,
+        "freeform_tags": tags,
+    }
+    defaults.update(kwargs)
+    return volume_factory(**defaults)
+
+
+def volume_attachment_factory(**kwargs) -> YoVolumeAttachment:
+    defaults = {
+        "id": _random_id(),
+        "name": "attachment",
+        "ad": AVAILABILITY_DOMAIN,
+        "state": "ATTACHED",
+        "kind": VolumeKind.BLOCK,
+        "compartment_id": _random_id(),
+        "volume_id": _random_id(),
+        "instance_id": _random_id(),
+        "time_created": now(),
+        "attachment_type": AttachmentType.PV,
+        "ro": False,
+        "shared": False,
+        "device": "/dev/oracleoci/oraclevdb",
+        "iscsi_ipv4": None,
+        "iscsi_port": None,
+        "iscsi_chap_username": None,
+        "iscsi_chap_password": None,
+        "iscsi_iqn": None,
+    }
+    defaults.update(kwargs)
+    return YoVolumeAttachment(**defaults)  # type: ignore
+
+
+def oci_boot_volume_fromyo(vol: YoVolume) -> t.Any:
+    return SimpleNamespace(
+        id=vol.id,
+        display_name=vol.name,
+        availability_domain=vol.ad,
+        lifecycle_state=vol.state,
+        image_id=vol.image_id,
+        compartment_id=vol.compartment_id,
+        size_in_gbs=vol.size_in_gbs,
+        time_created=vol.time_created,
+        defined_tags={},
+        freeform_tags=vol.freeform_tags,
+    )
+
+
+def oci_block_attachment_factory(**kwargs) -> t.Any:
+    defaults = {
+        "id": _random_id(),
+        "display_name": "attach-block",
+        "availability_domain": AVAILABILITY_DOMAIN,
+        "lifecycle_state": "ATTACHING",
+        "compartment_id": _random_id(),
+        "volume_id": _random_id(),
+        "instance_id": _random_id(),
+        "time_created": now(),
+        "attachment_type": "paravirtualized",
+        "is_shareable": False,
+        "is_read_only": False,
+        "device": "/dev/oracleoci/oraclevdb",
+        "ipv4": None,
+        "port": None,
+        "chap_username": None,
+        "chap_secret": None,
+        "iqn": None,
+    }
+    defaults.update(kwargs)
+    return SimpleNamespace(**defaults)
+
+
+def oci_boot_attachment_factory(**kwargs) -> t.Any:
+    defaults = {
+        "id": _random_id(),
+        "display_name": "attach-boot",
+        "availability_domain": AVAILABILITY_DOMAIN,
+        "lifecycle_state": "ATTACHING",
+        "compartment_id": _random_id(),
+        "boot_volume_id": _random_id(),
+        "instance_id": _random_id(),
+        "time_created": now(),
+    }
+    defaults.update(kwargs)
+    return SimpleNamespace(**defaults)

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from yo.api import YoCtx
 from yo.tasks import get_tasklib
 from yo.tasks import list_tasks
 from yo.tasks import YoTask
@@ -64,3 +65,12 @@ def clear_task_caches() -> t.Iterator[None]:
     YoTask.load.cache_clear()
     list_tasks.cache_clear()
     get_tasklib.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def clear_yoctx_class_caches() -> t.Iterator[None]:
+    for cache_attr in YoCtx._caches:
+        getattr(YoCtx, cache_attr).clear()
+    yield
+    for cache_attr in YoCtx._caches:
+        getattr(YoCtx, cache_attr).clear()
