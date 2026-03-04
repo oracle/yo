@@ -22,7 +22,7 @@ repos:
     hooks:
     -   id: mypy
         args: [--strict, --disallow-untyped-calls]
-        exclude: "(tests|doc|scripts)/.*"
+        exclude: "(tests|doc|scripts)/.*|setup.py"
         additional_dependencies:
         -   types-setuptools
         -   setuptools
