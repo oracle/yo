@@ -1762,19 +1762,33 @@ class YoCtx:
             raise YoExc(f"Invalid image name specification: {spec}")
         matches = []
         refresh = load_image == ImageLoad.LATEST
+        alternatives = []
         for img in self.list_all_images(refresh):
             if img.name == name and img.compartment_id == compartment_id:
                 matches.append(img)
-        if load_image == ImageLoad.UNIQUE:
-            # Assume images are unique, expect one per name. This is the legacy
-            # cached method.
-            return one(
-                matches,
-                'Looking for one image named "{}", but found none'.format(name),
-                'Looking for one image named "{}", but found multiple'.format(
-                    name
-                ),
+            elif img.name == name:
+                alternatives.append(img)
+        if load_image == ImageLoad.UNIQUE and len(matches) > 1:
+            raise YoExc(
+                f"More than one image matches {spec}, but a single match was "
+                "expected. To use the latest image, --load-image=LATEST"
             )
+        elif not matches and alternatives:
+            alternative_compartments = ", ".join(
+                set(
+                    self.get_compartment_name(a.compartment_id)
+                    for a in alternatives
+                )
+            )
+            raise YoExc(
+                f"No platform image exists with name {name}, but there are "
+                "matching custom image(s) in compartment(s):"
+                f"{alternative_compartments}. "
+                f"Specify it as COMPARTMENT_NAME:{name} instead. "
+                "See the changelog for Yo 1.12.0 for details: "
+                "https://oracle.github.io/yo/changelog.html"
+            )
+
         elif not matches:
             raise YoExc(
                 'Looking the latest image named "{}", but found none.'.format(
@@ -1796,19 +1810,41 @@ class YoCtx:
         else:
             raise YoExc(f"Invalid OS specification: {os_cfg}")
 
-        def compatible(image: YoImage) -> bool:
-            return (
+        images = []
+        alternatives = []
+
+        for image in self.list_all_images():
+            compatible = (
                 image.os == os
-                and image.os_version == ver
-                and image.compartment_id == compartment_id
+                and image.os_version
                 and image.compatibility.get(shape) is not None
             )
-
-        images = self.list_all_images()
-        images = list(filter(compatible, images))
+            compartment_match = image.compartment_id == compartment_id
+            is_alternative = (
+                compartment_id is None and image.compartment_id is not None
+            )
+            if compatible and compartment_match:
+                images.append(image)
+            elif compatible and is_alternative:
+                alternatives.append(image)
         images.sort(key=lambda i: natural_sort(i.name), reverse=True)
-        if not images:
+        if not images and not alternatives:
             raise YoExc(f"No matching images for {os_cfg} and shape {shape}...")
+        elif not images:
+            alternative_compartments = ", ".join(
+                set(
+                    self.get_compartment_name(a.compartment_id)
+                    for a in alternatives
+                )
+            )
+            raise YoExc(
+                f"No platform image exists with OS {os_cfg}, but there are "
+                "matching custom image(s) in compartment(s): "
+                f"{alternative_compartments}. "
+                f"Specify it as COMPARTMENT_NAME:{os_cfg} instead. "
+                "See the changelog for Yo 1.12.0 for details: "
+                "https://oracle.github.io/yo/changelog.html"
+            )
 
         image = images[0]
         dn = image.name
@@ -3081,7 +3117,9 @@ class YoCtx:
             self._compartments.set(compartments)
             self.save_cache()
 
-    def get_compartment_name(self, id: str) -> str:
+    def get_compartment_name(self, id: t.Optional[str]) -> str:
+        if not id:
+            return "(root)"
         self._load_compartments()
         compartment = self._compartments.get_by_id(id)
         if compartment is None:
