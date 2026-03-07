@@ -40,7 +40,7 @@ from setuptools import setup
 long_description = open("README.md").read()
 
 # Do not forget to update buildrpm/yo.spec, and CHANGELOG.md
-VERSION = "1.12.0.dev0"
+VERSION = "1.12.0"
 
 additional_requires = []  # type: ignore
 

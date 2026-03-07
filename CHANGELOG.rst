@@ -7,17 +7,27 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
+1.12.0 - Fri, Mar 6, 2025
+--------------------------
+
 - **Breaking Change:** custom images must now be prefixed by their compartment
   name when specified via the ``os`` and ``image`` configs, or when specified
   via the ``--os`` or ``--image`` arguments to ``yo launch``.
 
   - For example: ``--image Compartment:CustomImageName`` for a custom image
-    specified by name, or ``--os "Compartment:Oracle Linux:10"`` for a custom
+    specified by name, or ``--os "Compartment:MyCustomOS:1.0"`` for a custom
     image specified by OS.
   - For **platform images** (i.e. official images provided by Oracle) there is
     no change, e.g.: ``--os "Oracle Linux:10"``.
   - This change, while disruptive, ensures that custom images in your tenancy
-    can never take the place of a platform image.
+    can never take the place of a platform image, even if they have the same
+    name or OS label as a platform image.
+
+- Add ``yo volume resize`` command.
+- Add support for Cloudguard workload protection plugin (opt-in).
+- Add support for using ``OCI_CLI_PASSPHRASE`` when set
+- Improved error handling for a common error when attempting to attach a volume
+  to an instance in a different availability domain.
 
 1.11.1 - Wed, Aug 6, 2025
 -------------------------

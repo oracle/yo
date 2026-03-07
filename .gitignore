@@ -5,3 +5,5 @@ build
 dist
 .tox
 .coverage
+AGENTS.md
+todo.md
