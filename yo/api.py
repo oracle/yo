@@ -2649,6 +2649,14 @@ class YoCtx:
         ro: bool = False,
         shared: bool = False,
     ) -> YoVolumeAttachment:
+        inst = self.get_instance_by_id(inst_id)
+        if inst.ad != vol.ad:
+            raise YoExc(
+                f"The volume ({vol.ad}) and instance ({inst.ad}) are not in "
+                "the same availability domain -- attaching them is not "
+                "supported."
+            )
+
         # This function is for attaching volumes as "data volumes". Boot
         # volumes can actually attach and detach just fine as data volumes, you
         # just supply their ID like you would a block volume ID. Of course, this

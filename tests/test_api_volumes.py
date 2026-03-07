@@ -46,6 +46,9 @@ def test_attach_and_detach_block_volume(tmp_path):
     ctx = _make_ctx(tmp_path)
     vol = volume_factory(name="data", kind=VolumeKind.BLOCK)
     inst_id = str(uuid.uuid4())
+    ctx.get_instance_by_id = mock.Mock(
+        return_value=instance_factory(id=inst_id, ad=vol.ad)
+    )
 
     ctx._oci = SimpleNamespace(
         AttachServiceDeterminedVolumeDetails=lambda **k: SimpleNamespace(**k),
@@ -80,6 +83,9 @@ def test_attach_and_detach_boot_volume(tmp_path):
     ctx = _make_ctx(tmp_path)
     vol = volume_factory(name="boot (Boot Volume)", kind=VolumeKind.BOOT)
     inst_id = str(uuid.uuid4())
+    ctx.get_instance_by_id = mock.Mock(
+        return_value=instance_factory(id=inst_id, ad=vol.ad)
+    )
 
     ctx._oci = SimpleNamespace(
         AttachBootVolumeDetails=lambda **k: SimpleNamespace(**k),
