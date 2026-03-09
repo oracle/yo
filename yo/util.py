@@ -401,7 +401,7 @@ def get_version_string(dist: str) -> str:
 
 def current_yo_version() -> t.Tuple[int, int, int]:
     ver_str = get_version_string("yo")
-    g1, g2, g3, _ = ver_str.split(".")
+    g1, g2, g3 = ver_str.split(".")
     # NOTE: does not support prereleases
     return (int(g1), int(g2), int(g3))
 
