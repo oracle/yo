@@ -1816,7 +1816,7 @@ class YoCtx:
         for image in self.list_all_images():
             compatible = (
                 image.os == os
-                and image.os_version
+                and image.os_version == ver
                 and image.compatibility.get(shape) is not None
             )
             compartment_match = image.compartment_id == compartment_id
