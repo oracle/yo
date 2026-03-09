@@ -7,6 +7,11 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
+1.12.2 - Mon, Mar 9, 2025
+--------------------------
+
+- Fixed image selection for ``OS:VERSION`` -- version was being ignored.
+
 1.12.1 - Mon, Mar 9, 2025
 --------------------------
 
