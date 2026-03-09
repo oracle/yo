@@ -1,7 +1,7 @@
 # Copyright (c) 2025, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 Name:           yo
-Version:        1.12.0
+Version:        1.12.1
 Release:        0%{?dist}
 Summary:        A fast and simple CLI client for managing OCI instances
 
