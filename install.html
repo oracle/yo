@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation Guide &#8212; yo v1.11.1 documentation</title>
+    <title>Installation Guide &#8212; yo v1.12.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <script src="_static/documentation_options.js?v=63a3f62f"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/documentation_options.js?v=55a4acdd"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="icon" href="_static/yo.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -79,10 +79,11 @@ region, open the OCI Web UI and see what it defaults to.</p>
 contains the code <code class="docutils literal notranslate"><span class="pre">NotAuthorizedOrNotFound</span></code>, then there’s an alternative way
 to setup your OCI credentials:</p>
 <ol class="arabic simple">
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">oci</span> <span class="pre">setup</span> <span class="pre">keys</span></code>. At the prompt, you probably want to type “N/A” to
-avoid setting a passphrase for the key. However, if you really feel it is
-necessary, you can use a passphrase. Yo will detect that it is necessary and
-prompt you for it.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">oci</span> <span class="pre">setup</span> <span class="pre">keys</span></code>. You will be prompted for a passphrase. You can type
+“N/A” if you would not like one, which is easiest. If you elect to set a
+passphrase, then Yo will prompt you for it each time you run a command (but
+you can provide it via the <code class="docutils literal notranslate"><span class="pre">OCI_CLI_PASSPHRASE</span></code> environment variable to
+avoid the prompt).</p></li>
 <li><p>Open the OCI web console. Navigate to your profile using the icon at the top
 right (or search your email address in the search bar). On your profile page,
 select the “API keys” link, and then choose “Add API key”.</p></li>
@@ -223,7 +224,7 @@ up, visit  <a class="reference internal" href="optional_setup.html#optional-feat
       &#169;2020-2025, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |

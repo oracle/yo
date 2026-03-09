@@ -76,3 +76,14 @@ yo volume rename
    :module: yo.main
    :func: cmd_volume_rename_args
    :prog: yo volume rename
+
+
+.. _yo_volume_resize:
+
+yo volume resize
+----------------
+
+.. argparse::
+   :module: yo.main
+   :func: cmd_volume_resize_args
+   :prog: yo volume resize

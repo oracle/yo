@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; yo v1.11.1 documentation</title>
+    <title>Changelog &#8212; yo v1.12.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <script src="_static/documentation_options.js?v=63a3f62f"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/documentation_options.js?v=55a4acdd"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="icon" href="_static/yo.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -39,6 +39,30 @@
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading">¶</a></h2>
 <p>Any changes which are committed, but not yet present in a released
 version, should appear here.</p>
+</section>
+<section id="fri-mar-6-2025">
+<h2>1.12.0 - Fri, Mar 6, 2025<a class="headerlink" href="#fri-mar-6-2025" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Breaking Change:</strong> custom images must now be prefixed by their compartment
+name when specified via the <code class="docutils literal notranslate"><span class="pre">os</span></code> and <code class="docutils literal notranslate"><span class="pre">image</span></code> configs, or when specified
+via the <code class="docutils literal notranslate"><span class="pre">--os</span></code> or <code class="docutils literal notranslate"><span class="pre">--image</span></code> arguments to <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code>.</p>
+<ul>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">--image</span> <span class="pre">Compartment:CustomImageName</span></code> for a custom image
+specified by name, or <code class="docutils literal notranslate"><span class="pre">--os</span> <span class="pre">&quot;Compartment:MyCustomOS:1.0&quot;</span></code> for a custom
+image specified by OS.</p></li>
+<li><p>For <strong>platform images</strong> (i.e. official images provided by Oracle) there is
+no change, e.g.: <code class="docutils literal notranslate"><span class="pre">--os</span> <span class="pre">&quot;Oracle</span> <span class="pre">Linux:10&quot;</span></code>.</p></li>
+<li><p>This change, while disruptive, ensures that custom images in your tenancy
+can never take the place of a platform image, even if they have the same
+name or OS label as a platform image.</p></li>
+</ul>
+</li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">volume</span> <span class="pre">resize</span></code> command.</p></li>
+<li><p>Add support for Cloudguard workload protection plugin (opt-in).</p></li>
+<li><p>Add support for using <code class="docutils literal notranslate"><span class="pre">OCI_CLI_PASSPHRASE</span></code> when set</p></li>
+<li><p>Improved error handling for a common error when attempting to attach a volume
+to an instance in a different availability domain.</p></li>
+</ul>
 </section>
 <section id="wed-aug-6-2025">
 <h2>1.11.1 - Wed, Aug 6, 2025<a class="headerlink" href="#wed-aug-6-2025" title="Link to this heading">¶</a></h2>
@@ -524,7 +548,7 @@ to the public.</p>
       &#169;2020-2025, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |

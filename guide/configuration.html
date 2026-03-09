@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; yo v1.11.1 documentation</title>
+    <title>Configuration &#8212; yo v1.12.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
-    <script src="../_static/documentation_options.js?v=63a3f62f"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/documentation_options.js?v=55a4acdd"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="icon" href="../_static/yo.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -222,17 +222,23 @@ on separate lines, such as:</p>
 removing a value), yo’s cache becomes out-of-date in a way which it cannot
 detect. Once you’ve updated this configuration value, please run <code class="docutils literal notranslate"><span class="pre">yo</span>
 <span class="pre">cache-clean</span></code> to force yo to fetch the latest image list next time you run it.</p>
-<p>In cases where there are conflicting images between compartments, a notation
-can be appended to an image compartment <code class="docutils literal notranslate"><span class="pre">os</span></code> name. Using the extension of
-<code class="docutils literal notranslate"><span class="pre">:&lt;token&gt;</span></code> to specify a differentiator, the adjusted configuration would be:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">image_compartment_ids</span> <span class="o">=</span>
-    <span class="n">ocid</span><span class="o">.</span><span class="n">compartment</span><span class="o">.</span><span class="n">oc1</span><span class="o">..</span><span class="n">foobarsomelongstringhere</span>
-    <span class="n">ocid</span><span class="o">.</span><span class="n">compartment</span><span class="o">.</span><span class="n">oc1</span><span class="o">..</span><span class="n">theqadeptimageareafortst</span><span class="p">:</span><span class="n">QA</span>
-</pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In prior versions of Yo, it was possible to add a “tag” to the end of a
+compartment ID, separated by a colon. Yo would then append this tag to the
+name of the OS name for every image contained in the compartment, which could
+be used to help disambiguate images which had the same OS name but resided in
+different compartments.</p>
+<p>This behavior is now deprecated. Yo no longer modifies OS names using this
+tag. The tag may still be specified in the configuration file, in order to
+allow existing configs to continue to function.</p>
+<p>Instead, conflicting images must now be disambiguated by specifying the
+compartment name prior to the image’s OS or name. The compartment name is
+required in all cases now, rather than only when names conflict.</p>
+<p>The configured tag may still be used to specify an alternate name for the
+compartment. This can be used for cases when the compartment names themselves
+are duplicated.</p>
 </div>
-<p>For the images found in the second compartment, each <code class="docutils literal notranslate"><span class="pre">os</span></code> name will have
-<code class="docutils literal notranslate"><span class="pre">QA</span></code> appended to allow them to be identifiable independently from the similar
-images found in the first compartment.</p>
 </section>
 <section id="silence-automatic-tag-warning">
 <span id="silence-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">silence_automatic_tag_warning</span></code><a class="headerlink" href="#silence-automatic-tag-warning" title="Link to this heading">¶</a></h3>
@@ -430,14 +436,27 @@ is selected.</p>
 </section>
 <section id="os">
 <h3><code class="docutils literal notranslate"><span class="pre">os</span></code><a class="headerlink" href="#os" title="Link to this heading">¶</a></h3>
-<p>(String, Optional) Which operating system to use to create the instance. This
-field is a combination of a name and a version, separated by a colon. For
-example, <code class="docutils literal notranslate"><span class="pre">Oracle</span> <span class="pre">Linux:8</span></code>. You can list the available operating systems with
-<code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">os</span></code>. Please note that <code class="docutils literal notranslate"><span class="pre">os</span></code> is not the only way to specify which image
-your instance boots with. The <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">launch</span></code> command also provides the option
-<code class="docutils literal notranslate"><span class="pre">--image</span></code>, which can override the OS selection with a custom image name.
-However, at this time there is no way to specify a custom image in an instance
-profile.</p>
+<p>(String, Optional) Select an operating system for the instance. This
+configuration has the effect of telling Yo how to select an OCI image. Yo will
+select the most recent image with the corresponding OS name and version.</p>
+<p>Images may be either <strong>platform images</strong> or <strong>custom images</strong>. Platform images
+are provided by Oracle. They don’t reside in any OCI compartment – they are
+simply part of the service. Custom images are uploaded by users to a compartment
+within their tenancy.</p>
+<p>All images may specify an operating system name and version as metadata. As
+such, there is a need to disambiguate the platform images from custom images.
+The OS configuration may be specified in two ways:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">OS</span> <span class="pre">NAME:OS</span> <span class="pre">VERSION</span></code> - specifies a <strong>platform image</strong> with the given name
+and version.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">COMPARTMENT:OS</span> <span class="pre">NAME:OS</span> <span class="pre">VERSION</span></code> - specifies a <strong>custom image</strong> from a
+specific compartment, with the given OS name and version. Note that the
+compartment name here must either correspond to your
+<code class="docutils literal notranslate"><span class="pre">instance_compartment_id</span></code> or be one of your <code class="docutils literal notranslate"><span class="pre">image_compartment_ids</span></code>. You
+cannot name an arbitrary compartment here.</p></li>
+</ul>
+<p>You can use the <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">os</span></code> command to list all the platform and custom images
+available to Yo by their OS name.</p>
 <p>This configuration value is optional: you may specify either <code class="docutils literal notranslate"><span class="pre">os</span></code> or <code class="docutils literal notranslate"><span class="pre">image</span></code>
 (see below). You must specify exactly one of these values, otherwise an error
 will be raised on startup. These values may also be overridden on the <code class="docutils literal notranslate"><span class="pre">yo</span>
@@ -455,7 +474,7 @@ example:</p>
 
 <span class="k">[instances.custom]</span>
 <span class="na">inherit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">base</span>
-<span class="na">image</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">my-custom-image</span>
+<span class="na">image</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">my-compartment:my-custom-image</span>
 <span class="c1"># leave blank without &quot;=&quot; to clear the value</span>
 <span class="na">os</span>
 </pre></div>
@@ -463,9 +482,18 @@ example:</p>
 </section>
 <section id="image">
 <h3><code class="docutils literal notranslate"><span class="pre">image</span></code><a class="headerlink" href="#image" title="Link to this heading">¶</a></h3>
-<p>(String, Optional) The name of a custom image to use. Yo will search for this
-image inside the same compartment that it creates your instances
-(<code class="docutils literal notranslate"><span class="pre">instance_compartment_id</span></code>).</p>
+<p>(String, Optional) The name (and compartment) of an image to use.</p>
+<p>Similar to the <code class="docutils literal notranslate"><span class="pre">os</span></code> configuration, Yo uses this to select either a <strong>platform
+image</strong> or a <strong>custom image</strong>. Platform images do not have a compartment, and
+thus they are specified by name. Custom images reside in a compartment, and thus
+must be prefixed by this name. For example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Oracle-Linux-10.0-2025.10.23-0</span></code> specifies a platform image, while</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">My</span> <span class="pre">Custom</span> <span class="pre">Images:Oracle-Linux-Custom-10.0-2025.10.23-0</span></code> specifies a named
+image from the “My Custom Images” compartment of your tenancy.</p></li>
+</ul>
+<p>To use a custom image, the containing compartment must either be your
+<code class="docutils literal notranslate"><span class="pre">instance_compartment_id</span></code> or one of your <code class="docutils literal notranslate"><span class="pre">image_compartment_ids</span></code>.</p>
 <p>This configuration is optional, but exactly one of <code class="docutils literal notranslate"><span class="pre">os</span></code> or <code class="docutils literal notranslate"><span class="pre">image</span></code> must be
 specified. See the note directly above for more info.</p>
 </section>
@@ -547,6 +575,16 @@ support cloud-init user data differently, so this functionality is not
 guaranteed on all images. Please test this with your intended images before
 relying on it.</p>
 </section>
+<section id="cloudguard-wlp">
+<h3><code class="docutils literal notranslate"><span class="pre">cloudguard_wlp</span></code><a class="headerlink" href="#cloudguard-wlp" title="Link to this heading">¶</a></h3>
+<p>(Boolean, Optional, Default: false) Controls whether Yo adds an OCI
+<code class="docutils literal notranslate"><span class="pre">agent_config</span></code> section that enables plugin <code class="docutils literal notranslate"><span class="pre">Cloud</span> <span class="pre">Guard</span> <span class="pre">Workload</span>
+<span class="pre">Protection</span></code> during launch.</p>
+<p>This can be overridden on the command line via
+<code class="docutils literal notranslate"><span class="pre">--enable-cloudguard-wlp</span></code> or <code class="docutils literal notranslate"><span class="pre">--disable-cloudguard-wlp</span></code>.</p>
+<p>For more details on OCI plugin management, see:
+<a class="reference external" href="https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/manage-plugins.htm">https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/manage-plugins.htm</a></p>
+</section>
 </section>
 <section id="command-aliases">
 <h2>Command Aliases<a class="headerlink" href="#command-aliases" title="Link to this heading">¶</a></h2>
@@ -561,6 +599,18 @@ alias section:</p>
 <span class="n">s</span> <span class="o">=</span> <span class="n">ssh</span>
 </pre></div>
 </div>
+</section>
+<section id="id11">
+<h2>Global Configuration Options<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
+<p>Yo uses the OCI Python SDK. Any environment variable which affects the behavior
+of the SDK will similarly affect Yo. In addition, Yo implements some environment
+variables which impact its behavior:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">OCI_CLI_PASSPHRASE</span></code>: if the OCI API key is protected by a passphrase, this
+variable can be used to provide the passphrase without an interactive prompt.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">YO_LOG_WITHOUT_TIME</span></code>: if provided, yo’s logged status messages will not
+include a timestamp.</p></li>
+</ul>
 </section>
 <section id="sample-configuration-file">
 <h2>Sample Configuration File<a class="headerlink" href="#sample-configuration-file" title="Link to this heading">¶</a></h2>
@@ -800,9 +850,30 @@ of copy/paste.</p>
 <span class="na">mem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">16</span>
 <span class="na">cpu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
 
-<span class="c1"># REQUIRED: set the OS for this instance (OS:version)</span>
+<span class="c1"># OPTIONAL: set the OS for this instance ([Compartment:]OS:version). When this</span>
+<span class="c1"># is used, Yo will select the latest image matching the OS criteria you provide.</span>
+<span class="c1"># Official (platform) images have no compartment, so they should only contain</span>
+<span class="c1"># two fields, for example:</span>
+<span class="c1">#   &quot;Oracle Linux:10&quot;</span>
+<span class="c1"># Custom images (those uploaded by users of your tenancy) reside in a</span>
+<span class="c1"># compartment. You must specify the compartment name prior to the OS and version</span>
+<span class="c1"># in order to use a custom image. EG:</span>
+<span class="c1">#   &quot;My Custom Images:Oracle Linux:10&quot;</span>
+<span class="c1"># Either &quot;os&quot; or &quot;image&quot; must be specified so Yo knows how to select an image.</span>
 <span class="c1"># Want to see what OS options are available? Run `yo os`.</span>
-<span class="na">os</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">Oracle Linux:9</span>
+<span class="na">os</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">Oracle Linux:10</span>
+
+<span class="c1"># OPTIONAL: set the name of the image ([Compartment:]Name) Yo will use.</span>
+<span class="c1"># image = Oracle-Linux-10.0-2025.10.23-0</span>
+<span class="c1">#</span>
+<span class="c1"># Either the &quot;os&quot; or &quot;image&quot; config must be specified. This can be used to</span>
+<span class="c1"># select a specific image by name. Official (platform) images have no</span>
+<span class="c1"># compartment, and thus this part of the filed is omitted. For example:</span>
+<span class="c1">#   Oracle-Linux-10.0-2025.10.23-0</span>
+<span class="c1"># Custom images (those uploaded by users of your tenancy) reside in a</span>
+<span class="c1"># compartment. You must specify the compartment name, followed by a colon, and</span>
+<span class="c1"># then the image name, in order to use a custom image. For example:</span>
+<span class="c1">#   My Custom Images:Oracle-Linux-Custom-10.0-2025.10.23-0</span>
 
 <span class="c1"># OPTIONAL: set the disk size in GiB.</span>
 <span class="c1"># boot_volume_size_gbs = 100</span>
@@ -820,6 +891,15 @@ of copy/paste.</p>
 <span class="c1"># -&gt; So this would result in instances named &quot;USERNAME-ol8-1&quot;, &quot;USERNAME-ol8-2&quot;,</span>
 <span class="c1">#    etc, as you create them.</span>
 <span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ol9-1</span>
+
+<span class="c1"># OPTIONAL: enable or disable the Cloud Guard Workload Protection plugin.</span>
+<span class="c1"># When set to &quot;true&quot;, Yo launches the instance with an agent config that enables</span>
+<span class="c1"># plugin &quot;Cloud Guard Workload Protection&quot;.</span>
+<span class="c1"># OCI plugin docs:</span>
+<span class="c1"># https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/manage-plugins.htm</span>
+<span class="c1"># This can be overridden on the command line using</span>
+<span class="c1"># --enable-cloudguard-wlp / --disable-cloudguard-wlp.</span>
+<span class="c1"># cloudguard_wlp = false</span>
 
 <span class="c1"># OPTIONAL: add tasks which are automatically started on instance launch</span>
 <span class="c1"># tasks = task_a,task_b</span>
@@ -956,7 +1036,7 @@ of copy/paste.</p>
       &#169;2020-2025, Oracle and/or its affiliates.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
