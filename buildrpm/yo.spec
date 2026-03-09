@@ -1,7 +1,7 @@
 # Copyright (c) 2025, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 Name:           yo
-Version:        1.12.1
+Version:        1.12.2
 Release:        0%{?dist}
 Summary:        A fast and simple CLI client for managing OCI instances
 
@@ -60,6 +60,12 @@ cp README.* %{buildroot}/%{_docdir}/yo/
 
 
 %changelog
+* Mon Mar 9 2026 Stephen Brennan <stephen.s.brennan@oracle.com> - 1.12.2-0
+- Fixed image selection for OS:Version -- version was being ignored.
+
+* Mon Mar 9 2026 Stephen Brennan <stephen.s.brennan@oracle.com> - 1.12.1-0
+- Fixed breakage in yo version parsing logic.
+
 * Fri Mar 6 2026 Stephen Brennan <stephen.s.brennan@oracle.com> - 1.12.0-0
 - Update to 1.12.0, see documentation for details
 
