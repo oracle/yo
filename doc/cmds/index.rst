@@ -69,6 +69,7 @@ Volume Management Commands:
   - :ref:`yo_volume_detach` - Detach a block or boot volume from an instance.
   - :ref:`yo_volume_list` - List block & boot volumes.
   - :ref:`yo_volume_rename` - Rename a block or boot volume.
+  - :ref:`yo_volume_resize` - Resize a block or boot volume.
 
 Informative Commands:
 
