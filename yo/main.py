@@ -317,6 +317,9 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
 
 class YoCmd(subc.Command):
     c: YoCtx
+    ctxs: t.Dict[str, YoCtx] = {}
+    _config: YoConfig
+    _profiles: t.Mapping[str, InstanceProfile]
     es: contextlib.ExitStack
     rootname = "yo"
     help_formatter_class = ParagraphFormatter
@@ -326,7 +329,26 @@ class YoCmd(subc.Command):
         check_configs()
         fc = load_config()
         cls.c = YoCtx(fc.config, fc.profiles)
+        cls.ctxs = {fc.config.region: cls.c}
+        cls._config = fc.config
+        cls._profiles = fc.profiles
         return cls.c, fc.aliases
+
+    @classmethod
+    def ctx_for_region(cls, region: str) -> YoCtx:
+        if region not in cls.ctxs:
+            config = getattr(cls, "_config", cls.c.config)
+            if region not in config.regions:
+                raise YoExc(
+                    f"region '{region}' is not configured. Add a "
+                    f"\\[regions.{region}] configuration section to ~/.oci/yo.ini"
+                )
+            profiles = getattr(cls, "_profiles", cls.c.instance_profiles)
+            cls.ctxs[region] = YoCtx(
+                dataclasses.replace(config, region=region),
+                profiles,
+            )
+        return cls.ctxs[region]
 
     def base_run(self, args: argparse.Namespace) -> None:
         self.args = args
@@ -407,7 +429,7 @@ def send_notification(ctx: YoCtx, msg: str) -> None:
 class ListCmd(YoCmd):
     name = "list"
     group = "Basic Commands"
-    help = "List your OCI instances."
+    help = "List your OCI instances (--all-regions for every configured region)."
     description = """
     List your OCI instances.
 
@@ -421,9 +443,18 @@ class ListCmd(YoCmd):
     compartment, regardless of whether Yo believes you created them. Please keep
     in mind that you won't be able to manage those instances (e.g. yo ssh, yo
     terminate, etc) unless you change your "yo.resource_filtering" configuration.
+
+    Use "--all-regions" to list instances from every region configured in
+    yo.ini. Yo automatically adds a Region column in that mode.
     """
 
+    _all_region_ips: t.Optional[t.Dict[str, str]] = None
+
     def _ip_column(self, i: YoInstance) -> str:
+        all_region_ips = getattr(self, "_all_region_ips", None)
+        if all_region_ips is not None:
+            return all_region_ips.get(i.id, "")
+
         # It's more efficient to bulk lookup the IPs.
         if not getattr(self, "_fetched_ips", False):
             self.c.get_all_instance_ips(self.instances)
@@ -443,6 +474,10 @@ class ListCmd(YoCmd):
 
     def columns(self) -> t.Dict[str, Column]:
         return {
+            "Region": (
+                lambda i: self._resource_region(i),
+                lambda v, m: self._resource_region(v),
+            ),
             "Name": (self._name_column, lambda v, m: f":warning: {m.name}"),
             "Shape": (lambda i: i.shape, lambda v, m: m.shape),
             "CPU": (lambda i: str(int(i.ocpu)), lambda v, m: str(m.ocpu)),
@@ -501,6 +536,106 @@ class ListCmd(YoCmd):
             action="store_true",
             help="display all instances in the compartment (not just yours)",
         )
+        parser.add_argument(
+            "--all-regions",
+            action="store_true",
+            help="display instances from every configured region",
+        )
+
+    def _resource_region(self, resource: t.Any) -> str:
+        return t.cast(
+            str, getattr(resource, "_yo_region", self.c.config.region)
+        )
+
+    def _tag_region(self, region: str, resources: t.Iterable[t.Any]) -> None:
+        for resource in resources:
+            setattr(resource, "_yo_region", region)
+
+    def _list_current_region_resources(
+        self, ctx: YoCtx, verbose: bool
+    ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume]]:
+        if self.args.cached:
+            instances = ctx.list_instances_cached()
+        else:
+            instances = ctx.list_instances(
+                verbose=verbose, show_all=self.args.all
+            )
+        return instances, ctx.list_volumes()
+
+    def _list_region_resources(
+        self,
+        region: str,
+        verbose: bool,
+        ip_by_instance_id: t.Optional[t.Dict[str, str]],
+    ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume], t.Dict[str, str]]:
+        ctx = type(self).ctx_for_region(region)
+        if ctx is self.c:
+            instances, volumes = self._list_current_region_resources(
+                ctx, verbose
+            )
+        else:
+            with ctx:
+                instances, volumes = self._list_current_region_resources(
+                    ctx, verbose
+                )
+        self._tag_region(region, instances)
+        self._tag_region(region, volumes)
+        ips = {}
+        if ip_by_instance_id is not None:
+            displayed_instances = [
+                x
+                for x in instances
+                if x.state not in ("TERMINATED", "TERMINATING")
+            ]
+            ips = ctx.get_all_instance_ips(displayed_instances)
+        return instances, volumes, ips
+
+    def _list_all_region_resources(
+        self,
+        verbose: bool,
+        ip_by_instance_id: t.Optional[t.Dict[str, str]],
+    ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume]]:
+        regions = list(self.c.config.regions)
+        if self.c.config.region not in regions:
+            regions.insert(0, self.c.config.region)
+        results: t.List[
+            t.Optional[
+                t.Tuple[t.List[YoInstance], t.List[YoVolume], t.Dict[str, str]]
+            ]
+        ] = [None for _ in regions]
+        futures = {}
+        current_region = None
+        for idx, region in enumerate(regions):
+            if region == self.c.config.region:
+                current_region = (idx, region)
+            else:
+                futures[
+                    self.c._tpe.submit(
+                        self._list_region_resources,
+                        region,
+                        verbose,
+                        ip_by_instance_id,
+                    )
+                ] = idx
+        if current_region:
+            idx, region = current_region
+            results[idx] = self._list_region_resources(
+                region, verbose, ip_by_instance_id
+            )
+        for fut, idx in futures.items():
+            results[idx] = fut.result()
+
+        all_instances: t.List[YoInstance] = []
+        all_volumes: t.List[YoVolume] = []
+        for result in results:
+            if result is None:
+                continue
+            instances, volumes, ips = result
+            if ip_by_instance_id is not None:
+                ip_by_instance_id.update(ips)
+            all_instances.extend(instances)
+            all_volumes.extend(volumes)
+        return all_instances, all_volumes
 
     def get_columns(self) -> t.List[t.Tuple[str, Column]]:
         names_str = self.args.columns or self.c.config.list_columns
@@ -510,6 +645,8 @@ class ListCmd(YoCmd):
         if self.args.ad:
             self.args.extra_column.append("AD")
         names += self.args.extra_column
+        if self.args.all_regions and "Region" not in names:
+            names.insert(0, "Region")
 
         col_defs = self.columns()
         ret = []
@@ -525,12 +662,22 @@ class ListCmd(YoCmd):
         # must not call list_instances_cached()
         if self.args.all:
             self.args.cached = False
-        if self.args.cached:
-            instances = self.c.list_instances_cached()
-        else:
+
+        columns = self.get_columns()
+        include_ip = any(name == "IP" for name, _ in columns)
+        self._all_region_ips = None
+
+        if not self.args.cached:
             self.es.enter_context(self.c.maybe_check_for_updates())
-            instances = self.c.list_instances(
-                verbose=verbose, show_all=self.args.all
+        if self.args.all_regions:
+            if include_ip:
+                self._all_region_ips = {}
+            instances, volumes = self._list_all_region_resources(
+                verbose, self._all_region_ips
+            )
+        else:
+            instances, volumes = self._list_current_region_resources(
+                self.c, verbose
             )
 
         instances = [
@@ -542,7 +689,6 @@ class ListCmd(YoCmd):
         # access them as necessary.
         self.instances = instances
 
-        columns = self.get_columns()
         table = rich.table.Table()
         for name, _ in columns:
             table.add_column(name)
@@ -552,7 +698,7 @@ class ListCmd(YoCmd):
                 values.append(inst_fn(instance))
             table.add_row(*values)
 
-        for volume in self.c.list_volumes():
+        for volume in volumes:
             md = volume.saved_instance_metadata
             if not md:
                 continue
@@ -3535,8 +3681,8 @@ def main() -> None:
         argcomplete.autocomplete(parser)
         ns = parser.parse_args()
         if ns.region is not None:
-            ctx.switch_region(ns.region)
-        with ctx:
+            YoCmd.c = YoCmd.ctx_for_region(ns.region)
+        with YoCmd.c:
             ns.func(ns)
     except YoExc as e:
         con = rich.console.Console()

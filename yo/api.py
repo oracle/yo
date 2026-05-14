@@ -1284,7 +1284,22 @@ class YoCtx:
         self.config = yo_config
         self.instance_profiles = instance_profiles
         self._cache_file = os.path.expanduser(cache_file)
+        self._init_caches()
         self.load_cache()
+
+    def _init_caches(self) -> None:
+        for cache_attr in self._caches:
+            proto: YoCache[t.Any] = getattr(type(self), cache_attr)
+            setattr(
+                self,
+                cache_attr,
+                YoCache(
+                    proto._type,
+                    proto.name,
+                    proto._version,
+                    proto._stale_hours,
+                ),
+            )
 
     def switch_region(self, region: str) -> None:
         if region not in self.config.regions:

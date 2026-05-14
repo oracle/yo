@@ -6,12 +6,13 @@ resources are specific to one OCI region, such as instances and block
 devices. Further, the OCI API is region-specific, and the OCI web
 console only shows resources from a single region at a time.
 
-Yo’s functionality is similar. Any Yo command can only run against a
-single region (e.g. ``yo list`` will only show instances of a specific
-region). By default, Yo runs in the region configured by the ``region``
+Yo’s functionality is similar. Most Yo commands run against a single
+region. By default, Yo runs in the region configured by the ``region``
 key in the ``[yo]`` section of ``yo.ini``. However, with proper
 configuration, you can override the region that Yo runs in with
-``yo -r REGION ...`` for any sub-command.
+``yo -r REGION ...`` for any sub-command. ``yo list --all-regions`` is
+an exception: it lists instances from every region configured in
+``yo.ini``.
 
 Configuring multiple regions
 ----------------------------
@@ -42,6 +43,9 @@ command and before the sub-command. For example:
 
    # CORRECT:
    yo -r us-ashburn-1 list
+
+   # List instances from every configured region:
+   yo list --all-regions
 
    # INCORRECT
    yo list -r us-ashburn-1

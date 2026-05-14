@@ -46,6 +46,24 @@ from tests.testing.rich import FakeTable
 from yo.main import YoCmd
 from yo.util import strftime
 from yo.util import YoExc
+from yo.util import YoRegion
+
+
+class ImmediateFuture:
+    def __init__(self, value):
+        self.value = value
+
+    def result(self):
+        return self.value
+
+
+class ImmediateExecutor:
+    def __init__(self):
+        self.submitted = []
+
+    def submit(self, fn, *args, **kwargs):
+        self.submitted.append((fn, args, kwargs))
+        return ImmediateFuture(fn(*args, **kwargs))
 
 
 @pytest.fixture
@@ -70,6 +88,7 @@ def mock_ctx():
             )
         )
         YoCmd.c = mock_ctx
+        YoCmd.ctxs = {mock_ctx.config.region: mock_ctx}
         yield mock_ctx
 
 
@@ -139,6 +158,87 @@ def test_list_results(mock_ctx):
             strftime(insts[1].time_created),
         ),
     ]
+
+
+def test_list_all_regions_results(mock_ctx):
+    r1 = mock_ctx.config.region
+    r2 = "us-phoenix-1"
+    mock_ctx.config.regions[r2] = YoRegion(r2, "vcn2", "sub2")
+    mock_ctx._tpe = ImmediateExecutor()
+
+    region2_ctx = mock.MagicMock()
+    region2_ctx.config = dataclasses.replace(mock_ctx.config, region=r2)
+    region2_ctx.con = mock_ctx.con
+    YoCmd.ctxs = {
+        r1: mock_ctx,
+        r2: region2_ctx,
+    }
+
+    insts = [
+        instance_factory(name="test-r1"),
+        instance_factory(name="test-r2"),
+    ]
+    mock_ctx.list_instances.return_value = [insts[0]]
+    region2_ctx.list_instances.return_value = [insts[1]]
+    mock_ctx.list_volumes.return_value = []
+    region2_ctx.list_volumes.return_value = []
+    mock_ctx.get_all_instance_ips.return_value = {insts[0].id: "10.0.0.1"}
+    region2_ctx.get_all_instance_ips.return_value = {
+        insts[1].id: "10.0.0.2"
+    }
+
+    YoCmd.main("", args=["list", "--all-regions", "--ip"])
+
+    mock_ctx.switch_region.assert_not_called()
+    assert len(mock_ctx._tpe.submitted) == 1
+    mock_ctx.list_instances.assert_called_once_with(
+        verbose=False, show_all=False
+    )
+    region2_ctx.list_instances.assert_called_once_with(
+        verbose=False, show_all=False
+    )
+    mock_ctx.get_all_instance_ips.assert_called_once_with([insts[0]])
+    region2_ctx.get_all_instance_ips.assert_called_once_with([insts[1]])
+
+    mock_ctx.con.print.assert_called_once()
+    table = mock_ctx.con.print.call_args[0][0]
+    assert table._columns == [
+        "Region",
+        "Name",
+        "Shape",
+        "Mem",
+        "CPU",
+        "State",
+        "Created",
+        "IP",
+    ]
+    assert table._rows == [
+        (
+            r1,
+            insts[0].name,
+            insts[0].shape,
+            str(insts[0].memory_gb),
+            str(insts[0].ocpu),
+            insts[0].state,
+            strftime(insts[0].time_created),
+            "10.0.0.1",
+        ),
+        (
+            r2,
+            insts[1].name,
+            insts[1].shape,
+            str(insts[1].memory_gb),
+            str(insts[1].ocpu),
+            insts[1].state,
+            strftime(insts[1].time_created),
+            "10.0.0.2",
+        ),
+    ]
+
+
+def test_list_top_level_help_mentions_all_regions():
+    list_cmd = next(cmd for cmd in YoCmd.iter_commands() if cmd.name == "list")
+    assert "--all-regions" in list_cmd.help
 
 
 def test_ssh_one_instance(mock_ctx, mock_ssh):
