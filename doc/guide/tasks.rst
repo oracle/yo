@@ -195,8 +195,8 @@ have one running. The second argument is the name of the task. For example:
 You can also use ``yo task-join [inst]`` to wait for all currently running
 tasks. Finally, you can get a bird's eye view of all tasks running on an
 instance with ``yo task-status [inst]``. If a task fails, or if you just want
-more information, you can go into the ``/tmp/tasks`` directory on your instance.
-Each task gets a directory, with the following files:
+more information, you can go into the ``~/.cache/yo-tasks`` directory on your
+instance. Each task gets a directory, with the following files:
 
 - ``output`` - stdout and stderr of the task (which is executed with ``bash -x``
   so you can see each command executed).
@@ -205,8 +205,9 @@ Each task gets a directory, with the following files:
 - ``wait`` - while a task waits for a dependency, it writes the name of the
   dependency into this file, and deletes it once the wait completes
 
-The task directory can be configured from its default (``/tmp/tasks``) using the
-:ref:`task_dir<config_task_dir>` configuration option.
+The task directory can be configured from its default
+(``~/.cache/yo-tasks``) using the :ref:`task_dir<config_task_dir>`
+configuration option.
 
 Running Tasks at Launch Time
 ----------------------------

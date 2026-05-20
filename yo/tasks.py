@@ -335,8 +335,23 @@ def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
     export TASK_BASE_DIR={task_dir}
     export TASK_NAME={name}
     export TASK_DIR="$TASK_BASE_DIR/$TASK_NAME"
-    mkdir -p "$TASK_DIR"
-    cd "$TASK_DIR"
+    umask 077
+    secure_task_dir() {{
+        dir="$1"
+        if [ -L "$dir" ]; then
+            echo "Refusing symlink task directory: $dir"
+            exit 1
+        fi
+        mkdir -p "$dir" || exit 1
+        if [ -L "$dir" ]; then
+            echo "Refusing symlink task directory: $dir"
+            exit 1
+        fi
+        chmod 700 "$dir" || exit 1
+    }}
+    secure_task_dir "$TASK_BASE_DIR"
+    secure_task_dir "$TASK_DIR"
+    cd "$TASK_DIR" || exit 1
     if [ -f "status" ]; then
         rm -f "output" "pid"
         mv "status" "status.old"
@@ -368,8 +383,26 @@ def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
             """
             task_dir={task_dir}
             name={name}
-            mkdir -p "$task_dir/$name/files"
-            echo -n "$task_dir/$name/files"
+            task_path="$task_dir/$name"
+            files_path="$task_path/files"
+            umask 077
+            secure_task_dir() {{
+                dir="$1"
+                if [ -L "$dir" ]; then
+                    echo "Refusing symlink task directory: $dir"
+                    exit 1
+                fi
+                mkdir -p "$dir" || exit 1
+                if [ -L "$dir" ]; then
+                    echo "Refusing symlink task directory: $dir"
+                    exit 1
+                fi
+                chmod 700 "$dir" || exit 1
+            }}
+            secure_task_dir "$task_dir"
+            secure_task_dir "$task_path"
+            secure_task_dir "$files_path"
+            echo -n "$files_path"
             """
         ).format(
             task_dir=task_dir_safe,

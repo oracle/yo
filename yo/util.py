@@ -139,7 +139,7 @@ class YoConfig:
     ssh_interactive_args: t.Optional[str] = None
     rdp_prog: t.Optional[str] = None
     extension_modules: t.List[str] = dataclasses.field(default_factory=list)
-    task_dir: str = "/tmp/tasks"
+    task_dir: str = "~/.cache/yo-tasks"
     image_compartment_ids: t.List[str] = dataclasses.field(default_factory=list)
     silence_automatic_tag_warning: t.Optional[bool] = None
     exact_name: t.Optional[bool] = None

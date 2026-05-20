@@ -207,14 +207,13 @@ thoroughly.
 ~~~~~~~~~~~~
 
 (String, Optional) Set the directory in which yo :ref:`tasks<tasks_overview>`
-are stored. This may be useful in case the default (``/tmp/tasks``) is ephemeral
--- that is, if it is deleted on reboot. This must be an absolute path, with the
-following exception: if you begin the path with ``$HOME/`` or ``~/``, then the
-path will be interpreted relative to the instance user's home directory.
-However, this interpolation is performed manually by yo -- no other shell
-processing occurs, and the remaining portion of the string will be interpreted
-literally. Spaces and other special characters are supported in the directory
-name, though not recommended.
+are stored. The default is ``~/.cache/yo-tasks``. This must be an absolute path,
+with the following exception: if you begin the path with ``$HOME/`` or ``~/``,
+then the path will be interpreted relative to the instance user's home
+directory. However, this interpolation is performed manually by yo -- no other
+shell processing occurs, and the remaining portion of the string will be
+interpreted literally. Spaces and other special characters are supported in the
+directory name, though not recommended.
 
 Your instance's user needs to have permission to create the directory (and its
 parents) if it does not exist.

@@ -127,6 +127,12 @@ def test_task_dir_safe(task_dir, expected):
     assert cfg.task_dir_safe == expected
 
 
+def test_default_task_dir_is_home_cache():
+    cfg = config_factory()
+    assert cfg.task_dir == "~/.cache/yo-tasks"
+    assert cfg.task_dir_safe == '"$HOME"/.cache/yo-tasks'
+
+
 def test_removesuffix():
     assert removesuffix("id_rsa.pub", ".pub") == "id_rsa"
     assert removesuffix("id_rsa", ".pub") == "id_rsa"
