@@ -130,6 +130,7 @@ from yo.util import PKGMAN
 from yo.util import shlex_join
 from yo.util import standardize_name
 from yo.util import strftime
+from yo.util import validate_ssh_username
 from yo.util import YoConfig
 from yo.util import YoExc
 from yo.util import YoRegion
@@ -637,7 +638,8 @@ class SingleInstanceCommand(YoCmd):
         else:
             name = self.get_instance_name_arg()
         if name and "@" in name:
-            self.username, name = name.split("@")
+            self.username, name = name.split("@", 1)
+            validate_ssh_username(self.username, "SSH username")
         return name
 
     def run(self) -> None:

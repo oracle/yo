@@ -66,6 +66,7 @@ from yo.util import natural_sort
 from yo.util import one
 from yo.util import PKGMAN
 from yo.util import standardize_name
+from yo.util import validate_ssh_username
 from yo.util import YoConfig
 from yo.util import YoExc
 
@@ -2175,6 +2176,7 @@ class YoCtx:
             return default_username, None
         elif user_spec == "$MY_USERNAME":
             user_spec = self.config.my_username
+        user_spec = validate_ssh_username(user_spec, "custom username")
         self.con.log(f"Setting custom username: {user_spec}")
         user_data_lines = [
             "#cloud-config",
@@ -2981,7 +2983,7 @@ class YoCtx:
 
     def get_ssh_user(self, inst: YoInstance) -> str:
         if inst.username:
-            return inst.username
+            return validate_ssh_username(inst.username, "yo-username tag")
         img = self.get_image(inst.image_id)
         return OS_TO_USER[img.os]
 

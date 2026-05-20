@@ -60,6 +60,13 @@ def test_ssh_cmd_puts_target_before_remote_command():
     assert "-A" in cmd
 
 
+def test_ssh_into_rejects_invalid_username():
+    ctx = _ctx(ssh_private_key=None)
+
+    with pytest.raises(YoExc, match="SSH username"):
+        ssh.ssh_into("1.2.3.4", "-oProxyCommand=bad", ctx, quiet=True)
+
+
 def test_ssh_into_prints_and_runs_command():
     ctx = _ctx(ssh_private_key=None)
     with mock.patch(

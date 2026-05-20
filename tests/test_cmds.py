@@ -45,6 +45,7 @@ from tests.testing.factories import instance_factory
 from tests.testing.rich import FakeTable
 from yo.main import YoCmd
 from yo.util import strftime
+from yo.util import YoExc
 
 
 @pytest.fixture
@@ -225,3 +226,8 @@ def test_ssh_wait(mock_ctx, mock_ssh, mock_notify, state):
         cmds=[],
         quiet=False,
     )
+
+
+def test_ssh_rejects_invalid_username_prefix(mock_ctx):
+    with pytest.raises(YoExc, match="SSH username"):
+        YoCmd.main("", args=["ssh", "Bad@myinst"])

@@ -9,6 +9,7 @@ from tests.testing.factories import config_factory
 from yo.util import check_args_dataclass
 from yo.util import removesuffix
 from yo.util import standardize_name
+from yo.util import validate_ssh_username
 from yo.util import YoConfig
 from yo.util import YoExc
 from yo.util import YoRegion
@@ -131,6 +132,13 @@ def test_default_task_dir_is_home_cache():
     cfg = config_factory()
     assert cfg.task_dir == "~/.cache/yo-tasks"
     assert cfg.task_dir_safe == '"$HOME"/.cache/yo-tasks'
+
+
+def test_validate_ssh_username():
+    assert validate_ssh_username("opc") == "opc"
+    assert validate_ssh_username("user_1-name") == "user_1-name"
+    with pytest.raises(YoExc, match="SSH username"):
+        validate_ssh_username("-oProxyCommand=bad")
 
 
 def test_removesuffix():

@@ -59,6 +59,20 @@ class YoExc(Exception):
     pass
 
 
+SSH_USERNAME_RE = re.compile(r"[a-z_][a-z0-9_-]{0,31}\Z")
+
+
+def validate_ssh_username(username: str, source: str = "SSH username") -> str:
+    """
+    Validate a login username before passing it to ssh/scp-style commands.
+    """
+    if not SSH_USERNAME_RE.fullmatch(username):
+        raise YoExc(
+            f"{source} must match {SSH_USERNAME_RE.pattern!r}: {username!r}"
+        )
+    return username
+
+
 def opt_strlist(opts: t.Dict[str, t.Any], field: str) -> None:
     """
     Helper for parsing string lists in the yo.ini config file.

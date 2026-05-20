@@ -166,3 +166,23 @@ def test_launch_config_name_handles_exact_collisions_and_exhaustion(tmp_path):
         YoExc, match="could not come up with a unique instance name"
     ):
         ctx._launch_config_name(profile, "db", exact_name=False, max_tries=2)
+
+
+def test_launch_config_user_rejects_invalid_username(tmp_path):
+    ctx = _make_ctx(tmp_path)
+    profile = InstanceProfile(
+        availability_domain="1",
+        shape="VM.Standard.E2.1.Micro",
+        os="Oracle Linux:9",
+    )
+
+    with pytest.raises(YoExc, match="custom username"):
+        ctx._launch_config_user("opc", "-oProxyCommand=bad", profile)
+
+
+def test_get_ssh_user_rejects_invalid_username_tag(tmp_path):
+    ctx = _make_ctx(tmp_path)
+    inst = instance_factory(username="-oProxyCommand=bad")
+
+    with pytest.raises(YoExc, match="yo-username tag"):
+        ctx.get_ssh_user(inst)

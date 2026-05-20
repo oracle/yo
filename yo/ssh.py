@@ -43,6 +43,7 @@ import rich.progress
 from rich.progress import Progress
 
 from yo.api import YoCtx
+from yo.util import validate_ssh_username
 from yo.util import YoExc
 
 
@@ -120,6 +121,7 @@ def ssh_cmd(
     cmds = list(cmds)
     cmd = ["ssh"] + ssh_args(ctx, bool(cmds))
     cmd.extend(extra_args)
+    cmd.append("--")
     cmd.append(target)
     cmd.extend(cmds)
     return cmd
@@ -140,6 +142,7 @@ def ssh_into(
     empty, this will result in SSH to the machine. Otherwise, SSH will interpret
     them as a command to execute on the remote system, and then exit.
     """
+    user = validate_ssh_username(user)
     if not quiet:
         ctx.con.print(f"ssh [green]{user}[/green]@[blue]{ip}[/blue]...")
 
@@ -170,6 +173,7 @@ def wait_for_ssh_access(
     ssh_warn_grace: int = 60,
 ) -> bool:
     global warned_about_SSH_timeout
+    user = validate_ssh_username(user)
     start_time = last_time = time.time()
     progress = Progress(
         rich.progress.TextColumn("{task.description}"),

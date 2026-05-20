@@ -418,6 +418,7 @@ def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
             capture_output=True,
         )
         scp_cmd = ["scp"] + ssh_args(ctx, False)
+        scp_cmd.append("--")
         scp_cmd.extend(map(str, task.sendfiles))
         scp_cmd.append(f"{user}@{ip}:{proc.stdout.decode()}/")
         subprocess.run(scp_cmd)
