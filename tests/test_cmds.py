@@ -238,3 +238,57 @@ def test_ssh_wait(mock_ctx, mock_ssh, mock_notify, state):
 def test_ssh_rejects_invalid_username_prefix(mock_ctx):
     with pytest.raises(YoExc, match="SSH username"):
         YoCmd.main("", args=["ssh", "Bad@myinst"])
+
+
+def test_vnc_launch_splits_configured_command(mock_ctx):
+    inst = instance_factory()
+    mock_ctx.get_only_instance.return_value = inst
+    mock_ctx.get_instance_ip.return_value = "1.2.3.4"
+    mock_ctx.config.vnc_prog = "viewer --host {host} --port {port}"
+    proc = mock.Mock()
+
+    with mock.patch("yo.main.subprocess.Popen", return_value=proc) as popen:
+        YoCmd.main("", args=["vnc", "--no-tunnel"])
+
+    popen.assert_called_once_with(
+        ["viewer", "--host", "1.2.3.4", "--port", "5901"]
+    )
+    proc.wait.assert_called_once_with()
+
+
+def test_rdp_launch_splits_configured_command(mock_ctx):
+    inst = instance_factory()
+    mock_ctx.get_only_instance.return_value = inst
+    mock_ctx.get_instance_ip.return_value = "1.2.3.4"
+    mock_ctx.get_windows_initial_creds.return_value = (None, None)
+    mock_ctx.config.rdp_prog = "rdp-viewer {host}:{port}"
+    proc = mock.Mock()
+
+    with mock.patch("yo.main.subprocess.Popen", return_value=proc) as popen:
+        YoCmd.main("", args=["rdp", "--no-tunnel"])
+
+    popen.assert_called_once_with(["rdp-viewer", "1.2.3.4:3389"])
+    proc.wait.assert_called_once_with()
+
+
+def test_rsync_uses_ssh_args_with_host_alias(mock_ctx):
+    inst = instance_factory(id="inst1")
+    mock_ctx.get_only_instance.return_value = inst
+    mock_ctx.get_instance_ip.return_value = "1.2.3.4"
+    mock_ctx.get_ssh_user.return_value = "opc"
+
+    with mock.patch(
+        "yo.main.ssh_args", return_value=["-oHostKeyAlias=inst1"]
+    ) as ssh_args, mock.patch("yo.main.subprocess.run") as run:
+        YoCmd.main("", args=["rsync", "src", ":dst"])
+
+    ssh_args.assert_called_once_with(mock_ctx, False, "inst1")
+    run.assert_called_once_with(
+        [
+            "rsync",
+            "-e",
+            "ssh -oHostKeyAlias=inst1",
+            "src",
+            "opc@1.2.3.4:dst",
+        ]
+    )

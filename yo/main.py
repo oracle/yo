@@ -1017,8 +1017,9 @@ class VncCmd(RemoteDesktopCommand):
     def run_for_instance(self, inst: YoInstance) -> None:
         with self.maybe_tunnel(inst) as host:
             vnc = subprocess.Popen(
-                self.c.config.vnc_prog.format(host=host, port=self.PORT),
-                shell=True,
+                shlex.split(
+                    self.c.config.vnc_prog.format(host=host, port=self.PORT)
+                )
             )
             self.c.con.log("Launched your configured VNC program!")
             self.c.con.log("Exit it to terminate the SSH tunnel.")
@@ -1058,7 +1059,7 @@ class RdpCmd(RemoteDesktopCommand):
             )
         with self.maybe_tunnel(inst) as host:
             rdp_string = rdp_prog.format(host=host, port=self.PORT)
-            rdp = subprocess.Popen(rdp_string, shell=True)
+            rdp = subprocess.Popen(shlex.split(rdp_string))
             rdp.wait()
 
 

@@ -106,8 +106,8 @@ the following command:
 ~~~~~~~~~~~~
 
 (String, Optional) Set a desired program to launch for VNC (remote desktop).
-This string will be interpreted by your shell, but first Python's format method
-will replace the following strings:
+This string will first be split into arguments according to shell quoting rules,
+and Python's format method will replace the following strings:
 
 - ``{host}`` host for VNC connection
 - ``{port}`` port for VNC connection
@@ -121,8 +121,8 @@ desktop client), feel free to modify it.
 ~~~~~~~~~~~~
 
 (String, Optional) Set a desired program to launch for RDP (remote desktop).
-This string will be interpreted by your shell, but first Python's format method
-will replace the following strings:
+This string will first be split into arguments according to shell quoting rules,
+and Python's format method will replace the following strings:
 
 - ``{host}`` host for RDP connection
 - ``{port}`` port for VNC connection
