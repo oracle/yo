@@ -142,7 +142,8 @@ def test_list_results(mock_ctx):
 
 
 def test_ssh_one_instance(mock_ctx, mock_ssh):
-    mock_ctx.get_only_instance.return_value = instance_factory()
+    inst = instance_factory()
+    mock_ctx.get_only_instance.return_value = inst
     mock_ctx.get_image.return_value = image_factory()
     mock_ctx.get_instance_ip.return_value = "1.2.3.4"
     mock_ctx.get_ssh_user.return_value = "opc"
@@ -154,6 +155,7 @@ def test_ssh_one_instance(mock_ctx, mock_ssh):
         extra_args=[],
         cmds=[],
         quiet=False,
+        host_key_alias=inst.id,
     )
     # need to ensure that we used get_only_instance()
     mock_ctx.get_only_instance.assert_called_once_with(
@@ -167,7 +169,8 @@ def test_ssh_one_instance(mock_ctx, mock_ssh):
 @pytest.mark.parametrize("exact_name", [True, None])
 @pytest.mark.parametrize("dash_n", [True, False])
 def test_ssh_specify(mock_ctx, mock_ssh, exact_name, dash_n):
-    mock_ctx.get_instance_by_name.return_value = instance_factory()
+    inst = instance_factory()
+    mock_ctx.get_instance_by_name.return_value = inst
     mock_ctx.get_image.return_value = image_factory()
     mock_ctx.get_instance_ip.return_value = "1.2.3.4"
     mock_ctx.get_ssh_user.return_value = "opc"
@@ -186,6 +189,7 @@ def test_ssh_specify(mock_ctx, mock_ssh, exact_name, dash_n):
         extra_args=[],
         cmds=[],
         quiet=False,
+        host_key_alias=inst.id,
     )
     mock_ctx.get_instance_by_name.assert_called_once_with(
         "myinst",
@@ -214,7 +218,9 @@ def test_ssh_wait(mock_ctx, mock_ssh, mock_notify, state):
         )
     else:
         mock_ctx.wait_instance_state.assert_not_called()
-    mock_ssh.wait.assert_called_once_with("1.2.3.4", "opc", mock_ctx)
+    mock_ssh.wait.assert_called_once_with(
+        "1.2.3.4", "opc", mock_ctx, host_key_alias=inst.id
+    )
     mock_notify.assert_called_once_with(
         mock_ctx, "Instance myinstance is connected via SSH!"
     )
@@ -225,6 +231,7 @@ def test_ssh_wait(mock_ctx, mock_ssh, mock_notify, state):
         extra_args=["-A"],
         cmds=[],
         quiet=False,
+        host_key_alias=inst.id,
     )
 
 

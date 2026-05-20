@@ -8,6 +8,14 @@ import yo.ssh as ssh
 from yo.util import YoExc
 
 
+@pytest.fixture(autouse=True)
+def fake_known_hosts_file():
+    with mock.patch(
+        "yo.ssh.known_hosts_file", return_value="/tmp/yo-known-hosts"
+    ):
+        yield
+
+
 def _ctx(
     *,
     ssh_args: str = "",
@@ -35,10 +43,35 @@ def test_ssh_args_adds_config_key_and_interactive_args():
     interactive = ssh.ssh_args(ctx, interactive=True)
 
     assert "-oProxyCommand=none" in non_interactive
+    assert "-oStrictHostKeyChecking=accept-new" in non_interactive
+    assert "-oUserKnownHostsFile=/tmp/yo-known-hosts" in non_interactive
     assert "-i" in non_interactive
     assert "/tmp/mykey" in non_interactive
     assert "-t" not in non_interactive
     assert "-t" in interactive
+
+
+def test_ssh_args_configured_options_win_by_appearing_first():
+    ctx = _ctx(
+        ssh_args=(
+            "-oStrictHostKeyChecking=no "
+            "-oUserKnownHostsFile=/dev/null "
+            "-oHostKeyAlias=custom"
+        ),
+        ssh_private_key=None,
+    )
+
+    args = ssh.ssh_args(ctx, interactive=False, host_key_alias="ocid1.test")
+
+    assert args.index("-oStrictHostKeyChecking=no") < args.index(
+        "-oStrictHostKeyChecking=accept-new"
+    )
+    assert args.index("-oUserKnownHostsFile=/dev/null") < args.index(
+        "-oUserKnownHostsFile=/tmp/yo-known-hosts"
+    )
+    assert args.index("-oHostKeyAlias=custom") < args.index(
+        "-oHostKeyAlias=ocid1.test"
+    )
 
 
 def test_ssh_args_rejects_identity_in_config():
@@ -56,8 +89,16 @@ def test_ssh_cmd_puts_target_before_remote_command():
         cmds=["echo", "hello"],
     )
     assert cmd[0] == "ssh"
-    assert cmd[-3:] == ["opc@1.2.3.4", "echo", "hello"]
+    assert cmd[-4:] == ["--", "opc@1.2.3.4", "echo", "hello"]
     assert "-A" in cmd
+
+
+def test_ssh_cmd_adds_host_key_alias():
+    ctx = _ctx(ssh_private_key=None)
+    cmd = ssh.ssh_cmd(ctx, "opc@1.2.3.4", host_key_alias="ocid1.instance")
+
+    assert "-oHostKeyAlias=ocid1.instance" in cmd
+    assert cmd[-2:] == ["--", "opc@1.2.3.4"]
 
 
 def test_ssh_into_rejects_invalid_username():

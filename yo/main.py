@@ -113,7 +113,6 @@ from yo.ssh import ssh_cmd
 from yo.ssh import SSH_CONSOLE_OPTIONS
 from yo.ssh import ssh_into
 from yo.ssh import SSH_MINIMUM_TIME
-from yo.ssh import SSH_OPTIONS
 from yo.ssh import wait_for_ssh_access
 from yo.tasks import list_tasks
 from yo.tasks import task_get_status
@@ -900,7 +899,7 @@ class SshCmd(SingleInstanceCommand):
         if self.args.agent:
             extra_args.append("-A")
         if self.args.wait:
-            wait_for_ssh_access(ip, user, self.c)
+            wait_for_ssh_access(ip, user, self.c, host_key_alias=inst.id)
             send_notification(
                 self.c, f"Instance {inst.name} is connected via SSH!"
             )
@@ -912,6 +911,7 @@ class SshCmd(SingleInstanceCommand):
             extra_args=extra_args,
             cmds=self.get_cmds(),
             quiet=self.args.quiet,
+            host_key_alias=inst.id,
         )
 
     def run(self) -> None:
@@ -960,7 +960,7 @@ class ScpCmd(SingleInstanceCommand):
         replaced = [
             repl.sub(f"{user}@{ip}:", arg) for arg in self.args.scp_args
         ]
-        scp_args = ["scp"] + ssh_args(self.c, False)
+        scp_args = ["scp"] + ssh_args(self.c, False, inst.id)
         subprocess.run(scp_args + replaced)
 
 
@@ -997,6 +997,7 @@ class RemoteDesktopCommand(SingleInstanceCommand):
                 self.c,
                 f"{user}@{ip}",
                 [f"-NL{self.PORT}:localhost:{self.PORT}"],
+                host_key_alias=inst.id,
             )
             ssh_tunnel = subprocess.Popen(cmd)
             try:
@@ -1094,6 +1095,13 @@ class RsyncCmd(SingleInstanceCommand):
         if not user:
             user = self.c.get_ssh_user(inst)
         rsync_args = ["rsync"]
+        if not self.args.raw:
+            rsync_args.extend(
+                [
+                    "-e",
+                    "ssh " + shlex_join(ssh_args(self.c, False, inst.id)),
+                ]
+            )
         if self.c.config.rsync_args and not self.args.raw:
             rsync_args.extend(shlex.split(self.c.config.rsync_args))
         self.c.con.log(
@@ -1155,7 +1163,12 @@ class ConsoleCmd(SingleInstanceCommand):
                 "yo bug, please report it on Github."
             )
 
-        cmd = ssh_cmd(self.c, target, SSH_CONSOLE_OPTIONS, processed_args)
+        cmd = ssh_cmd(
+            self.c,
+            target,
+            list(SSH_CONSOLE_OPTIONS) + processed_args,
+            host_key_alias=conn.id,
+        )
 
         self.c.con.log("About to execute:")
         self.c.con.log(cmd)
@@ -1279,11 +1292,16 @@ class CopyIdCmd(SingleInstanceCommand):
         ip = self.c.get_instance_ip(instance)
         user = self.c.get_ssh_user(instance)
 
-        options = SSH_OPTIONS[:]
+        options = ssh_args(
+            self.c,
+            False,
+            instance.id,
+            include_key=False,
+        )
         if public_key_file_path:
             options += ["-i", public_key_file_path]
 
-        ssh_copy_id_cmd = ["ssh-copy-id"] + options + [f"{user}@{ip}"]
+        ssh_copy_id_cmd = ["ssh-copy-id"] + options + ["--", f"{user}@{ip}"]
 
         # Execution starts here
         try:
@@ -1980,7 +1998,9 @@ class LaunchCmd(YoCmd):
         # Wait for SSH to come up
         if self.args.wait_ssh:
             ip = self.c.get_instance_ip(inst)
-            if not wait_for_ssh_access(ip, user, self.c):
+            if not wait_for_ssh_access(
+                ip, user, self.c, host_key_alias=inst.id
+            ):
                 self.c.con.log("[red]Could not connect via SSH")
                 self.c.con.log("Maybe you're not connected to VPN?")
                 return
@@ -1992,7 +2012,7 @@ class LaunchCmd(YoCmd):
         send_notification(self.c, f"Instance {inst.name} is ready!")
 
         if self.args.ssh:
-            ssh_into(ip, user, ctx=self.c)
+            ssh_into(ip, user, ctx=self.c, host_key_alias=inst.id)
 
 
 class TerminateCmd(MultiInstanceCommand):
@@ -2212,12 +2232,12 @@ class InstanceActionMaybeSsh(InstanceActionCommand):
             return
         ip = self.c.get_instance_ip(inst, True)
         user = self.c.get_ssh_user(inst)
-        if not wait_for_ssh_access(ip, user, self.c):
+        if not wait_for_ssh_access(ip, user, self.c, host_key_alias=inst.id):
             self.c.con.log("[red]Could not connect via SSH")
             self.c.con.log("Maybe you're not connected to VPN?")
             return
         send_notification(self.c, f"Instance {inst.name} is connected via SSH")
-        ssh_into(ip, user, ctx=self.c)
+        ssh_into(ip, user, ctx=self.c, host_key_alias=inst.id)
 
 
 class RebootCommand(InstanceActionMaybeSsh):
@@ -2376,7 +2396,9 @@ class RebuildCmd(YoCmd):
         if self.args.ssh:
             ip = self.c.get_instance_ip(inst)
             user = self.c.get_ssh_user(inst)
-            if not wait_for_ssh_access(ip, user, self.c):
+            if not wait_for_ssh_access(
+                ip, user, self.c, host_key_alias=inst.id
+            ):
                 self.c.con.log("[red]Could not connect via SSH")
                 self.c.con.log("Maybe you're not connected to VPN?")
                 return
@@ -2945,6 +2967,7 @@ def do_volume_attach(
             cmds=[" && ".join(attach)],
             capture_output=True,
             quiet=True,
+            host_key_alias=inst.id,
         )
         if res.returncode == 0:
             setup = True
@@ -3203,6 +3226,7 @@ def do_detach_volume(
                 cmds=[" && ".join(detach)],
                 capture_output=True,
                 quiet=True,
+                host_key_alias=inst.id,
             )
             if res.returncode != 0:
                 print(res.stderr)
@@ -3385,7 +3409,7 @@ class MoshCmd(SingleInstanceCommand):
         # Mosh uses SSH to establish an initial connection.
         # We must be sure to specify the correct SSH key, and to do this we need
         # to use all the ssh arguments we have configured.
-        args = ssh_args(self.c, False)
+        args = ssh_args(self.c, False, inst.id)
         ssh_opt = "--ssh=ssh " + shlex_join(args)
         subprocess.run(
             [

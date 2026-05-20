@@ -416,13 +416,22 @@ def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
             cmds=[mkdir_p_cmd],
             quiet=True,
             capture_output=True,
+            host_key_alias=inst.id,
         )
-        scp_cmd = ["scp"] + ssh_args(ctx, False)
+        scp_cmd = ["scp"] + ssh_args(ctx, False, inst.id)
         scp_cmd.append("--")
         scp_cmd.extend(map(str, task.sendfiles))
         scp_cmd.append(f"{user}@{ip}:{proc.stdout.decode()}/")
         subprocess.run(scp_cmd)
-    ssh_into(ip, user, ctx, extra_args=["-q"], cmds=[commands], quiet=True)
+    ssh_into(
+        ip,
+        user,
+        ctx,
+        extra_args=["-q"],
+        cmds=[commands],
+        quiet=True,
+        host_key_alias=inst.id,
+    )
 
 
 class TaskPlan:
@@ -565,6 +574,7 @@ def task_get_status(
         cmds=[command],
         capture_output=True,
         quiet=True,
+        host_key_alias=inst.id,
     )
     expr = re.compile(r"^.*/([^/]*)/(pid|status|wait):(.*)$")
     task_to_files: t.Dict[

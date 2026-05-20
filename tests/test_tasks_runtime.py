@@ -21,7 +21,7 @@ def _ctx() -> mock.Mock:
 
 
 def _inst() -> types.SimpleNamespace:
-    return types.SimpleNamespace(name="vm1")
+    return types.SimpleNamespace(name="vm1", id="ocid1.instance.test")
 
 
 def _task(name: str, *, sendfiles=None) -> YoTask:
@@ -50,6 +50,9 @@ def test_task_run_without_sendfiles_uses_single_ssh():
     ssh_into.assert_called_once()
     call = ssh_into.call_args
     assert call.kwargs["cmds"] and "HEREDOC" in call.kwargs["cmds"][0]
+    assert "umask 077" in call.kwargs["cmds"][0]
+    assert "chmod 700" in call.kwargs["cmds"][0]
+    assert call.kwargs["host_key_alias"] == "ocid1.instance.test"
 
 
 def test_task_run_with_sendfiles_copies_before_launch(tmp_path):
@@ -73,8 +76,15 @@ def test_task_run_with_sendfiles_copies_before_launch(tmp_path):
     assert ssh_into.call_count == 2
     scp_cmd = subproc_run.call_args.args[0]
     assert scp_cmd[:2] == ["scp", "-oStrictHostKeyChecking=no"]
+    assert "--" in scp_cmd
     assert str(send_a) in scp_cmd and str(send_b) in scp_cmd
     assert scp_cmd[-1] == "opc@1.2.3.4:/remote/files/"
+    assert ssh_into.call_args_list[0].kwargs["host_key_alias"] == (
+        "ocid1.instance.test"
+    )
+    assert ssh_into.call_args_list[1].kwargs["host_key_alias"] == (
+        "ocid1.instance.test"
+    )
 
 
 def test_task_get_status_parses_running_waiting_and_success():

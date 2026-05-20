@@ -33,6 +33,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import os
 import shlex
 import subprocess
 import sys
@@ -51,20 +52,14 @@ PYVER = sys.version_info[:2]
 
 SSH_OPTIONS = [
     # OCI instances reuse the same pool of IPs. If you use OCI a lot, you'll
-    # start getting IP collisions and key verification failures. While I'm never
-    # one to disable security features, this is a case where it just doesn't
-    # make sense to have it enabled. First, it annoys users who expect yo to
-    # "just connect", but instead it prompts yes/no, or fails due to
-    # verification errors. Second, it clutters up the ~/.ssh/known_hosts and
-    # encourages users to chuck out their existing host keys, because of the OCI
-    # verification failures. SO, we completely neuter the feature in our config.
+    # start getting IP collisions and key verification failures. Store yo's host
+    # keys separately and use HostKeyAlias=<instance OCID> so OpenSSH verifies
+    # the stable instance identity instead of the recycled address.
     "-oCheckHostIP=no",
-    "-oStrictHostKeyChecking=no",
+    "-oStrictHostKeyChecking=accept-new",
     "-oUpdateHostKeys=no",
-    "-oUserKnownHostsFile=/dev/null",
-    # This will suppress warnings regarding "permanently added host key", which
-    # are pretty pointless given that our known hosts file is /dev/null, and so
-    # it's not very permanent, is it?
+    # This suppresses "permanently added host key" noise. The key is permanent
+    # within yo's managed known_hosts file, but this still is not useful output.
     "-oLogLevel=ERROR",
     # The following two options are mostly useful for long-running serial
     # console connections. But they certainly don't harm things when you're
@@ -92,12 +87,19 @@ SSH_MINIMUM_TIME = 4
 warned_about_SSH_timeout = False
 
 
+def known_hosts_file() -> str:
+    path = os.path.expanduser("~/.cache/yo/known_hosts")
+    os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
+    return path
+
+
 def ssh_args(
     ctx: YoCtx,
     interactive: bool,
+    host_key_alias: t.Optional[str] = None,
+    include_key: bool = True,
 ) -> t.List[str]:
-    cmd = SSH_OPTIONS.copy()
-    cmd += shlex.split(ctx.config.ssh_args or "")
+    cmd = shlex.split(ctx.config.ssh_args or "")
     if "-i" in cmd:
         raise YoExc(
             "you have -i configured in ssh_args, but yo now "
@@ -105,7 +107,11 @@ def ssh_args(
             "your configured SSH key. Please remove it from your"
             "configuration."
         )
-    if ctx.config.ssh_private_key is not None:
+    cmd += SSH_OPTIONS.copy()
+    cmd.append(f"-oUserKnownHostsFile={known_hosts_file()}")
+    if host_key_alias:
+        cmd.append(f"-oHostKeyAlias={host_key_alias}")
+    if include_key and ctx.config.ssh_private_key is not None:
         cmd.extend(["-i", str(ctx.config.ssh_private_key)])
     if interactive:
         cmd += shlex.split(ctx.config.ssh_interactive_args or "")
@@ -117,9 +123,10 @@ def ssh_cmd(
     target: str,
     extra_args: t.Iterable[str] = (),
     cmds: t.Iterable[str] = (),
+    host_key_alias: t.Optional[str] = None,
 ) -> t.List[str]:
     cmds = list(cmds)
-    cmd = ["ssh"] + ssh_args(ctx, bool(cmds))
+    cmd = ["ssh"] + ssh_args(ctx, bool(cmds), host_key_alias)
     cmd.extend(extra_args)
     cmd.append("--")
     cmd.append(target)
@@ -134,6 +141,7 @@ def ssh_into(
     extra_args: t.Iterable[str] = (),
     cmds: t.Iterable[str] = (),
     quiet: bool = False,
+    host_key_alias: t.Optional[str] = None,
     **kwargs: t.Any,
 ) -> "subprocess.CompletedProcess[bytes]":
     """
@@ -147,7 +155,7 @@ def ssh_into(
         ctx.con.print(f"ssh [green]{user}[/green]@[blue]{ip}[/blue]...")
 
     extra_args = list(extra_args)
-    cmd = ssh_cmd(ctx, f"{user}@{ip}", extra_args, cmds)
+    cmd = ssh_cmd(ctx, f"{user}@{ip}", extra_args, cmds, host_key_alias)
 
     if extra_args and not quiet:
         print("Exact SSH command: {}".format(repr(cmd)))
@@ -171,6 +179,7 @@ def wait_for_ssh_access(
     ctx: YoCtx,
     timeout_sec: int = 600,
     ssh_warn_grace: int = 60,
+    host_key_alias: t.Optional[str] = None,
 ) -> bool:
     global warned_about_SSH_timeout
     user = validate_ssh_username(user)
@@ -188,7 +197,13 @@ def wait_for_ssh_access(
             "Wait for SSH", total=timeout_sec, finished_time=1, start=True
         )
         while not progress.finished:
-            cmd = ssh_cmd(ctx, f"{user}@{ip}", ["-q"], ["true"])
+            cmd = ssh_cmd(
+                ctx,
+                f"{user}@{ip}",
+                ["-q"],
+                ["true"],
+                host_key_alias,
+            )
             proc = subprocess.Popen(cmd)
             rv = 1
             try:

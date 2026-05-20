@@ -55,14 +55,14 @@ def test_launch_ssh_implies_wait_and_connects(
 
     mock_cmd_ctx.wait_instance_state.assert_called_once_with("inst1", "RUNNING")
     mock_cmd_boundaries.wait_for_ssh_access.assert_called_once_with(
-        "1.2.3.4", "opc", mock_cmd_ctx
+        "1.2.3.4", "opc", mock_cmd_ctx, host_key_alias="inst1"
     )
     plan.run.assert_called_once_with(mock_cmd_ctx, running)
     mock_cmd_boundaries.send_notification.assert_called_once_with(
         mock_cmd_ctx, "Instance test-vm is ready!"
     )
     mock_cmd_boundaries.ssh_into.assert_called_once_with(
-        "1.2.3.4", "opc", ctx=mock_cmd_ctx
+        "1.2.3.4", "opc", ctx=mock_cmd_ctx, host_key_alias="inst1"
     )
 
 
