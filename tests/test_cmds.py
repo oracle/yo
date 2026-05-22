@@ -70,11 +70,13 @@ class ImmediateExecutor:
 def mock_ctx():
     es = contextlib.ExitStack()
     with es:
-        mock_ctx = es.enter_context(
+        cc = es.enter_context(
             mock.patch("yo.main.YoCtx"),
         ).return_value
-        mock_ctx.config = config_factory()
-        mock_ctx._tpe = ImmediateExecutor()
+        mock_ctx = mock.MagicMock()
+        cc.config = config_factory()
+        cc.region = cc.config.region
+        cc._tpe = ImmediateExecutor()
         mock_ctx.list_volumes.return_value = []
         mock_con = es.enter_context(
             mock.patch(
@@ -82,15 +84,20 @@ def mock_ctx():
                 autospec=True,
             )
         ).return_value
-        mock_ctx.con = mock_con
+        cc.con = mock_con
+        cc.rc.return_value = mock_ctx
+        mock_ctx.c = cc
+        mock_ctx.config = cc.config
+        mock_ctx.con = cc.con
+        mock_ctx._tpe = cc._tpe
         es.enter_context(
             mock.patch(
                 "rich.table.Table",
                 new=FakeTable,
             )
         )
+        YoCmd.cc = cc
         YoCmd.c = mock_ctx
-        YoCmd.ctxs = {mock_ctx.config.region: mock_ctx}
         yield mock_ctx
 
 
@@ -166,15 +173,17 @@ def test_list_all_regions_results(mock_ctx):
     r1 = mock_ctx.config.region
     r2 = "us-phoenix-1"
     mock_ctx.config.regions[r2] = YoRegion(r2, "vcn2", "sub2")
-    mock_ctx._tpe = ImmediateExecutor()
+    mock_ctx.c._tpe = ImmediateExecutor()
+    mock_ctx._tpe = mock_ctx.c._tpe
 
     region2_ctx = mock.MagicMock()
+    region2_ctx.c = mock_ctx.c
     region2_ctx.config = dataclasses.replace(mock_ctx.config, region=r2)
     region2_ctx.con = mock_ctx.con
-    YoCmd.ctxs = {
+    mock_ctx.c.rc.side_effect = lambda region: {
         r1: mock_ctx,
         r2: region2_ctx,
-    }
+    }[region]
 
     insts = [
         instance_factory(name="test-r1"),
@@ -189,7 +198,6 @@ def test_list_all_regions_results(mock_ctx):
 
     YoCmd.main("", args=["list", "--all-regions", "--ip"])
 
-    mock_ctx.switch_region.assert_not_called()
     assert [args[0] for _, args, _ in mock_ctx._tpe.submitted] == [r1, r2]
     mock_ctx.list_instances.assert_called_once_with(
         verbose=False, show_all=False
@@ -238,7 +246,7 @@ def test_list_all_regions_results(mock_ctx):
 
 def test_list_top_level_help_mentions_all_regions():
     list_cmd = next(cmd for cmd in YoCmd.iter_commands() if cmd.name == "list")
-    assert "--all-regions" in list_cmd.help
+    assert "--all-regions" in list_cmd.description
 
 
 def test_ssh_one_instance(mock_ctx, mock_ssh):
@@ -251,7 +259,7 @@ def test_ssh_one_instance(mock_ctx, mock_ssh):
     mock_ssh.ssh_into.assert_called_once_with(
         "1.2.3.4",
         "opc",
-        ctx=mock_ctx,
+        ctx=mock_ctx.c,
         extra_args=[],
         cmds=[],
         quiet=False,
@@ -285,7 +293,7 @@ def test_ssh_specify(mock_ctx, mock_ssh, exact_name, dash_n):
     mock_ssh.ssh_into.assert_called_once_with(
         "1.2.3.4",
         "opc",
-        ctx=mock_ctx,
+        ctx=mock_ctx.c,
         extra_args=[],
         cmds=[],
         quiet=False,
@@ -319,15 +327,15 @@ def test_ssh_wait(mock_ctx, mock_ssh, mock_notify, state):
     else:
         mock_ctx.wait_instance_state.assert_not_called()
     mock_ssh.wait.assert_called_once_with(
-        "1.2.3.4", "opc", mock_ctx, host_key_alias=inst.id
+        "1.2.3.4", "opc", mock_ctx.c, host_key_alias=inst.id
     )
     mock_notify.assert_called_once_with(
-        mock_ctx, "Instance myinstance is connected via SSH!"
+        mock_ctx.c, "Instance myinstance is connected via SSH!"
     )
     mock_ssh.ssh_into.assert_called_once_with(
         "1.2.3.4",
         "opc",
-        ctx=mock_ctx,
+        ctx=mock_ctx.c,
         extra_args=["-A"],
         cmds=[],
         quiet=False,
@@ -382,7 +390,7 @@ def test_rsync_uses_ssh_args_with_host_alias(mock_ctx):
     ) as ssh_args, mock.patch("yo.main.subprocess.run") as run:
         YoCmd.main("", args=["rsync", "src", ":dst"])
 
-    ssh_args.assert_called_once_with(mock_ctx, False, "inst1")
+    ssh_args.assert_called_once_with(mock_ctx.c, False, "inst1")
     run.assert_called_once_with(
         [
             "rsync",

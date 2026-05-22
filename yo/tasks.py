@@ -55,8 +55,8 @@ from pathlib import Path
 import rich
 from rich.live import Live
 
-from yo.api import YoCtx
 from yo.api import YoInstance
+from yo.api import YoRegionalCtx
 from yo.ssh import ssh_args
 from yo.ssh import ssh_into
 from yo.util import YoExc
@@ -94,7 +94,7 @@ def standardize_globs(include_files: GlobList) -> t.Tuple[GlobList, GlobList]:
 
 
 def build_tarball(
-    ctx: "YoCtx",
+    ctx: "YoRegionalCtx",
     include_files: GlobList,
     root: Path,
     tarball: Path,
@@ -148,7 +148,7 @@ def build_tarball(
         else:
             return  # no need to build tarball
 
-    ctx.con.log(f"Task {task_name}: {verb} {tarball.name}")
+    ctx.c.con.log(f"Task {task_name}: {verb} {tarball.name}")
     cmd: t.List[str | Path] = ["tar", "-czhf", tarball]
     with tempfile.TemporaryDirectory() as td:
         tdpath = Path(td)
@@ -274,7 +274,7 @@ class YoTask:
         self.dependencies.append(other)
         self.script = f"DEPENDS_ON {other}\n{self.script}"
 
-    def prepare_files(self, ctx: "YoCtx") -> None:
+    def prepare_files(self, ctx: "YoRegionalCtx") -> None:
         if not self.include_files:
             return
         staging_dir = Path.home() / ".cache/yo/task-files" / self.name
@@ -319,12 +319,12 @@ def get_tasklib(task_dir_safe: str) -> str:
     return contents.replace("$$TASK_DIR$$", task_dir_safe)
 
 
-def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
+def _task_run(ctx: "YoRegionalCtx", inst: YoInstance, task: YoTask) -> None:
     """
     Run a task on an instance. This doesn't check or load dependencies.
     """
-    task_dir_safe = ctx.config.task_dir_safe
-    ctx.con.log(
+    task_dir_safe = ctx.c.config.task_dir_safe
+    ctx.c.con.log(
         f"Start task [blue]{task.name}[/blue] on instance [green]{inst.name}..."
     )
     ip = ctx.get_instance_ip(inst, True)
@@ -411,14 +411,14 @@ def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
         proc = ssh_into(
             ip,
             user,
-            ctx,
+            ctx.c,
             extra_args=["-q"],
             cmds=[mkdir_p_cmd],
             quiet=True,
             capture_output=True,
             host_key_alias=inst.id,
         )
-        scp_cmd = ["scp"] + ssh_args(ctx, False, inst.id)
+        scp_cmd = ["scp"] + ssh_args(ctx.c, False, inst.id)
         scp_cmd.append("--")
         scp_cmd.extend(map(str, task.sendfiles))
         scp_cmd.append(f"{user}@{ip}:{proc.stdout.decode()}/")
@@ -426,7 +426,7 @@ def _task_run(ctx: "YoCtx", inst: YoInstance, task: YoTask) -> None:
     ssh_into(
         ip,
         user,
-        ctx,
+        ctx.c,
         extra_args=["-q"],
         cmds=[commands],
         quiet=True,
@@ -485,7 +485,7 @@ class TaskPlan:
         for task in self.name_to_task.values():
             visit(task)
 
-    def _prepare_files(self, ctx: "YoCtx") -> None:
+    def _prepare_files(self, ctx: "YoRegionalCtx") -> None:
         for task in self.ordered_tasks:
             if task.include_files:
                 task.prepare_files(ctx)
@@ -518,7 +518,7 @@ class TaskPlan:
 
         self.ordered_tasks = []
 
-    def prepare(self, ctx: "YoCtx") -> None:
+    def prepare(self, ctx: "YoRegionalCtx") -> None:
         self._prepare_prereqs_check_conflicts()
         self._create_execution_order()
         self._prepare_files(ctx)
@@ -539,7 +539,7 @@ class TaskPlan:
             if task.name == "yo-install-packages":
                 print("   " + "\n   ".join(task.script.split("\n")))
 
-    def run(self, ctx: "YoCtx", inst: YoInstance) -> None:
+    def run(self, ctx: "YoRegionalCtx", inst: YoInstance) -> None:
         # Now ordered_tasks contains the order in which we should launch them.  This
         # is just a nice-to-have: even if we launched them out of order, the
         # DEPENDS_ON function would enforce the order of execution. Regardless,
@@ -547,16 +547,16 @@ class TaskPlan:
         for task in self.ordered_tasks:
             _task_run(ctx, inst, task)
 
-    def join(self, ctx: "YoCtx", inst: YoInstance) -> None:
+    def join(self, ctx: "YoRegionalCtx", inst: YoInstance) -> None:
         wait_tasks = [t.name for t in self.ordered_tasks]
         task_join(ctx, inst, wait_tasks)
 
 
 def task_get_status(
-    ctx: "YoCtx",
+    ctx: "YoRegionalCtx",
     inst: YoInstance,
 ) -> t.Mapping[str, t.Tuple[str, t.Union[int, str]]]:
-    task_dir_safe = ctx.config.task_dir_safe
+    task_dir_safe = ctx.c.config.task_dir_safe
     # Take care to use the escaped task dir, and use the -print0 and xargs -0
     # arguments for maximum safety: filenames can be weird.
     command = (
@@ -569,7 +569,7 @@ def task_get_status(
     res = ssh_into(
         ip,
         user,
-        ctx,
+        ctx.c,
         extra_args=["-q"],
         cmds=[command],
         capture_output=True,
@@ -589,7 +589,7 @@ def task_get_status(
             print(line)
             print(res.stdout)
             raise YoExc(
-                f"bad task status data, examine {ctx.config.task_dir} on the host"
+                f"bad task status data, examine {ctx.c.config.task_dir} on the host"
             )
         task, kind, stat = match.groups()
         task_to_files[task].append((kind, stat))
@@ -642,11 +642,11 @@ def task_status_to_table(
 
 
 def task_join(
-    ctx: "YoCtx",
+    ctx: "YoRegionalCtx",
     inst: YoInstance,
     wait_tasks: t.Iterable[str] = (),
 ) -> t.Mapping[str, t.Tuple[str, t.Union[str, int]]]:
-    with Live(console=ctx.con) as live:
+    with Live(console=ctx.c.con) as live:
         task_previous_status: t.Dict[str, t.Tuple[str, t.Union[int, str]]] = {}
         while True:
             status_dict = task_get_status(ctx, inst)

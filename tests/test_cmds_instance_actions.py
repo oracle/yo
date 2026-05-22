@@ -24,7 +24,7 @@ def test_start_waits_and_notifies(mock_cmd_ctx, mock_cmd_boundaries):
         max_wait_seconds=600,
     )
     mock_cmd_boundaries.send_notification.assert_called_once_with(
-        mock_cmd_ctx, "Instance test-vm is now in state RUNNING"
+        mock_cmd_ctx.c, "Instance test-vm is now in state RUNNING"
     )
 
 
@@ -67,16 +67,18 @@ def test_reboot_ssh_connects_after_wait(mock_cmd_ctx, mock_cmd_boundaries):
         max_wait_seconds=600,
     )
     mock_cmd_boundaries.wait_for_ssh_access.assert_called_once_with(
-        "1.2.3.4", "opc", mock_cmd_ctx, host_key_alias="inst1"
+        "1.2.3.4", "opc", mock_cmd_ctx.c, host_key_alias="inst1"
     )
     mock_cmd_boundaries.send_notification.assert_has_calls(
         [
-            mock.call(mock_cmd_ctx, "Instance test-vm is now in state RUNNING"),
-            mock.call(mock_cmd_ctx, "Instance test-vm is connected via SSH"),
+            mock.call(
+                mock_cmd_ctx.c, "Instance test-vm is now in state RUNNING"
+            ),
+            mock.call(mock_cmd_ctx.c, "Instance test-vm is connected via SSH"),
         ]
     )
     mock_cmd_boundaries.ssh_into.assert_called_once_with(
-        "1.2.3.4", "opc", ctx=mock_cmd_ctx, host_key_alias="inst1"
+        "1.2.3.4", "opc", ctx=mock_cmd_ctx.c, host_key_alias="inst1"
     )
 
 

@@ -123,7 +123,8 @@ class FakeOCI:
         self.compute = FakeOCICompute()
         self.ctx = ctx
 
-        ctx.con = mock.Mock()
+        ctx.c.con = mock.Mock()
+        ctx.con = ctx.c.con
         ctx._oci = mock.Mock()
         ctx._oci.list_call_get_all_results.side_effect = (
             self.list_call_get_all_results

@@ -33,7 +33,7 @@ def test_task_run_wait_runs_and_joins(mock_cmd_ctx, mock_cmd_boundaries):
     plan.run.assert_called_once_with(mock_cmd_ctx, inst)
     plan.join.assert_called_once_with(mock_cmd_ctx, inst)
     mock_cmd_boundaries.send_notification.assert_called_once_with(
-        mock_cmd_ctx, "Task ['prep'] complete on instance test-vm"
+        mock_cmd_ctx.c, "Task ['prep'] complete on instance test-vm"
     )
 
 
@@ -62,7 +62,7 @@ def test_task_wait_waits_on_named_task(mock_cmd_ctx, mock_cmd_boundaries):
 
     task_join.assert_called_once_with(mock_cmd_ctx, inst, wait_tasks=["prep"])
     mock_cmd_boundaries.send_notification.assert_called_once_with(
-        mock_cmd_ctx, "Task prep complete on instance test-vm"
+        mock_cmd_ctx.c, "Task prep complete on instance test-vm"
     )
 
 
@@ -75,7 +75,7 @@ def test_task_join_waits_for_all_tasks(mock_cmd_ctx, mock_cmd_boundaries):
 
     task_join.assert_called_once_with(mock_cmd_ctx, inst)
     mock_cmd_boundaries.send_notification.assert_called_once_with(
-        mock_cmd_ctx, "All tasks complete on instance test-vm"
+        mock_cmd_ctx.c, "All tasks complete on instance test-vm"
     )
 
 

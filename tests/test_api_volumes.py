@@ -18,6 +18,7 @@ from yo.api import AttachmentType
 from yo.api import SAVEDATA
 from yo.api import VolumeKind
 from yo.api import YoCtx
+from yo.api import YoRegionalCtx
 from yo.api import YoSubnet
 from yo.util import YoExc
 
@@ -25,8 +26,10 @@ from yo.util import YoExc
 def _make_ctx(tmp_path, **cfg_kwargs):
     cache_file = tmp_path / "yo-cache.json"
     cfg = config_factory(**cfg_kwargs)
-    ctx = YoCtx(cfg, {}, cache_file=str(cache_file))
-    ctx.con = mock.Mock()
+    cc = YoCtx(cfg, {})
+    cc.con = mock.Mock()
+    ctx = YoRegionalCtx(cc, cfg.region, str(cache_file))
+    ctx.con = cc.con
     ctx.clear_cache()
     return ctx
 

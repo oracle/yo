@@ -13,8 +13,9 @@ from yo.util import YoExc
 
 def _ctx() -> mock.Mock:
     ctx = mock.Mock()
-    ctx.config.task_dir_safe = "/tmp/yo tasks"
-    ctx.config.task_dir = "/tmp/yo tasks"
+    ctx.c = ctx
+    ctx.c.config.task_dir_safe = "/tmp/yo tasks"
+    ctx.c.config.task_dir = "/tmp/yo tasks"
     ctx.get_instance_ip.return_value = "1.2.3.4"
     ctx.get_ssh_user.return_value = "opc"
     return ctx

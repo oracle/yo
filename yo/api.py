@@ -224,7 +224,7 @@ class InstanceProfile:
     cloudguard_wlp: t.Optional[bool] = None
     install: t.List[str] = dataclasses.field(default_factory=list)
 
-    def create_arg_dict(self, ctx: "YoCtx") -> t.Dict[str, t.Any]:
+    def create_arg_dict(self, ctx: "YoRegionalCtx") -> t.Dict[str, t.Any]:
         return {
             "availability_domain": ctx.get_ad(self.availability_domain).name,
             "boot_volume_size_gbs": self.boot_volume_size_gbs,
@@ -1038,24 +1038,64 @@ class YoCtx:
     con: rich.console.Console
     config: YoConfig
     instance_profiles: t.Mapping[str, InstanceProfile]
+    region: str
+    _regions: t.Dict[str, "YoRegionalCtx"]
+    _tpe: concurrent.futures.ThreadPoolExecutor
+    _cache_dir: str
+    _oci_passphrase: t.Optional[str]
 
+    def __init__(
+        self,
+        yo_config: YoConfig,
+        instance_profiles: t.Mapping[str, InstanceProfile],
+        cache_dir: t.Optional[str] = None,
+    ):
+        if not cache_dir:
+            cache_dir = "~/.cache/"
+        # Escape hatch to disable the log timestamps
+        log_time = "YO_LOG_WITHOUT_TIME" not in os.environ
+        self.con = rich.console.Console(log_path=False, log_time=log_time)
+        self.config = yo_config
+        self.instance_profiles = instance_profiles
+        self.region = yo_config.region
+        self._regions = {}
+        self._tpe = concurrent.futures.ThreadPoolExecutor()
+        self._cache_dir = cache_dir
+        # Some API keys have passphrases, and the OCI CLI supports a
+        # "OCI_CLI_PASSPHRASE" environment variable. This is probably the most
+        # secure way to communicate the passphrase (short of a human entering
+        # it every time). To support this environment variable, load it now and
+        # save it. Even if the envvar is not set, it is still useful: If we
+        # detect that OCI requires a passphrase to create a regional client,
+        # this field will be updated so that subsequent regions don't prompt
+        # again.
+        self._oci_passphrase = os.environ.get("OCI_CLI_PASSPHRASE")
+
+    def __enter__(self) -> None:
+        self._tpe.__enter__()
+
+    def __exit__(
+        self, exc_type: t.Any, exc_value: t.Any, traceback: t.Any
+    ) -> t.Any:
+        self._tpe.__exit__(exc_type, exc_value, traceback)
+
+    def rc(self, region: str) -> "YoRegionalCtx":
+        if region not in self._regions:
+            if region not in self.config.regions:
+                raise YoExc(
+                    f"region '{region}' is not configured. Add a "
+                    f"\\[regions.{region}] configuration section to "
+                    "~/.oci/yo.ini"
+                )
+            cache_file = os.path.join(self._cache_dir, f"yo.{region}.json")
+            self._regions[region] = YoRegionalCtx(self, region, cache_file)
+        return self._regions[region]
+
+
+class YoRegionalCtx:
+    # ---- CLASS ATTRIBUTES ----
     cache_version = 2
-    last_checked_for_update: datetime.datetime
-
-    _instances: YoCache[YoInstance] = YoCache(YoInstance, "instances", 5)
-    _vnics: YoCache[YoVnic] = YoCache(YoVnic, "vnics", 2)
-    _images: YoCache[YoImage] = YoCache(YoImage, "images", 7)
-    _consoles: YoCache[YoConsole] = YoCache(YoConsole, "consoles", 2)
-    _shapes: YoCache[YoShape] = YoCache(YoShape, "shapes", 5)
-    _vols: YoCache[YoVolume] = YoCache(YoVolume, "bootvols", 5)
-    _vas: YoCache[YoVolumeAttachment] = YoCache(YoVolumeAttachment, "vas", 3)
-    _ads: YoCache[YoAd] = YoCache(YoAd, "ads", 1, stale_hours=24 * 7)
-    _compartments: YoCache[YoCompartment] = YoCache(
-        YoCompartment, "compartments", 1, stale_hours=24 * 7
-    )
-
-    # Put all cache names from above here too so we automatically manage them
-    _caches = [
+    _caches = (
         "_instances",
         "_vnics",
         "_images",
@@ -1065,8 +1105,26 @@ class YoCtx:
         "_vas",
         "_ads",
         "_compartments",
-    ]
+    )
 
+    # ---- INSTANCE ATTRIBUTES ----
+    c: YoCtx
+    region: str
+    last_checked_for_update: datetime.datetime
+    _oci_cfg: t.Dict[str, str]
+
+    # Caches (See above, and __init__)
+    _instances: YoCache[YoInstance]
+    _vnics: YoCache[YoVnic]
+    _images: YoCache[YoImage]
+    _consoles: YoCache[YoConsole]
+    _shapes: YoCache[YoShape]
+    _vols: YoCache[YoVolume]
+    _vas: YoCache[YoVolumeAttachment]
+    _ads: YoCache[YoAd]
+    _compartments: YoCache[YoCompartment]
+
+    # OCI Clients
     _compute: t.Optional["ComputeClient"] = None
     _vnet: t.Optional["VirtualNetworkClient"] = None
     _oci: t.Any = None
@@ -1074,37 +1132,100 @@ class YoCtx:
     _iam: t.Optional["IdentityClient"] = None
     _limits: t.Optional["LimitsClient"] = None
 
-    _tpe: concurrent.futures.ThreadPoolExecutor
-    _oci_config: t.Dict[str, t.Any]
+    def __init__(self, ctx: YoCtx, region: str, cache_file: str) -> None:
+        self.c = ctx
+        self.region = region
+        self.last_checked_for_update = now()  # TODO: fix updates
+        self._oci_cfg = {}
+        self._cache_file = os.path.expanduser(cache_file)
+        self._instances = YoCache(YoInstance, "instances", 5)
+        self._vnics = YoCache(YoVnic, "vnics", 2)
+        self._images = YoCache(YoImage, "images", 7)
+        self._consoles = YoCache(YoConsole, "consoles", 2)
+        self._shapes = YoCache(YoShape, "shapes", 5)
+        self._vols = YoCache(YoVolume, "bootvols", 5)
+        self._vas = YoCache(YoVolumeAttachment, "vas", 3)
+        self._ads = YoCache(YoAd, "ads", 1, stale_hours=24 * 7)
+        self._compartments = YoCache(
+            YoCompartment, "compartments", 1, stale_hours=24 * 7
+        )
+        self._compute = None
+        self._vnet = None
+        self._oci = None
+        self._block = None
+        self._iam = None
+        self._limits = None
+        self.load_cache()
+
+    def load_cache(self) -> None:
+        cache_file = self._cache_file
+        cache = {}
+        try:
+            stbuf = os.stat(cache_file)
+            exists = True
+        except FileNotFoundError:
+            exists = False
+        if exists and stbuf.st_mtime < self.c.config.mtime:
+            self.c.con.log("Invalidating cache due to updated config")
+            os.unlink(cache_file)
+        elif exists:
+            with open(cache_file) as f:
+                cache = json.load(f)
+            cache_version = cache.pop("cache_version", 0)
+            resource_filtering = cache.pop("resource_filtering", None)
+            if (
+                cache_version != self.cache_version
+                or resource_filtering != self.c.config.resource_filtering
+            ):
+                os.unlink(cache_file)
+                self.c.con.log(
+                    "Invalidating cache due to cache version or resource filtering"
+                )
+                cache = {}
+        if "last_checked_for_update" in cache:
+            self.last_checked_for_update = fromisoformat(
+                cache["last_checked_for_update"]
+            )
+        else:
+            # There are two cases where this may happen:
+            # 1. Upgrading Yo past the version which introduced
+            #    "last_checked_for_update".
+            # 2. The first run of Yo after installation.
+            # In either case, Yo was very likely recently updated. So it makes
+            # the most sense to set it to now(), rather than setting it to an
+            # arbitrary date in the past. What's more, setting it to an
+            # arbitrary date in the past such as Unix timestamp 0 ends up
+            # causing errors on some platforms (cough... Windows).
+            self.last_checked_for_update = now()
+        for cache_attr in self._caches:
+            yocache: YoCache[t.Any] = getattr(self, cache_attr)
+            yocache.load(cache.get(yocache.name, {}))
 
     def _setup_oci(self) -> None:
         import yo.oci as foo
 
         self._oci = foo
         self._oci_cfg = foo.oci.config.from_file(
-            profile_name=self.config.oci_profile
+            profile_name=self.c.config.oci_profile
         )
         # The OCI SDK allows you to set the region. However, that's one extra
         # config file to keep in sync with yo.ini. Yo overrides the region with
         # a value provided from its own config, to allow users to update the
         # region, VCN ID, and AD configuration, all in one place.
-        self._oci_cfg["region"] = self.config.region
-
-        # Some API keys have passphrases, and the OCI CLI supports a
-        # "OCI_CLI_PASSPHRASE" environment variable. This is probably the most
-        # secure way to communicate the passphrase (short of a human entering
-        # it every time). Let's support this environment variable. Note that
-        # doing it this way is actually using OCI's deprecated "pass_phrase"
-        # configuration item, but that's how the CLI implements it as well, so
-        # this should be safe.
-        if "OCI_CLI_PASSPHRASE" in os.environ:
-            self._oci_cfg["pass_phrase"] = os.environ["OCI_CLI_PASSPHRASE"]
+        self._oci_cfg["region"] = self.region
 
         # First try to load a client without using a passphrase. If that fails,
-        # we need to prompt and retry with a passphrase. If that fails, the
-        # passphrase was likely wrong, so we continue until we succeed in
-        # creating the client, or until we get any other error.
+        # we need to prompt the user and retry with a passphrase.
         #
+        # However, if the context already has one set, then the passphrase was
+        # either provided by envvar, or the passphrase was set by a previous
+        # regional context on initialization. In either case, we should not
+        # retry with a passphrase prompt.
+        retry_with_passphrase = True
+        if self.c._oci_passphrase:
+            self._oci_cfg["pass_phrase"] = self.c._oci_passphrase
+            retry_with_passphrase = False
+
         # KNOWN BUG: Some versions of cryptography / OpenSSL (the built-in ones
         # on OL9, at least) will give a spurious prompt in case you provide the
         # wrong password. This doesn't happen with recent versions from pip, and
@@ -1115,37 +1236,30 @@ class YoCtx:
             try:
                 self._vnet = foo.oci.core.VirtualNetworkClient(self._oci_cfg)
             except foo.oci.exceptions.MissingPrivateKeyPassphrase:
-                needs_passphrase = True
-                self._oci_cfg["pass_phrase"] = self.con.input(
+                self._oci_cfg["pass_phrase"] = self.c.con.input(
                     prompt="OCI API Key Passphrase: ",
                     password=True,
                 )
             except foo.oci.exceptions.InvalidPrivateKey:
-                # The error is vague: either the password is wrong, or it's the
-                # wrong type of key. We can be more specific, since we know
-                # whether a password is required, we already tried without it.
-                if not needs_passphrase:
+                if not retry_with_passphrase:
                     raise
-                self.con.print("[red]Incorrect passphrase[/red]")
-                self._oci_cfg["pass_phrase"] = self.con.input(
+                self.c.con.print("[red]Incorrect passphrase[/red]")
+                self._oci_cfg["pass_phrase"] = self.c.con.input(
                     prompt="OCI API Key Passphrase: ",
                     password=True,
                 )
             else:
                 break
+
+        # Now save the passphrase for other regions
+        if "pass_phrase" in self._oci_cfg:
+            self.c._oci_passphrase = self._oci_cfg["pass_phrase"]
+
+        # And finally, initialize our other clients
         self._compute = foo.oci.core.ComputeClient(self._oci_cfg)
         self._block = foo.oci.core.BlockstorageClient(self._oci_cfg)
         self._iam = foo.oci.identity.IdentityClient(self._oci_cfg)
         self._limits = foo.oci.limits.LimitsClient(self._oci_cfg)
-
-    def __enter__(self) -> None:
-        self._tpe = concurrent.futures.ThreadPoolExecutor()
-        self._tpe.__enter__()
-
-    def __exit__(
-        self, exc_type: t.Any, exc_value: t.Any, traceback: t.Any
-    ) -> t.Any:
-        self._tpe.__exit__(exc_type, exc_value, traceback)
 
     @property
     def oci(self) -> t.Any:
@@ -1187,51 +1301,7 @@ class YoCtx:
     def tenancy_id(self) -> str:
         if getattr(self, "_oci_cfg", None) is None:
             self._setup_oci()
-        return t.cast(str, self._oci_cfg["tenancy"])
-
-    def load_cache(self) -> None:
-        cache_file = self._cache_file
-        cache = {}
-        try:
-            stbuf = os.stat(cache_file)
-            exists = True
-        except FileNotFoundError:
-            exists = False
-        if exists and stbuf.st_mtime < self.config.mtime:
-            self.con.log("Invalidating cache due to updated config")
-            os.unlink(cache_file)
-        elif exists:
-            with open(cache_file) as f:
-                cache = json.load(f)
-            cache_version = cache.pop("cache_version", 0)
-            resource_filtering = cache.pop("resource_filtering", None)
-            if (
-                cache_version != self.cache_version
-                or resource_filtering != self.config.resource_filtering
-            ):
-                os.unlink(cache_file)
-                self.con.log(
-                    "Invalidating cache due to cache version or resource filtering"
-                )
-                cache = {}
-        if "last_checked_for_update" in cache:
-            self.last_checked_for_update = fromisoformat(
-                cache["last_checked_for_update"]
-            )
-        else:
-            # There are two cases where this may happen:
-            # 1. Upgrading Yo past the version which introduced
-            #    "last_checked_for_update".
-            # 2. The first run of Yo after installation.
-            # In either case, Yo was very likely recently updated. So it makes
-            # the most sense to set it to now(), rather than setting it to an
-            # arbitrary date in the past. What's more, setting it to an
-            # arbitrary date in the past such as Unix timestamp 0 ends up
-            # causing errors on some platforms (cough... Windows).
-            self.last_checked_for_update = now()
-        for cache_attr in self._caches:
-            yocache: YoCache[t.Any] = getattr(self, cache_attr)
-            yocache.load(cache.get(yocache.name, {}))
+        return self._oci_cfg["tenancy"]
 
     def save_cache(self) -> None:
         # It is possible for multiple executions of Yo to concurrently read and
@@ -1245,7 +1315,7 @@ class YoCtx:
         cache_dir = os.path.dirname(cache_pid_file)
         cache: t.Dict[str, t.Any] = {
             "cache_version": self.cache_version,
-            "resource_filtering": self.config.resource_filtering,
+            "resource_filtering": self.c.config.resource_filtering,
             "last_checked_for_update": toisoformat(
                 self.last_checked_for_update
             ),
@@ -1270,57 +1340,11 @@ class YoCtx:
             yocache: YoCache[t.Any] = getattr(self, cache_attr)
             yocache.clear()
 
-    def __init__(
-        self,
-        yo_config: YoConfig,
-        instance_profiles: t.Mapping[str, InstanceProfile],
-        cache_file: t.Optional[str] = None,
-    ):
-        if not cache_file:
-            cache_file = f"~/.cache/yo.{yo_config.region}.json"
-        # Escape hatch to disable the log timestamps
-        log_time = "YO_LOG_WITHOUT_TIME" not in os.environ
-        self.con = rich.console.Console(log_path=False, log_time=log_time)
-        self.config = yo_config
-        self.instance_profiles = instance_profiles
-        self._cache_file = os.path.expanduser(cache_file)
-        self._init_caches()
-        self.load_cache()
-
-    def _init_caches(self) -> None:
-        for cache_attr in self._caches:
-            proto: YoCache[t.Any] = getattr(type(self), cache_attr)
-            setattr(
-                self,
-                cache_attr,
-                YoCache(
-                    proto._type,
-                    proto.name,
-                    proto._version,
-                    proto._stale_hours,
-                ),
-            )
-
-    def switch_region(self, region: str) -> None:
-        if region not in self.config.regions:
-            raise YoExc(
-                f"region '{region}' is not configured. Add a "
-                f"\\[regions.{region}] configuration section to ~/.oci/yo.ini"
-            )
-        self._cache_file = os.path.expanduser(f"~/.cache/yo.{region}.json")
-        self.config.region = region
-        if self._oci:
-            # Reload the OCI SDK clients if they were already loaded for the
-            # other region. Otherwise, let them get lazily initialized later.
-            self._setup_oci()
-        self.clear_cache()  # clear out cached data from other region
-        self.load_cache()
-
     def filter_by_creator(self, s: t.Optional[str]) -> bool:
         """Return true if the string matches a creator tag"""
-        if not self.config.resource_filtering:
+        if not self.c.config.resource_filtering:
             return True
-        return bool(s) and (s in self.config.all_creator_tags)
+        return bool(s) and (s in self.c.config.all_creator_tags)
 
     @contextlib.contextmanager
     def maybe_check_for_updates(self) -> t.Iterator[None]:
@@ -1341,12 +1365,12 @@ class YoCtx:
         since_last_check = now() - self.last_checked_for_update
         hours = since_last_check.total_seconds() / 3600
         if (
-            not self.config.check_for_update_every
-            or hours < self.config.check_for_update_every
+            not self.c.config.check_for_update_every
+            or hours < self.c.config.check_for_update_every
         ):
             yield
             return
-        fut = self._tpe.submit(latest_yo_version)
+        fut = self.c._tpe.submit(latest_yo_version)
         try:
             yield
         except BaseException:
@@ -1358,12 +1382,12 @@ class YoCtx:
         ver = current_yo_version()
         latest_str = ".".join(map(str, latest))
         if ver < latest:
-            self.con.print(
+            self.c.con.print(
                 f"Note: version {latest_str} of Yo is available, please update"
             )
-            self.con.print("To update:")
-            self.con.print(f"   {yo.util.UPGRADE_COMMAND}")
-            self.con.print(
+            self.c.con.print("To update:")
+            self.c.con.print(f"   {yo.util.UPGRADE_COMMAND}")
+            self.c.con.print(
                 "You can check the current & latest version with 'yo version'"
             )
         self.last_checked_for_update = now()
@@ -1372,7 +1396,7 @@ class YoCtx:
     def list_instances(
         self, verbose: bool = False, show_all: bool = False
     ) -> t.List[YoInstance]:
-        cid = self.config.instance_compartment_id
+        cid = self.c.config.instance_compartment_id
         instances_generator = self.oci.list_call_get_all_results(
             self.compute.list_instances,
             cid,
@@ -1387,7 +1411,7 @@ class YoCtx:
             )
             if not email:
                 if not warned_on_missing_tag:
-                    self.con.log(
+                    self.c.con.log(
                         "[red]warning:[/red] Instances in your tenancy "
                         "do not have the automatic Oracle-Tags.CreatedBy "
                         "tag - your tenancy may be older, or your tenancy "
@@ -1494,7 +1518,7 @@ class YoCtx:
         :param exact_name: whether to use --exact-name behavior
         """
         # First, try with the cached instance list
-        real_name = standardize_name(name, exact_name, self.config)
+        real_name = standardize_name(name, exact_name, self.c.config)
         name_matches = self._instances_named([real_name])
         matches = self._filter_instances(
             name_matches, states_allowlist, states_denylist
@@ -1594,8 +1618,8 @@ class YoCtx:
         yovnic = self._vnics.get_by("instance_id", inst.id)
         if not yovnic:
             if not quiet:
-                self.con.log("Looking up instance IP/Vnic")
-            cid = self.config.instance_compartment_id
+                self.c.con.log("Looking up instance IP/Vnic")
+            cid = self.c.config.instance_compartment_id
             vnic_gen = self.oci.list_call_get_all_results_generator(
                 self.compute.list_vnic_attachments,
                 "record",
@@ -1606,7 +1630,7 @@ class YoCtx:
             if not vnic_attachments:
                 raise YoExc("There are no attached VNICs for this instance")
             elif len(vnic_attachments) > 1:
-                self.con.log(
+                self.c.con.log(
                     "[red]warning:[/red] your instance has multiple attached "
                     "VNICs, which may have multiple IPs. Yo is choosing to use "
                     "first one. If you encounter issues, please mention this "
@@ -1623,7 +1647,7 @@ class YoCtx:
         yovnic = self.get_vnic(inst, quiet)
         ip = yovnic.public_ip or yovnic.private_ip
         if not quiet:
-            self.con.log(f"Found instance ip [blue]{ip}")
+            self.c.con.log(f"Found instance ip [blue]{ip}")
         return ip
 
     def get_all_instance_ips(
@@ -1643,7 +1667,7 @@ class YoCtx:
             vnic_gen = self.oci.list_call_get_all_results_generator(
                 self.compute.list_vnic_attachments,
                 "record",
-                self.config.instance_compartment_id,
+                self.c.config.instance_compartment_id,
             )
             inst_to_atchs = collections.defaultdict(list)
             for vnic_atch in vnic_gen:
@@ -1667,7 +1691,7 @@ class YoCtx:
                     except self.oci.TransientServiceError as e:
                         if e.code == "TooManyRequests" and i < 2:
                             sleep = random.uniform(1, 4)
-                            self.con.log(
+                            self.c.con.log(
                                 f"Rate-limited by OCI ({i + 1})! Backing off {sleep:.2f}s"
                             )
                             time.sleep(sleep)
@@ -1678,7 +1702,7 @@ class YoCtx:
 
             # Use the thread pool to request all the vnics
             inst_to_vnic.update(
-                dict(self._tpe.map(load_vnic, inst_to_atchs_filtered.items()))
+                dict(self.c._tpe.map(load_vnic, inst_to_atchs_filtered.items()))
             )
             self._vnics.set(list(inst_to_vnic.values()))
             self.save_cache()
@@ -1733,11 +1757,11 @@ class YoCtx:
         List all OCI images, including custom images.
         """
         compartments = [
-            self.config.instance_compartment_id
-        ] + self.config.image_compartment_ids
+            self.c.config.instance_compartment_id
+        ] + self.c.config.image_compartment_ids
         images = []
         if refresh or not self._images.is_current():
-            self.con.log("Refreshing cached image list")
+            self.c.con.log("Refreshing cached image list")
             seen_ids = set()
             for cid in compartments:
                 cid = cid.split(":")[0]
@@ -1750,8 +1774,8 @@ class YoCtx:
                     if img.id not in seen_ids:
                         images.append(YoImage.from_oci(img))
                         seen_ids.add(img.id)
-            self.con.log("Loading image compatibility")
-            list(self._tpe.map(self._load_image_compatibility, images))
+            self.c.con.log("Loading image compatibility")
+            list(self.c._tpe.map(self._load_image_compatibility, images))
             self._images.set(images)
             self.save_cache()
         return self._images.get_all()
@@ -1864,11 +1888,11 @@ class YoCtx:
 
         image = images[0]
         dn = image.name
-        self.con.log(f"Using image [blue]{dn}[/blue]")
+        self.c.con.log(f"Using image [blue]{dn}[/blue]")
         return image
 
     def list_shapes(self) -> t.List[YoShape]:
-        cid = self.config.instance_compartment_id
+        cid = self.c.config.instance_compartment_id
         if not self._shapes.is_current():
             shape_gen = self.oci.list_call_get_all_results_generator(
                 self.compute.list_shapes, "record", cid
@@ -1894,11 +1918,11 @@ class YoCtx:
     def create_console(self, instance_id: str) -> YoConsole:
         details = self.oci.CreateInstanceConsoleConnectionDetails(
             instance_id=instance_id,
-            public_key=self.config.ssh_public_key_full,
+            public_key=self.c.config.ssh_public_key_full,
         )
         resp = self.compute.create_instance_console_connection(details)
         conn = resp.data
-        self.con.log(
+        self.c.con.log(
             "Created instance console connection. Waiting for it to become "
             "active."
         )
@@ -1933,7 +1957,7 @@ class YoCtx:
 
         # Second, make the API call to look for an existing console. It is
         # possible that one could have been created elsewhere.
-        cid = self.config.instance_compartment_id
+        cid = self.c.config.instance_compartment_id
         conns = list(
             filter(
                 lambda i: i.lifecycle_state == "ACTIVE",
@@ -1957,22 +1981,22 @@ class YoCtx:
             )
 
     def pick_subnet(self, ad: str) -> YoSubnet:
-        if self.config.subnet_id:
-            resp = self.vnet.get_subnet(subnet_id=self.config.subnet_id)
+        if self.c.config.subnet_id:
+            resp = self.vnet.get_subnet(subnet_id=self.c.config.subnet_id)
             subnet = resp.data
             if subnet.availability_domain and subnet.availability_domain != ad:
-                self.con.log(
+                self.c.con.log(
                     "[orange]warning: the given subnet_id has a different "
                     "availability domain than the one specified in your "
                     "instance profile. Continuing, but this may not be what "
                     "you want."
                 )
-        elif self.config.subnet_compartment_id:
+        elif self.c.config.subnet_compartment_id:
             gen = self.oci.list_call_get_all_results_generator(
                 self.vnet.list_subnets,
                 "record",
-                self.config.subnet_compartment_id,
-                vcn_id=self.config.vcn_id,
+                self.c.config.subnet_compartment_id,
+                vcn_id=self.c.config.vcn_id,
                 lifecycle_state="AVAILABLE",
             )
             for subnet in gen:
@@ -1986,7 +2010,7 @@ class YoCtx:
         else:
             raise YoExc("Need subnet_id or subnet_compartment_id.")
         sub = YoSubnet.from_oci(subnet)
-        self.con.log(f"Using subnet [blue]{sub.name}[/blue]")
+        self.c.con.log(f"Using subnet [blue]{sub.name}[/blue]")
         return sub
 
     def launch_instance(self, details: t.Dict[str, t.Any]) -> YoInstance:
@@ -2047,7 +2071,7 @@ class YoCtx:
         # Yo-specific tag, we can at least ensure that we will be able to list
         # and manage the instances created by Yo.
         details["freeform_tags"] = {
-            CREATEDBY: self.config.my_email,
+            CREATEDBY: self.c.config.my_email,
         }
         if username:
             details["freeform_tags"][USERNAME] = username
@@ -2171,7 +2195,7 @@ class YoCtx:
                     f"{image.name}: allowed Mem range (GiB) {compat.min_mem_gbs}"
                     f" - {compat.max_mem_gbs}"
                 )
-        self.con.log(
+        self.c.con.log(
             f"Configured flex shape with [blue]{cpu} CPUs[/blue]"
             f" and [blue]{mem} GiB[/blue] memory"
         )
@@ -2190,9 +2214,9 @@ class YoCtx:
         if not user_spec or user_spec == "$DEFAULT":
             return default_username, None
         elif user_spec == "$MY_USERNAME":
-            user_spec = self.config.my_username
+            user_spec = self.c.config.my_username
         user_spec = validate_ssh_username(user_spec, "custom username")
-        self.con.log(f"Setting custom username: {user_spec}")
+        self.c.con.log(f"Setting custom username: {user_spec}")
         user_data_lines = [
             "#cloud-config",
             "system_info:",
@@ -2222,7 +2246,7 @@ class YoCtx:
         # This name is used as the baseline for what the user expected.
         # If we choose one that doesn't match, we print a warning.
         name = orig_name = name or profile.name
-        name = standardize_name(name, exact_name, self.config)
+        name = standardize_name(name, exact_name, self.c.config)
         all_instances = self.list_instances()
         names = set(
             inst.name for inst in all_instances if inst.state != "TERMINATED"
@@ -2233,7 +2257,7 @@ class YoCtx:
 
         def _maybe_warn_name(profile: InstanceProfile, name: str) -> str:
             if orig_name is not None and name != orig_name:
-                self.con.log(
+                self.c.con.log(
                     f"[magenta]Warning[/magenta]: display name set to {name} "
                     f"instead of {orig_name}. If you want to have your name "
                     f"used exactly, use --exact-name."
@@ -2307,16 +2331,16 @@ class YoCtx:
         :param boot_volume_size_gbs: size of boot volume
         :param cloudguard_wlp: override Cloud Guard Workload Protection plugin
         """
-        profile = self.instance_profiles[profile_name]
+        profile = self.c.instance_profiles[profile_name]
         create_args = profile.create_arg_dict(self)
         if exact_name is not None:
             en = exact_name
         else:
-            en = bool(self.config.exact_name)
+            en = bool(self.c.config.exact_name)
 
         shape_obj = self.get_shape_by_name(shape or profile.shape)
         create_args["shape"] = shape_obj.name
-        create_args["compartment_id"] = self.config.instance_compartment_id
+        create_args["compartment_id"] = self.c.config.instance_compartment_id
         avd = self.get_ad(ad or profile.availability_domain).name
         create_args["availability_domain"] = avd
         subnet = self.pick_subnet(avd)
@@ -2325,7 +2349,7 @@ class YoCtx:
         img = None
         vol = None
         if volume is not None:
-            volname = standardize_name(volume, en, self.config)
+            volname = standardize_name(volume, en, self.c.config)
             vol = self.get_volume(volname, kind=VolumeKind.BOOT)
             default_username = "opc"
             if vol.image_id is not None:
@@ -2353,7 +2377,7 @@ class YoCtx:
             default_username, username, profile
         )
         create_args["metadata"] = {
-            "ssh_authorized_keys": self.config.ssh_public_key_full,
+            "ssh_authorized_keys": self.c.config.ssh_public_key_full,
         }
         if user_data:
             create_args["metadata"]["user_data"] = user_data
@@ -2394,17 +2418,17 @@ class YoCtx:
         oldshape = self.get_shape_by_name(inst.shape)
         yoshape = self.get_shape_by_name(shape)
         if oldshape.is_flexible:
-            self.con.log(
+            self.c.con.log(
                 f"Instance is currently shape [blue]{inst.shape}[/blue]"
                 f" with [blue]{inst.ocpu} CPU[/blue] and [blue]"
                 f"{inst.memory_gb} GiB[/blue] of memory."
             )
         else:
-            self.con.log(
+            self.c.con.log(
                 f"Instance is currently shape [blue]{inst.shape}[/blue]"
             )
         if oldshape.name != shape:
-            self.con.log(f"Updating to shape: {shape}")
+            self.c.con.log(f"Updating to shape: {shape}")
         cpu = cpu or inst.ocpu
         mem = mem or inst.memory_gb
         create_args: t.Dict[str, t.Dict[str, t.Any]] = {"shape_config": {}}
@@ -2417,11 +2441,11 @@ class YoCtx:
             shape=shape, shape_config=shape_config
         )
         if not Confirm.ask(
-            "This will reboot your instance! Is this ok?", console=self.con
+            "This will reboot your instance! Is this ok?", console=self.c.con
         ):
-            self.con.print("[green]Ok, cancelled.")
+            self.c.con.print("[green]Ok, cancelled.")
             return inst
-        self.con.print("[bold red]Confirmed.")
+        self.c.con.print("[bold red]Confirmed.")
         try:
             newinst = YoInstance.from_oci(
                 self.compute.update_instance(inst.id, deets).data
@@ -2453,7 +2477,7 @@ class YoCtx:
             self.block.list_boot_volumes,
             "record",
             availability_domain=ad,
-            compartment_id=self.config.instance_compartment_id,
+            compartment_id=self.c.config.instance_compartment_id,
         )
         for bootdev in bootdev_gen:
             bv = YoVolume.from_oci_boot(bootdev)
@@ -2464,7 +2488,7 @@ class YoCtx:
             self.compute.list_boot_volume_attachments,
             "record",
             availability_domain=ad,
-            compartment_id=self.config.instance_compartment_id,
+            compartment_id=self.c.config.instance_compartment_id,
         )
         for boot_attch in boot_attch_gen:
             bva = YoVolumeAttachment.from_oci_boot(boot_attch)
@@ -2476,14 +2500,14 @@ class YoCtx:
         if self._vols.is_current() and not refresh:
             return
         ad_resp = self.iam.list_availability_domains(
-            self.config.instance_compartment_id
+            self.c.config.instance_compartment_id
         )
 
         # On the thread pool, start requesting boot volumes and attachments for
         # each availability domain. Unfortunately this can't be done in one
         # call.
         futures = [
-            self._tpe.submit(self._list_bootdevs_atchs, ad.name)
+            self.c._tpe.submit(self._list_bootdevs_atchs, ad.name)
             for ad in ad_resp.data
         ]
 
@@ -2496,7 +2520,7 @@ class YoCtx:
         blockdev_gen = self.oci.list_call_get_all_results_generator(
             self.block.list_volumes,
             "record",
-            compartment_id=self.config.instance_compartment_id,
+            compartment_id=self.c.config.instance_compartment_id,
         )
         for blockdev in blockdev_gen:
             vol = YoVolume.from_oci_block(blockdev)
@@ -2508,7 +2532,7 @@ class YoCtx:
         attch_gen = self.oci.list_call_get_all_results_generator(
             self.compute.list_volume_attachments,
             "record",
-            compartment_id=self.config.instance_compartment_id,
+            compartment_id=self.c.config.instance_compartment_id,
         )
 
         # Before we filter the returned volume attachments, we need to retrieve
@@ -2610,10 +2634,10 @@ class YoCtx:
 
     def create_volume(self, name: str, ad: str, size_gbs: int) -> YoVolume:
         freeform_tags = {
-            CREATEDBY: self.config.my_email,
+            CREATEDBY: self.c.config.my_email,
         }
         details = self.oci.CreateVolumeDetails(
-            compartment_id=self.config.instance_compartment_id,
+            compartment_id=self.c.config.instance_compartment_id,
             display_name=name,
             size_in_gbs=size_gbs,
             availability_domain=ad,
@@ -2793,18 +2817,18 @@ class YoCtx:
         return attach, detach
 
     def report_attached(self, va: YoVolumeAttachment, auto: bool) -> None:
-        self.con.print(f"Your attachment type is {va.attachment_type}")
+        self.c.con.print(f"Your attachment type is {va.attachment_type}")
         if va.device:
-            self.con.print(f"Device: {va.device}")
+            self.c.con.print(f"Device: {va.device}")
         if va.attachment_type == AttachmentType.ISCSI:
             if auto:
-                self.con.print(
+                self.c.con.print(
                     "Your iSCSI device has been automatically attached."
                 )
             else:
                 attach, _ = self.get_attachment_commands(va)
                 cmds = "\n".join(attach)
-                self.con.print(f"Attachment commands:\n[code]{cmds}[/code]")
+                self.c.con.print(f"Attachment commands:\n[code]{cmds}[/code]")
 
     def list_limit_availability(
         self, limits: t.Iterable[str], service: str = "compute"
@@ -2838,7 +2862,7 @@ class YoCtx:
             r = self.limits.get_resource_availability(
                 service,
                 name,
-                self.config.instance_compartment_id,
+                self.c.config.instance_compartment_id,
                 availability_domain=ad,
             )
             return YoAvail(
@@ -2857,7 +2881,7 @@ class YoCtx:
             r = self.limits.get_resource_availability(
                 service,
                 name,
-                self.config.instance_compartment_id,
+                self.c.config.instance_compartment_id,
             )
             return YoAvail(
                 name=name,
@@ -2881,7 +2905,7 @@ class YoCtx:
             if lim_set and lim.name not in lim_set:
                 continue
             if lim.scope_type == "AD":
-                fut = self._tpe.submit(
+                fut = self.c._tpe.submit(
                     load_ad_availability,
                     lim.name,
                     lim.availability_domain,
@@ -2891,7 +2915,7 @@ class YoCtx:
                 ad_lims.add(lim.name)
                 ads.add(lim.availability_domain)
             else:
-                name_to_fut[lim.name] = self._tpe.submit(
+                name_to_fut[lim.name] = self.c._tpe.submit(
                     load_region_availability, lim.name, lim.value
                 )
 
@@ -3057,7 +3081,7 @@ class YoCtx:
             raise YoExc("the volume has no metadata attached to it")
 
         details: t.Dict[str, t.Any] = {
-            "compartment_id": self.config.instance_compartment_id,
+            "compartment_id": self.c.config.instance_compartment_id,
             "availability_domain": volume.ad,
         }
         try:
@@ -3090,7 +3114,7 @@ class YoCtx:
         if not self._ads.is_current():
             ads = []
             ad_resp = self.iam.list_availability_domains(
-                self.config.instance_compartment_id
+                self.c.config.instance_compartment_id
             )
             for oci_ad in ad_resp.data:
                 ads.append(YoAd.from_oci(oci_ad))
@@ -3129,7 +3153,7 @@ class YoCtx:
 
     def _load_compartments(self) -> None:
         if not self._compartments.is_current():
-            self.con.log("Refreshing cached compartment info")
+            self.c.con.log("Refreshing cached compartment info")
             results = self.oci.list_call_get_all_results_generator(
                 self.iam.list_compartments,
                 "record",
@@ -3153,13 +3177,13 @@ class YoCtx:
 
     def identify_compartment(self, name: str) -> str:
         if name == "":
-            return self.config.instance_compartment_id
+            return self.c.config.instance_compartment_id
         elif name.startswith("ocid."):
             return name
 
         compartments = [
-            self.config.instance_compartment_id
-        ] + self.config.image_compartment_ids
+            self.c.config.instance_compartment_id
+        ] + self.c.config.image_compartment_ids
         for entry in compartments:
             if ":" in entry:
                 cid, entry_name = entry.split(":", 1)

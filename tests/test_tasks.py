@@ -185,6 +185,7 @@ def create_test_dir(tmp_path):
 
 def test_build_tarball_skip(tmp_path):
     ctx = mock.Mock()
+    ctx.c = ctx
     name = "test_task"
 
     tarball, included, excluded = create_test_dir(tmp_path)
@@ -228,6 +229,7 @@ def test_build_tarball_skip(tmp_path):
 
 def test_build_tarball(tmp_path):
     ctx = mock.Mock()
+    ctx.c = ctx
     name = "test_task"
 
     tarball, included, excluded = create_test_dir(tmp_path)
@@ -250,6 +252,7 @@ def test_build_tarball(tmp_path):
 
 def test_real_tarball(tmp_path):
     ctx = mock.Mock()
+    ctx.c = ctx
     name = "test_task"
 
     tarball, included, excluded = create_test_dir(tmp_path)

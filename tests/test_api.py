@@ -51,6 +51,7 @@ from tests.testing.fake_oci import FakeOCI
 from tests.testing.rich import FakeTable
 from yo.api import now
 from yo.api import YoCtx
+from yo.api import YoRegionalCtx
 from yo.util import YoExc
 
 
@@ -59,8 +60,9 @@ def fake_ctx(tmpdir):
     es = contextlib.ExitStack()
     with es:
         es.enter_context(mock.patch("rich.table.Table", new=FakeTable))
-        cache = tmpdir.join("cache.json")
-        ctx = YoCtx(config_factory(), {}, cache_file=cache)
+        cache = str(tmpdir.join("cache.json"))
+        cc = YoCtx(config_factory(), {})
+        ctx = YoRegionalCtx(cc, cc.region, cache)
         fake = FakeOCI(ctx)
         yield fake, ctx
 
@@ -76,8 +78,12 @@ def fake(fake_ctx):
 
 
 def set_cache(
-    ctx: YoCtx, kind: str, values: t.List[t.Any], update_age=0, refresh_age=0
-):
+    ctx: YoRegionalCtx,
+    kind: str,
+    values: t.List[t.Any],
+    update_age: int = 0,
+    refresh_age: int = 0,
+) -> None:
     under = "_" + kind
     assert under in ctx._caches
     cache = getattr(ctx, under)
@@ -88,7 +94,7 @@ def set_cache(
         cache.last_refresh = now() - datetime.timedelta(seconds=refresh_age)
 
 
-def test_list(ctx: YoCtx, fake: FakeOCI):
+def test_list(ctx: YoRegionalCtx, fake: FakeOCI):
     fake.compute._instances = [
         oci_instance_factory(created_by=NOT_MY_EMAIL),
         oci_instance_factory(display_name="myinstance1", id="myinstance1"),

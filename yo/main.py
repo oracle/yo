@@ -105,6 +105,7 @@ from yo.api import InstanceProfile
 from yo.api import SavedInstanceMetadata
 from yo.api import YoCtx
 from yo.api import YoInstance
+from yo.api import YoRegionalCtx
 from yo.api import YoShape
 from yo.api import YoVolume
 from yo.api import YoVolumeAttachment
@@ -316,40 +317,19 @@ def load_config(config_file: str = CONFIG_FILE) -> FullYoConfig:
 
 
 class YoCmd(subc.Command):
-    c: YoCtx
-    ctxs: t.Dict[str, YoCtx] = {}
-    _config: YoConfig
-    _profiles: t.Mapping[str, InstanceProfile]
+    c: YoRegionalCtx
+    cc: YoCtx
     es: contextlib.ExitStack
     rootname = "yo"
     help_formatter_class = ParagraphFormatter
 
     @classmethod
-    def setup_config(cls) -> t.Tuple[YoCtx, t.Dict[str, str]]:
+    def setup_config(cls) -> t.Dict[str, str]:
         check_configs()
         fc = load_config()
-        cls.c = YoCtx(fc.config, fc.profiles)
-        cls.ctxs = {fc.config.region: cls.c}
-        cls._config = fc.config
-        cls._profiles = fc.profiles
-        return cls.c, fc.aliases
-
-    @classmethod
-    def ctx_for_region(cls, region: str) -> YoCtx:
-        if region not in cls.ctxs:
-            config = getattr(cls, "_config", cls.c.config)
-            if region not in config.regions:
-                raise YoExc(
-                    f"region '{region}' is not configured. Add a "
-                    f"\\[regions.{region}] configuration section to ~/.oci/yo.ini"
-                )
-            profiles = getattr(cls, "_profiles", cls.c.instance_profiles)
-            cls.ctxs[region] = YoCtx(
-                dataclasses.replace(config, region=region),
-                profiles,
-            )
-            cls.ctxs[region]._tpe = cls.c._tpe
-        return cls.ctxs[region]
+        cls.cc = YoCtx(fc.config, fc.profiles)
+        cls.c = cls.cc.rc(cls.cc.region)
+        return fc.aliases
 
     def base_run(self, args: argparse.Namespace) -> None:
         self.args = args
@@ -381,8 +361,8 @@ class YoCmd(subc.Command):
             if inst.state in states_denylist:
                 continue
             names.append(inst.name)
-            if inst.name.startswith(self.c.config.my_username + "-"):
-                names.append(inst.name[len(self.c.config.my_username) + 1 :])
+            if inst.name.startswith(self.cc.config.my_username + "-"):
+                names.append(inst.name[len(self.cc.config.my_username) + 1 :])
         return names
 
     def complete_shape(self, **kwargs: t.Any) -> t.List[str]:
@@ -408,13 +388,13 @@ class YoCmd(subc.Command):
         names = []
         for vol in volumes:
             names.append(vol.name)
-            if vol.name.startswith(self.c.config.my_username + "-"):
-                names.append(vol.name[len(self.c.config.my_username) + 1 :])
+            if vol.name.startswith(self.cc.config.my_username + "-"):
+                names.append(vol.name[len(self.cc.config.my_username) + 1 :])
             if vol.name != vol.alt_name:
                 names.append(vol.alt_name)
-                if vol.alt_name.startswith(self.c.config.my_username + "-"):
+                if vol.alt_name.startswith(self.cc.config.my_username + "-"):
                     names.append(
-                        vol.alt_name[len(self.c.config.my_username) + 1 :]
+                        vol.alt_name[len(self.cc.config.my_username) + 1 :]
                     )
         return names
 
@@ -540,7 +520,7 @@ class ListCmd(YoCmd):
 
     def _resource_region(self, resource: t.Any) -> str:
         return t.cast(
-            str, getattr(resource, "_yo_region", self.c.config.region)
+            str, getattr(resource, "_yo_region", self.cc.config.region)
         )
 
     def _tag_region(self, region: str, resources: t.Iterable[t.Any]) -> None:
@@ -552,7 +532,7 @@ class ListCmd(YoCmd):
         region: str,
         verbose: bool,
     ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume], t.Dict[str, str]]:
-        ctx = type(self).ctx_for_region(region)
+        ctx = self.cc.rc(region)
         if self.args.cached:
             instances = ctx.list_instances_cached()
         else:
@@ -577,7 +557,7 @@ class ListCmd(YoCmd):
     ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume]]:
         futures = {}
         for region in regions:
-            futures[region] = self.c._tpe.submit(
+            futures[region] = self.cc._tpe.submit(
                 self._list_region_resources,
                 region,
                 verbose,
@@ -592,7 +572,7 @@ class ListCmd(YoCmd):
         return all_instances, all_volumes
 
     def get_columns(self) -> t.List[t.Tuple[str, Column]]:
-        names_str = self.args.columns or self.c.config.list_columns
+        names_str = self.args.columns or self.cc.config.list_columns
         names = list(s.strip() for s in names_str.split(","))
         if self.args.ip:
             self.args.extra_column.append("IP")
@@ -613,7 +593,7 @@ class ListCmd(YoCmd):
         return ret
 
     def run(self) -> None:
-        verbose = not self.c.config.silence_automatic_tag_warning
+        verbose = not self.cc.config.silence_automatic_tag_warning
         # We do not cache other people's instances. If --all is provided, we
         # must not call list_instances_cached()
         if self.args.all:
@@ -622,9 +602,9 @@ class ListCmd(YoCmd):
         columns = self.get_columns()
         if not self.args.cached:
             self.es.enter_context(self.c.maybe_check_for_updates())
-        regions = [self.c.config.region]
+        regions = [self.cc.config.region]
         if self.args.all_regions:
-            regions = list(self.c.config.regions)
+            regions = list(self.cc.config.regions)
         instances, volumes = self._list_all_region_resources(regions, verbose)
         instances = [
             x for x in instances if x.state not in ("TERMINATED", "TERMINATING")
@@ -655,7 +635,7 @@ class ListCmd(YoCmd):
                 else:
                     values.append("---")
             table.add_row(*values)
-        self.c.con.print(table)
+        self.cc.con.print(table)
 
 
 class SingleInstanceCommand(YoCmd):
@@ -822,34 +802,34 @@ class MultiInstanceCommand(YoCmd):
         if confirm:
             if self.needs_confirmation:
                 if self.args.yes:
-                    self.c.con.print(
+                    self.cc.con.print(
                         "[red]Skipping confirmation because of --yes"
                     )
                 else:
-                    self.c.con.print("[bold red]Confirmed.")
+                    self.cc.con.print("[bold red]Confirmed.")
         else:
-            self.c.con.print("[green]Ok, canceling![/green]")
+            self.cc.con.print("[green]Ok, canceling![/green]")
         return confirm
 
     def run_for_all(self, instances: t.List[YoInstance]) -> None:
         if not instances:
-            self.c.con.print("[red]No instances matching conditions:")
-            self.c.con.print(
+            self.cc.con.print("[red]No instances matching conditions:")
+            self.cc.con.print(
                 " state: {}".format(
                     fmt_allow_deny(self.states_allowlist, self.states_denylist)
                 )
             )
             names = [
-                standardize_name(n, self.args.exact_name, self.c.config)
+                standardize_name(n, self.args.exact_name, self.cc.config)
                 for n in self.args.instances
             ]
             if names:
-                self.c.con.print(" name: {}".format(", ".join(names)))
+                self.cc.con.print(" name: {}".format(", ".join(names)))
             else:
-                self.c.con.print(" name: any")
+                self.cc.con.print(" name: any")
             return
         instance_list_str = "\n".join(f"- {x.name}" for x in instances)
-        self.c.con.print(
+        self.cc.con.print(
             f"[bold red]About to {self.action_message} [underline]"
             f"{len(instances)}"
             f"[/underline] instances:\n"
@@ -865,7 +845,7 @@ class MultiInstanceCommand(YoCmd):
                     rich.progress.TaskProgressColumn(),
                     rich.progress.SpinnerColumn(),
                     rich.progress.TimeElapsedColumn(),
-                    console=self.c.con,
+                    console=self.cc.con,
                 )
                 es.enter_context(progress)
                 instance_iter = progress.track(instances)
@@ -886,7 +866,7 @@ class MultiInstanceCommand(YoCmd):
         self.validate_args(self.args)
 
         names = set(
-            standardize_name(name, self.args.exact_name, self.c.config)
+            standardize_name(name, self.args.exact_name, self.cc.config)
             for name in self.args.instances
         )
 
@@ -969,7 +949,7 @@ class SshCmd(SingleInstanceCommand):
 
     def run_for_instance(self, inst: YoInstance) -> None:
         if not self.args.quiet:
-            self.c.con.log(f"Connecting to instance [blue]{inst.name}[/blue]")
+            self.cc.con.log(f"Connecting to instance [blue]{inst.name}[/blue]")
         if self.args.start and inst.state == "STOPPED":
             self.args.wait = True
             self.c.instance_action(inst.id, "START")
@@ -991,15 +971,15 @@ class SshCmd(SingleInstanceCommand):
         if self.args.agent:
             extra_args.append("-A")
         if self.args.wait:
-            wait_for_ssh_access(ip, user, self.c, host_key_alias=inst.id)
+            wait_for_ssh_access(ip, user, self.cc, host_key_alias=inst.id)
             send_notification(
-                self.c, f"Instance {inst.name} is connected via SSH!"
+                self.cc, f"Instance {inst.name} is connected via SSH!"
             )
         extra_args += shlex.split(self.args.ssh_args)
         ssh_into(
             ip,
             user,
-            ctx=self.c,
+            ctx=self.cc,
             extra_args=extra_args,
             cmds=self.get_cmds(),
             quiet=self.args.quiet,
@@ -1044,7 +1024,7 @@ class ScpCmd(SingleInstanceCommand):
         user = self.username
         if not user:
             user = self.c.get_ssh_user(inst)
-        self.c.con.log(
+        self.cc.con.log(
             f"Copying to instance [blue]{inst.name}[/blue] "
             f"([green]{user}[/green]@[blue]{ip}[/blue])"
         )
@@ -1052,7 +1032,7 @@ class ScpCmd(SingleInstanceCommand):
         replaced = [
             repl.sub(f"{user}@{ip}:", arg) for arg in self.args.scp_args
         ]
-        scp_args = ["scp"] + ssh_args(self.c, False, inst.id)
+        scp_args = ["scp"] + ssh_args(self.cc, False, inst.id)
         subprocess.run(scp_args + replaced)
 
 
@@ -1081,12 +1061,12 @@ class RemoteDesktopCommand(SingleInstanceCommand):
             user = self.username
             if not user:
                 user = self.c.get_ssh_user(inst)
-            self.c.con.log(
+            self.cc.con.log(
                 f"SSH Tunnel to [blue]{inst.name}[/blue] "
                 f"([green]{user}[/green]@[blue]{ip}[/blue])"
             )
             cmd = ssh_cmd(
-                self.c,
+                self.cc,
                 f"{user}@{ip}",
                 [f"-NL{self.PORT}:localhost:{self.PORT}"],
                 host_key_alias=inst.id,
@@ -1110,11 +1090,11 @@ class VncCmd(RemoteDesktopCommand):
         with self.maybe_tunnel(inst) as host:
             vnc = subprocess.Popen(
                 shlex.split(
-                    self.c.config.vnc_prog.format(host=host, port=self.PORT)
+                    self.cc.config.vnc_prog.format(host=host, port=self.PORT)
                 )
             )
-            self.c.con.log("Launched your configured VNC program!")
-            self.c.con.log("Exit it to terminate the SSH tunnel.")
+            self.cc.con.log("Launched your configured VNC program!")
+            self.cc.con.log("Exit it to terminate the SSH tunnel.")
             vnc.wait()
 
 
@@ -1125,28 +1105,28 @@ class RdpCmd(RemoteDesktopCommand):
     PORT = 3389
 
     def run_for_instance(self, inst: YoInstance) -> None:
-        rdp_prog = self.c.config.rdp_prog
+        rdp_prog = self.cc.config.rdp_prog
         if rdp_prog is None:
             raise YoExc("You must configure rdp_prog first")
         init_user, pw = self.c.get_windows_initial_creds(inst)
         if init_user is not None:
-            self.c.con.print(
+            self.cc.con.print(
                 "This is a Windows instance! Here are the initial credentials:"
             )
-            self.c.con.print(f"[bold]Username:[bold] {init_user}")
-            self.c.con.print(f"[bold]Password:[bold] {pw}")
+            self.cc.con.print(f"[bold]Username:[bold] {init_user}")
+            self.cc.con.print(f"[bold]Password:[bold] {pw}")
             if self.args.tunnel:
-                self.c.con.print(
+                self.cc.con.print(
                     "warning: SSH tunnel enabled, this probably won't work on "
                     "Windows"
                 )
         else:
-            self.c.con.print("This is not a Windows instance...")
-            self.c.con.print(
+            self.cc.con.print("This is not a Windows instance...")
+            self.cc.con.print(
                 "If you have not configured a password, you'll need to do that."
             )
-            self.c.con.print("Try 'sudo passwd opc' on the instance first.")
-            self.c.con.print(
+            self.cc.con.print("Try 'sudo passwd opc' on the instance first.")
+            self.cc.con.print(
                 "Disregard this message if you already have a password."
             )
         with self.maybe_tunnel(inst) as host:
@@ -1192,12 +1172,12 @@ class RsyncCmd(SingleInstanceCommand):
             rsync_args.extend(
                 [
                     "-e",
-                    "ssh " + shlex_join(ssh_args(self.c, False, inst.id)),
+                    "ssh " + shlex_join(ssh_args(self.cc, False, inst.id)),
                 ]
             )
-        if self.c.config.rsync_args and not self.args.raw:
-            rsync_args.extend(shlex.split(self.c.config.rsync_args))
-        self.c.con.log(
+        if self.cc.config.rsync_args and not self.args.raw:
+            rsync_args.extend(shlex.split(self.cc.config.rsync_args))
+        self.cc.con.log(
             f"Rsync with instance [blue]{inst.name}[/blue] "
             f"([green]{user}[/green]@[blue]{ip}[/blue])"
         )
@@ -1226,10 +1206,10 @@ class ConsoleCmd(SingleInstanceCommand):
 
     def run_for_instance(self, inst: YoInstance) -> None:
         dn = inst.name
-        self.c.con.log(f"Connecting to instance [blue]{dn}[/blue] console")
+        self.cc.con.log(f"Connecting to instance [blue]{dn}[/blue] console")
         conn = self.c.get_or_create_console(inst.id, refresh=self.args.refresh)
         args = shlex.split(conn.connection_string)
-        identity = self.c.config.ssh_private_key
+        identity = self.cc.config.ssh_private_key
 
         processed_args = []
         target = None
@@ -1250,22 +1230,22 @@ class ConsoleCmd(SingleInstanceCommand):
                 processed_args.append(val)  # pass all other args
 
         if target is None:
-            self.c.con.log(args)
+            self.cc.con.log(args)
             raise YoExc(
                 "Could not understand OCI's console SSH string. This is a "
                 "yo bug, please report it on Github."
             )
 
         cmd = ssh_cmd(
-            self.c,
+            self.cc,
             target,
             list(SSH_CONSOLE_OPTIONS) + processed_args,
             host_key_alias=conn.id,
         )
 
-        self.c.con.log("About to execute:")
-        self.c.con.log(cmd)
-        self.c.con.log(
+        self.cc.con.log("About to execute:")
+        self.cc.con.log(cmd)
+        self.cc.con.log(
             "[bold red]This connection will stay open for a long time.\n"
             "To exit a running SSH connection, use the escape sequence: "
             "<Return>~.\n"
@@ -1274,7 +1254,7 @@ class ConsoleCmd(SingleInstanceCommand):
         proc = subprocess.run(cmd)
         total_time = time.time() - total_time
         if proc.returncode != 0 and total_time < SSH_MINIMUM_TIME:
-            self.c.con.log(
+            self.cc.con.log(
                 "\n[bold red]Note:[/bold red] It looks like your SSH session "
                 "failed quite quickly.\n"
                 "If the connection failed, yo's cache may be out of date. "
@@ -1319,7 +1299,7 @@ class WaitCmd(SingleInstanceCommand):
             max_wait_seconds=self.args.timeout,
         )
         send_notification(
-            self.c, f"Instance {inst.name} is in state {inst.state}"
+            self.cc, f"Instance {inst.name} is in state {inst.state}"
         )
 
 
@@ -1358,7 +1338,7 @@ class TaskRunCmd(SingleInstanceCommand):
         if self.args.wait:
             plan.join(self.c, inst)
             send_notification(
-                self.c,
+                self.cc,
                 f"Task {self.args.task} complete on instance {inst.name}",
             )
 
@@ -1386,7 +1366,7 @@ class CopyIdCmd(SingleInstanceCommand):
         user = self.c.get_ssh_user(instance)
 
         options = ssh_args(
-            self.c,
+            self.cc,
             False,
             instance.id,
             include_key=False,
@@ -1399,11 +1379,11 @@ class CopyIdCmd(SingleInstanceCommand):
         # Execution starts here
         try:
             subprocess.run(ssh_copy_id_cmd, check=True)
-            self.c.con.print(
+            self.cc.con.print(
                 f"SSH public key copied to '{instance_name}' successfully."
             )
         except subprocess.CalledProcessError:
-            self.c.con.print(
+            self.cc.con.print(
                 f"Error copying SSH public key to '{instance_name}'!!"
             )
             sys.exit(
@@ -1418,7 +1398,7 @@ class TaskStatusCmd(SingleInstanceCommand):
 
     def run_for_instance(self, inst: YoInstance) -> None:
         statuses = task_get_status(self.c, inst)
-        self.c.con.print(task_status_to_table(statuses))
+        self.cc.con.print(task_status_to_table(statuses))
 
 
 class TaskWaitCmd(SingleInstanceCommand):
@@ -1437,7 +1417,7 @@ class TaskWaitCmd(SingleInstanceCommand):
     def run_for_instance(self, inst: YoInstance) -> None:
         task_join(self.c, inst, wait_tasks=[self.args.task])
         send_notification(
-            self.c, f"Task {self.args.task} complete on instance {inst.name}"
+            self.cc, f"Task {self.args.task} complete on instance {inst.name}"
         )
 
 
@@ -1448,7 +1428,9 @@ class TaskJoinCmd(SingleInstanceCommand):
 
     def run_for_instance(self, inst: YoInstance) -> None:
         task_join(self.c, inst)
-        send_notification(self.c, f"All tasks complete on instance {inst.name}")
+        send_notification(
+            self.cc, f"All tasks complete on instance {inst.name}"
+        )
 
 
 class TaskInfo(YoCmd):
@@ -1465,12 +1447,12 @@ class TaskInfo(YoCmd):
 
     def run(self) -> None:
         task = YoTask.load(self.args.task)
-        self.c.con.print(f"File: {task.path}")
-        self.c.con.print(f"Dependencies: {', '.join(task.dependencies)}")
-        self.c.con.print(f"Conflicts: {', '.join(task.conflicts)}")
-        self.c.con.print("\nScript:")
+        self.cc.con.print(f"File: {task.path}")
+        self.cc.con.print(f"Dependencies: {', '.join(task.dependencies)}")
+        self.cc.con.print(f"Conflicts: {', '.join(task.conflicts)}")
+        self.cc.con.print("\nScript:")
         s = rich.syntax.Syntax(task.script, "bash", theme="ansi_light")
-        self.c.con.print(s)
+        self.cc.con.print(s)
 
 
 class TaskList(YoCmd):
@@ -1491,7 +1473,7 @@ class TaskList(YoCmd):
             if task.conflicts:
                 dc += "Conflicts: " + ", ".join(task.conflicts) + "\n"
             t.add_row(task_name, dc.strip(), task.path)
-        self.c.con.print(t)
+        self.cc.con.print(t)
 
 
 class IpCmd(YoCmd):
@@ -1539,7 +1521,7 @@ class IpCmd(YoCmd):
 
     def run(self) -> None:
         names = set(
-            standardize_name(name, self.args.exact_name, self.c.config)
+            standardize_name(name, self.args.exact_name, self.cc.config)
             for name in self.args.instances
         )
         instances = self.c.get_matching_instances(
@@ -1557,7 +1539,7 @@ class IpCmd(YoCmd):
                 instance.name,
                 self.c.get_instance_ip(instance, True),
             )
-        self.c.con.print(table)
+        self.cc.con.print(table)
 
 
 class ImagesCmd(YoCmd):
@@ -1630,7 +1612,7 @@ class ImagesCmd(YoCmd):
             )
         images.sort(key=lambda i: natural_sort(i.name), reverse=True)
         if self.args.verbose:
-            self.c.con.print(images)
+            self.cc.con.print(images)
         else:
             if not images:
                 raise YoExc("No matching images...")
@@ -1649,11 +1631,11 @@ class ImagesCmd(YoCmd):
                     img.os,
                     img.os_version,
                 )
-            self.c.con.print(table)
+            self.cc.con.print(table)
             if self.args.os:
                 image = images[0]
                 dn = image.display_name
-                self.c.con.print(f"Would use image [blue]{dn}[/blue]")
+                self.cc.con.print(f"Would use image [blue]{dn}[/blue]")
 
 
 class CompatCmd(YoCmd):
@@ -1752,7 +1734,7 @@ class CompatCmd(YoCmd):
             for i, image in enumerate(images):
                 char = "X" if shape.shape in image.compatibility else " "
                 line.append(char, styles[i] + add_style)
-            self.c.con.print(line)
+            self.cc.con.print(line)
 
         if self.args.image_names:
             os_ver_count = [(i.name, 1) for i in images]
@@ -1786,8 +1768,8 @@ class CompatCmd(YoCmd):
             residual_bar(line, total + count)
             residual_bar(hl_line, total + count)
             if not self.args.image_names:
-                self.c.con.print(hl_line)
-            self.c.con.print(line)
+                self.cc.con.print(hl_line)
+            self.cc.con.print(line)
             total += count
 
         legend = Text("Color Legend: ")
@@ -1796,7 +1778,7 @@ class CompatCmd(YoCmd):
         legend.append("DenseIO", style="#000000 on rgb(192,215,192)")
         legend.append(", ")
         legend.append("GPU", style="#000000 on rgb(215,192,192)")
-        self.c.con.print(legend)
+        self.cc.con.print(legend)
 
 
 class LaunchCmd(YoCmd):
@@ -1823,7 +1805,7 @@ class LaunchCmd(YoCmd):
 
     def _profile_choices(self) -> t.Optional[t.List[str]]:
         if hasattr(self, "c"):
-            return list(self.c.instance_profiles)
+            return list(self.cc.instance_profiles)
         else:
             return None  # for docs
 
@@ -2059,7 +2041,7 @@ class LaunchCmd(YoCmd):
             boot_volume_size_gbs=self.args.boot_volume_size_gbs,
             cloudguard_wlp=self.args.cloudguard_wlp,
         )
-        profile = self.c.instance_profiles[self.args.profile]
+        profile = self.cc.instance_profiles[self.args.profile]
         user = create_args["username"]
         name = create_args["display_name"]
 
@@ -2067,15 +2049,15 @@ class LaunchCmd(YoCmd):
         # support an old feature there.
         create_args["are_legacy_imds_endpoints_disabled"] = not (
             self.args.allow_legacy_imds_endpoints
-            or self.c.config.allow_legacy_imds_endpoints
+            or self.cc.config.allow_legacy_imds_endpoints
         )
 
         task_plan = self.build_task_plan(profile)
 
-        self.c.con.log(f"Launching instance [blue]{name}[/blue]")
+        self.cc.con.log(f"Launching instance [blue]{name}[/blue]")
         if self.args.dry_run:
-            self.c.con.log("DRY RUN. Args below:")
-            self.c.con.log(create_args)
+            self.cc.con.log("DRY RUN. Args below:")
+            self.cc.con.log(create_args)
             task_plan.dry_run_print()
             return
         inst = self.c.launch_instance(create_args)
@@ -2092,20 +2074,20 @@ class LaunchCmd(YoCmd):
         if self.args.wait_ssh:
             ip = self.c.get_instance_ip(inst)
             if not wait_for_ssh_access(
-                ip, user, self.c, host_key_alias=inst.id
+                ip, user, self.cc, host_key_alias=inst.id
             ):
-                self.c.con.log("[red]Could not connect via SSH")
-                self.c.con.log("Maybe you're not connected to VPN?")
+                self.cc.con.log("[red]Could not connect via SSH")
+                self.cc.con.log("Maybe you're not connected to VPN?")
                 return
 
         task_plan.run(self.c, inst)
         if task_plan.have_tasks():
             task_plan.join(self.c, inst)
 
-        send_notification(self.c, f"Instance {inst.name} is ready!")
+        send_notification(self.cc, f"Instance {inst.name} is ready!")
 
         if self.args.ssh:
-            ssh_into(ip, user, ctx=self.c, host_key_alias=inst.id)
+            ssh_into(ip, user, ctx=self.cc, host_key_alias=inst.id)
 
 
 class TerminateCmd(MultiInstanceCommand):
@@ -2163,8 +2145,8 @@ class TerminateCmd(MultiInstanceCommand):
     def should_preserve_volume(self) -> bool:
         if self.args.preserve_volume is not None:
             return t.cast(bool, self.args.preserve_volume)
-        if self.c.config.preserve_volume_on_terminate is not None:
-            return self.c.config.preserve_volume_on_terminate
+        if self.cc.config.preserve_volume_on_terminate is not None:
+            return self.cc.config.preserve_volume_on_terminate
         return False
 
     def run_for_instance(self, inst: YoInstance) -> None:
@@ -2173,11 +2155,11 @@ class TerminateCmd(MultiInstanceCommand):
         if inst.termination_protected:
             raise YoExc(f"instance {inst.name} is termination protected")
         if self.args.dry_run:
-            self.c.con.log(f"DRY RUN: Would terminate {inst.id}")
+            self.cc.con.log(f"DRY RUN: Would terminate {inst.id}")
             if self.should_preserve_volume():
-                self.c.con.log("DRY RUN: would preserve root volume!")
+                self.cc.con.log("DRY RUN: would preserve root volume!")
             else:
-                self.c.con.log("DRY RUN: would delete root volume!")
+                self.cc.con.log("DRY RUN: would delete root volume!")
             return
         self.c.terminate_instance(
             inst.id,
@@ -2186,7 +2168,7 @@ class TerminateCmd(MultiInstanceCommand):
 
     def confirm(self, msg: str) -> bool:
         if self.should_preserve_volume():
-            self.c.con.print("Your boot volume will be preserved!")
+            self.cc.con.print("Your boot volume will be preserved!")
         return super().confirm(msg)
 
     def run_for_all(self, instances: t.List[YoInstance]) -> None:
@@ -2254,7 +2236,7 @@ class InstanceActionCommand(MultiInstanceCommand):
         if self.force_action and self.args.force:
             action = self.force_action
         if self.args.dry_run:
-            self.c.con.log(f"DRY RUN: Would {action} {inst.id}")
+            self.cc.con.log(f"DRY RUN: Would {action} {inst.id}")
             return
         self.do_action(inst, action)
 
@@ -2271,7 +2253,7 @@ class InstanceActionCommand(MultiInstanceCommand):
                 max_wait_seconds=600,
             )
             send_notification(
-                self.c, f"Instance {inst.name} is now in state {inst.state}"
+                self.cc, f"Instance {inst.name} is now in state {inst.state}"
             )
 
 
@@ -2325,12 +2307,12 @@ class InstanceActionMaybeSsh(InstanceActionCommand):
             return
         ip = self.c.get_instance_ip(inst, True)
         user = self.c.get_ssh_user(inst)
-        if not wait_for_ssh_access(ip, user, self.c, host_key_alias=inst.id):
-            self.c.con.log("[red]Could not connect via SSH")
-            self.c.con.log("Maybe you're not connected to VPN?")
+        if not wait_for_ssh_access(ip, user, self.cc, host_key_alias=inst.id):
+            self.cc.con.log("[red]Could not connect via SSH")
+            self.cc.con.log("Maybe you're not connected to VPN?")
             return
-        send_notification(self.c, f"Instance {inst.name} is connected via SSH")
-        ssh_into(ip, user, ctx=self.c, host_key_alias=inst.id)
+        send_notification(self.cc, f"Instance {inst.name} is connected via SSH")
+        ssh_into(ip, user, ctx=self.cc, host_key_alias=inst.id)
 
 
 class RebootCommand(InstanceActionMaybeSsh):
@@ -2418,23 +2400,23 @@ class TeardownCmd(SingleInstanceCommand):
         if instance.termination_protected:
             raise YoExc(f"Instance {instance.name} is termination protected")
         inst_to_atch = self.c.attachments_by_instance()
-        self.c.con.print(
+        self.cc.con.print(
             f"About to [red]TERMINATE[/red] instance [blue]{instance.name}[/blue],"
             " preserving the boot volume so it can be later rebuilt."
         )
         if len(inst_to_atch[instance.id]) > 1:
-            self.c.con.print(
+            self.cc.con.print(
                 "[orange]warning:[/orange] This instance has volumes other than "
                 "the boot volume attached. Yo cannot remember these volume "
                 "attachments: if you rebuild the instance, you will need to "
                 "manually reattach the volumes."
             )
         if self.args.yes:
-            self.c.con.print("[red]Skipping confirmation because of --yes")
+            self.cc.con.print("[red]Skipping confirmation because of --yes")
         elif Confirm.ask("Is this ok?"):
-            self.c.con.print("[bold red]Confirmed.")
+            self.cc.con.print("[bold red]Confirmed.")
         else:
-            self.c.con.print("Aborted!")
+            self.cc.con.print("Aborted!")
             return
         self.c.save_instance(instance)
 
@@ -2475,7 +2457,7 @@ class RebuildCmd(YoCmd):
 
     def run(self) -> None:
         name = standardize_name(
-            self.args.name, self.args.exact_name, self.c.config
+            self.args.name, self.args.exact_name, self.cc.config
         )
         for v in self.c.list_volumes():
             md = v.saved_instance_metadata
@@ -2490,10 +2472,10 @@ class RebuildCmd(YoCmd):
             ip = self.c.get_instance_ip(inst)
             user = self.c.get_ssh_user(inst)
             if not wait_for_ssh_access(
-                ip, user, self.c, host_key_alias=inst.id
+                ip, user, self.cc, host_key_alias=inst.id
             ):
-                self.c.con.log("[red]Could not connect via SSH")
-                self.c.con.log("Maybe you're not connected to VPN?")
+                self.cc.con.log("[red]Could not connect via SSH")
+                self.cc.con.log("Maybe you're not connected to VPN?")
                 return
 
 
@@ -2513,10 +2495,10 @@ class OsCmd(YoCmd):
                 if i.compartment_id is not None
             )
         )
-        self.c.con.print("[bold]Platform Images[/bold]")
-        self.c.con.print(Text("\n".join(names)))
-        self.c.con.print("\n[bold]Custom Images (by OS):[/bold]")
-        self.c.con.print(Text("\n".join(custom_names)))
+        self.cc.con.print("[bold]Platform Images[/bold]")
+        self.cc.con.print(Text("\n".join(names)))
+        self.cc.con.print("\n[bold]Custom Images (by OS):[/bold]")
+        self.cc.con.print(Text("\n".join(custom_names)))
 
 
 class ShapesCmd(YoCmd):
@@ -2643,21 +2625,21 @@ class ShapesCmd(YoCmd):
                 else:
                     vals.append("[green](unlimited)")
             table.add_row(*vals)
-        self.c.con.print(table)
+        self.cc.con.print(table)
         if missing_quotas:
-            self.c.con.print(
+            self.cc.con.print(
                 "[italic]*Some quotas were not found, yo assumed they are unlimited"
             )
 
-        self.c.con.line()
-        self.c.con.print(
+        self.cc.con.line()
+        self.cc.con.print(
             "Looking for more details on a particular shape? Try `yo limits -S SHAPE`"
         )
 
     def run(self) -> None:
         if self.args.verbose:
             for shape in self.filtered_shapes():
-                self.c.con.print(shape)
+                self.cc.con.print(shape)
         elif self.args.availability:
             self.show_avail()
         else:
@@ -2665,7 +2647,7 @@ class ShapesCmd(YoCmd):
             self.headers(table)
             for shape in sorted(self.filtered_shapes(), key=lambda x: x.shape):
                 self.add_row(shape, table)
-            self.c.con.print(table)
+            self.cc.con.print(table)
 
 
 class ShapeCmd(YoCmd):
@@ -2725,7 +2707,7 @@ class ShapeCmd(YoCmd):
                 "Max VNIC Options",
                 f"{vo.min} - {vo.max} (default: {vo.default_per_ocpu} /CPU)",
             )
-        self.c.con.print(table)
+        self.cc.con.print(table)
 
 
 class LimitsCmd(YoCmd):
@@ -2779,7 +2761,7 @@ class LimitsCmd(YoCmd):
                     else:
                         vals.append("--")
                 table.add_row(*vals)
-            self.c.con.print(table)
+            self.cc.con.print(table)
 
         if limits.name_to_avail:
             table = rich.table.Table(title="Global or Regional Limits")
@@ -2789,10 +2771,10 @@ class LimitsCmd(YoCmd):
                 table.add_row(
                     name, f"{av.fractional_availability} / {av.limit}"
                 )
-            self.c.con.print(table)
+            self.cc.con.print(table)
 
         if self.args.shape:
-            self.c.con.rule("But... will it fit?")
+            self.cc.con.rule("But... will it fit?")
             shav = self.c.compute_shape_availability(limits, shape)
 
             table = rich.table.Table(
@@ -2800,7 +2782,7 @@ class LimitsCmd(YoCmd):
             )
             for quota, requirement in shav.quota_to_requirement.items():
                 table.add_row(quota, str(requirement))
-            self.c.con.print(table)
+            self.cc.con.print(table)
 
             table = rich.table.Table(title="Will it fit?")
             table.add_column("AD")
@@ -2826,14 +2808,14 @@ class LimitsCmd(YoCmd):
                         f"[red]{int(space)}",
                         factors,
                     )
-            self.c.con.print(table)
+            self.cc.con.print(table)
 
             if shav.missing_quotas:
-                self.c.con.print(
+                self.cc.con.print(
                     "[orange]Warning:[/orange] the following quotas were not listed by OCI, so "
                     "yo could not determine whether they are satisfied:"
                 )
-                self.c.con.print(
+                self.cc.con.print(
                     "\n".join(f"- {q}" for q in shav.missing_quotas)
                 )
 
@@ -2912,7 +2894,7 @@ class VolumeListCmd(YoCmd):
                 volume.ad,
                 strftime(volume.time_created),
             )
-        self.c.con.print(table)
+        self.cc.con.print(table)
 
 
 class AttachedCmd(YoCmd):
@@ -2950,7 +2932,7 @@ class AttachedCmd(YoCmd):
                     va.attachment_type,
                     end_section=(i + 1 == len(vas)),
                 )
-        self.c.con.print(table)
+        self.cc.con.print(table)
 
 
 def volume_attach_args(
@@ -3036,7 +3018,10 @@ def volume_attach_args(
 
 
 def do_volume_attach(
-    ctx: YoCtx, args: argparse.Namespace, volume: YoVolume, inst: YoInstance
+    ctx: YoRegionalCtx,
+    args: argparse.Namespace,
+    volume: YoVolume,
+    inst: YoInstance,
 ) -> None:
     va = ctx.attach_volume(
         volume,
@@ -3048,14 +3033,14 @@ def do_volume_attach(
     va = ctx.wait_attachment(va, "ATTACHED")
     setup = False
     if args.setup and args.kind == "iscsi":
-        ctx.con.log("Running commands to mount iSCSI volume...")
+        ctx.c.con.log("Running commands to mount iSCSI volume...")
         ip = ctx.get_instance_ip(inst)
         user = ctx.get_ssh_user(inst)
         attach, _ = ctx.get_attachment_commands(va)
         res = ssh_into(
             ip,
             user,
-            ctx,
+            ctx.c,
             extra_args=["-q"],
             cmds=[" && ".join(attach)],
             capture_output=True,
@@ -3065,7 +3050,7 @@ def do_volume_attach(
         if res.returncode == 0:
             setup = True
         else:
-            ctx.con.log("[orange]warn:[/orange] failed to setup iSCSI device")
+            ctx.c.con.log("[orange]warn:[/orange] failed to setup iSCSI device")
     ctx.report_attached(va, setup)
 
 
@@ -3077,7 +3062,7 @@ class VolumeCreateCmd(YoCmd):
     def _default_ad(self) -> t.Optional[str]:
         if hasattr(self, "c"):
             return self.c.get_ad(
-                self.c.instance_profiles["DEFAULT"].availability_domain
+                self.cc.instance_profiles["DEFAULT"].availability_domain
             ).name
         return None
 
@@ -3134,7 +3119,7 @@ class VolumeCreateCmd(YoCmd):
             ad = inst.ad
 
         name = standardize_name(
-            self.args.name, self.args.exact_name, self.c.config
+            self.args.name, self.args.exact_name, self.cc.config
         )
         # TODO: deduplicate...
         volume = self.c.create_volume(name, ad, self.args.size_gbs)
@@ -3171,7 +3156,7 @@ class AttachCmd(YoCmd):
         if self.args.setup:
             self.args.wait = True
         name = standardize_name(
-            self.args.volume_name, self.args.exact_name, self.c.config
+            self.args.volume_name, self.args.exact_name, self.cc.config
         )
         inst = self.c.get_instance_by_name(
             self.args.instance_name,
@@ -3218,10 +3203,10 @@ class VolumeRename(YoCmd):
 
     def run(self) -> None:
         old_name = standardize_name(
-            self.args.volume_name, self.args.exact_name, self.c.config
+            self.args.volume_name, self.args.exact_name, self.cc.config
         )
         new_name = standardize_name(
-            self.args.new_name, self.args.exact_name, self.c.config
+            self.args.new_name, self.args.exact_name, self.cc.config
         )
         volume = self.c.get_volume(old_name)
         self.c.rename_volume(volume, new_name)
@@ -3264,12 +3249,12 @@ class VolumeResize(YoCmd):
 
     def run(self) -> None:
         name = standardize_name(
-            self.args.volume_name, self.args.exact_name, self.c.config
+            self.args.volume_name, self.args.exact_name, self.cc.config
         )
         volume = self.c.get_volume(name)
         volume = self.c.resize_volume(volume, self.args.new_size_gbs)
         self.c.wait_volume(volume, "AVAILABLE")
-        self.c.con.log("Resized!")
+        self.cc.con.log("Resized!")
 
 
 def detach_volume_args(parser: argparse.ArgumentParser) -> None:
@@ -3298,14 +3283,14 @@ def detach_volume_args(parser: argparse.ArgumentParser) -> None:
 
 
 def do_detach_volume(
-    ctx: YoCtx,
+    ctx: YoRegionalCtx,
     args: argparse.Namespace,
     detach_vas: t.List[YoVolumeAttachment],
 ) -> None:
     for detach_va in detach_vas:
         if args.teardown and detach_va.attachment_type == AttachmentType.ISCSI:
             inst = ctx.get_instance_by_id(detach_va.instance_id)
-            ctx.con.log(
+            ctx.c.con.log(
                 f"Running commands to unmount iSCSI volume on {inst.name}..."
             )
             ip = ctx.get_instance_ip(inst)
@@ -3314,7 +3299,7 @@ def do_detach_volume(
             res = ssh_into(
                 ip,
                 user,
-                ctx,
+                ctx.c,
                 extra_args=["-q"],
                 cmds=[" && ".join(detach)],
                 capture_output=True,
@@ -3326,7 +3311,7 @@ def do_detach_volume(
                 raise YoExc(
                     "failed to unmount on host, your volume has not been detached"
                 )
-            ctx.con.log("Unmounted!")
+            ctx.c.con.log("Unmounted!")
         ctx.detach_volume(detach_va)
     for detach_va in detach_vas:
         ctx.wait_attachment(detach_va, "DETACHED")
@@ -3365,7 +3350,7 @@ class DetachCmd(YoCmd):
         if self.args.all and self.args.from_instance:
             raise YoExc("--from and --all are mutually exclusive")
         name = standardize_name(
-            self.args.volume, self.args.exact_name, self.c.config
+            self.args.volume, self.args.exact_name, self.cc.config
         )
         vol = self.c.get_volume(name)
         vas = self.c.attachments_by_volume()[vol.id]
@@ -3420,7 +3405,7 @@ class VolumeDeleteCmd(YoCmd):
 
     def run(self) -> None:
         name = standardize_name(
-            self.args.name, self.args.exact_name, self.c.config
+            self.args.name, self.args.exact_name, self.cc.config
         )
         volume = self.c.get_volume(name)
         vas = self.c.attachments_by_volume()[volume.id]
@@ -3428,7 +3413,7 @@ class VolumeDeleteCmd(YoCmd):
         if self.args.detach:
             do_detach_volume(self.c, self.args, vas)
         self.c.delete_volume(volume)
-        self.c.con.log("Deleted!")
+        self.cc.con.log("Deleted!")
 
 
 class RenameCmd(SingleInstanceCommand):
@@ -3447,7 +3432,7 @@ class RenameCmd(SingleInstanceCommand):
 
     def run_for_instance(self, instance: YoInstance) -> None:
         new_name = standardize_name(
-            self.args.new_name, self.args.exact_name, self.c.config
+            self.args.new_name, self.args.exact_name, self.cc.config
         )
         instances = self.c.list_instances()
         non_terminated_names = {
@@ -3502,7 +3487,7 @@ class MoshCmd(SingleInstanceCommand):
         # Mosh uses SSH to establish an initial connection.
         # We must be sure to specify the correct SSH key, and to do this we need
         # to use all the ssh arguments we have configured.
-        args = ssh_args(self.c, False, inst.id)
+        args = ssh_args(self.cc, False, inst.id)
         ssh_opt = "--ssh=ssh " + shlex_join(args)
         subprocess.run(
             [
@@ -3519,8 +3504,8 @@ class CacheCleanCmd(YoCmd):
     description = "Clear Yo's caches -- a good first troubleshooting step."
 
     def run(self) -> None:
-        regions = set(self.c.config.regions.keys())
-        regions.add(self.c.config.region)
+        regions = set(self.cc.config.regions.keys())
+        regions.add(self.cc.config.region)
         files = [
             os.path.expanduser(f"~/.cache/yo.{region}.json")
             for region in regions
@@ -3615,8 +3600,8 @@ def main() -> None:
             help="select an alternative region configured in ~/.oci/yo.ini",
         )
         _extend()
-        ctx, aliases = YoCmd.setup_config()
-        _old_extension_modules(ctx)
+        aliases = YoCmd.setup_config()
+        _old_extension_modules(YoCmd.cc)
         YoCmd.add_commands(
             parser,
             default="help",
@@ -3627,8 +3612,8 @@ def main() -> None:
         argcomplete.autocomplete(parser)
         ns = parser.parse_args()
         if ns.region is not None:
-            YoCmd.c = YoCmd.ctx_for_region(ns.region)
-        with YoCmd.c:
+            YoCmd.c = YoCmd.cc.rc(ns.region)
+        with YoCmd.cc:
             ns.func(ns)
     except YoExc as e:
         con = rich.console.Console()

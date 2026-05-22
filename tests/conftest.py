@@ -9,7 +9,6 @@ import pytest
 
 from tests.testing.factories import config_factory
 from tests.testing.rich import FakeTable
-from yo.api import YoCtx
 from yo.main import YoCmd
 from yo.tasks import get_tasklib
 from yo.tasks import list_tasks
@@ -73,34 +72,33 @@ def clear_task_caches() -> t.Iterator[None]:
     get_tasklib.cache_clear()
 
 
-@pytest.fixture(autouse=True)
-def clear_yoctx_class_caches() -> t.Iterator[None]:
-    for cache_attr in YoCtx._caches:
-        getattr(YoCtx, cache_attr).clear()
-    yield
-    for cache_attr in YoCtx._caches:
-        getattr(YoCtx, cache_attr).clear()
-
-
 @pytest.fixture
 def mock_cmd_ctx() -> t.Iterator[mock.Mock]:
     with contextlib.ExitStack() as es:
-        ctx = es.enter_context(mock.patch("yo.main.YoCtx")).return_value
-        ctx.config = config_factory()
-        ctx.instance_profiles = {
+        cc = es.enter_context(mock.patch("yo.main.YoCtx")).return_value
+        ctx = mock.MagicMock()
+        cc.config = config_factory()
+        cc.region = cc.config.region
+        cc.instance_profiles = {
             "DEFAULT": mock.Mock(
                 tasks=[],
                 install=[],
                 availability_domain="1",
             ),
         }
-        ctx.con = es.enter_context(
+        cc.con = es.enter_context(
             mock.patch("rich.console.Console", autospec=True)
         ).return_value
+        cc.rc.return_value = ctx
+        ctx.c = cc
+        ctx.config = cc.config
+        ctx.con = cc.con
+        ctx.instance_profiles = cc.instance_profiles
         es.enter_context(mock.patch("rich.table.Table", new=FakeTable))
         es.enter_context(
             mock.patch("yo.main.list_tasks", return_value=["prep", "test"])
         )
+        YoCmd.cc = cc
         YoCmd.c = ctx
         yield ctx
 
