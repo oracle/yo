@@ -533,6 +533,7 @@ class ListCmd(YoCmd):
         )
         parser.add_argument(
             "--all-regions",
+            "-A",
             action="store_true",
             help="display instances from every configured region",
         )
