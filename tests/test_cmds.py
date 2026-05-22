@@ -74,6 +74,8 @@ def mock_ctx():
             mock.patch("yo.main.YoCtx"),
         ).return_value
         mock_ctx.config = config_factory()
+        mock_ctx._tpe = ImmediateExecutor()
+        mock_ctx.list_volumes.return_value = []
         mock_con = es.enter_context(
             mock.patch(
                 "rich.console.Console",
@@ -183,14 +185,12 @@ def test_list_all_regions_results(mock_ctx):
     mock_ctx.list_volumes.return_value = []
     region2_ctx.list_volumes.return_value = []
     mock_ctx.get_all_instance_ips.return_value = {insts[0].id: "10.0.0.1"}
-    region2_ctx.get_all_instance_ips.return_value = {
-        insts[1].id: "10.0.0.2"
-    }
+    region2_ctx.get_all_instance_ips.return_value = {insts[1].id: "10.0.0.2"}
 
     YoCmd.main("", args=["list", "--all-regions", "--ip"])
 
     mock_ctx.switch_region.assert_not_called()
-    assert len(mock_ctx._tpe.submitted) == 1
+    assert [args[0] for _, args, _ in mock_ctx._tpe.submitted] == [r1, r2]
     mock_ctx.list_instances.assert_called_once_with(
         verbose=False, show_all=False
     )

@@ -348,6 +348,7 @@ class YoCmd(subc.Command):
                 dataclasses.replace(config, region=region),
                 profiles,
             )
+            cls.ctxs[region]._tpe = cls.c._tpe
         return cls.ctxs[region]
 
     def base_run(self, args: argparse.Namespace) -> None:
@@ -429,7 +430,7 @@ def send_notification(ctx: YoCtx, msg: str) -> None:
 class ListCmd(YoCmd):
     name = "list"
     group = "Basic Commands"
-    help = "List your OCI instances (--all-regions for every configured region)."
+    help = "List your OCI instances."
     description = """
     List your OCI instances.
 
@@ -448,18 +449,12 @@ class ListCmd(YoCmd):
     yo.ini. Yo automatically adds a Region column in that mode.
     """
 
-    _all_region_ips: t.Optional[t.Dict[str, str]] = None
+    _ips: t.Dict[str, str]
+    _fetch_ips = False
 
-    def _ip_column(self, i: YoInstance) -> str:
-        all_region_ips = getattr(self, "_all_region_ips", None)
-        if all_region_ips is not None:
-            return all_region_ips.get(i.id, "")
-
-        # It's more efficient to bulk lookup the IPs.
-        if not getattr(self, "_fetched_ips", False):
-            self.c.get_all_instance_ips(self.instances)
-            self._fetched_ips = True
-        return self.c.get_instance_ip(i, quiet=True)
+    def __init__(self) -> None:
+        super().__init__()
+        self._ips = {}
 
     def _name_column(self, i: YoInstance) -> str:
         if i.termination_protected:
@@ -488,7 +483,7 @@ class ListCmd(YoCmd):
             "State": (lambda i: i.state, lambda v, m: "[red]SAVED[/red]"),
             "AD": (lambda i: i.ad, lambda v, m: v.ad),
             "Created": (lambda i: strftime(i.time_created), None),
-            "IP": (self._ip_column, None),
+            "IP": (lambda i: self._ips[i.id], None),
             "ResourceType": (
                 lambda i: i.defined_tags.get("Oracle-Recommended-Tags", {}).get(
                     "ResourceType", ""
@@ -551,37 +546,23 @@ class ListCmd(YoCmd):
         for resource in resources:
             setattr(resource, "_yo_region", region)
 
-    def _list_current_region_resources(
-        self, ctx: YoCtx, verbose: bool
-    ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume]]:
+    def _list_region_resources(
+        self,
+        region: str,
+        verbose: bool,
+    ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume], t.Dict[str, str]]:
+        ctx = type(self).ctx_for_region(region)
         if self.args.cached:
             instances = ctx.list_instances_cached()
         else:
             instances = ctx.list_instances(
                 verbose=verbose, show_all=self.args.all
             )
-        return instances, ctx.list_volumes()
-
-    def _list_region_resources(
-        self,
-        region: str,
-        verbose: bool,
-        ip_by_instance_id: t.Optional[t.Dict[str, str]],
-    ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume], t.Dict[str, str]]:
-        ctx = type(self).ctx_for_region(region)
-        if ctx is self.c:
-            instances, volumes = self._list_current_region_resources(
-                ctx, verbose
-            )
-        else:
-            with ctx:
-                instances, volumes = self._list_current_region_resources(
-                    ctx, verbose
-                )
+        volumes = ctx.list_volumes()
         self._tag_region(region, instances)
         self._tag_region(region, volumes)
         ips = {}
-        if ip_by_instance_id is not None:
+        if self._fetch_ips:
             displayed_instances = [
                 x
                 for x in instances
@@ -591,50 +572,22 @@ class ListCmd(YoCmd):
         return instances, volumes, ips
 
     def _list_all_region_resources(
-        self,
-        verbose: bool,
-        ip_by_instance_id: t.Optional[t.Dict[str, str]],
+        self, regions: t.List[str], verbose: bool
     ) -> t.Tuple[t.List[YoInstance], t.List[YoVolume]]:
-        regions = list(self.c.config.regions)
-        if self.c.config.region not in regions:
-            regions.insert(0, self.c.config.region)
-        results: t.List[
-            t.Optional[
-                t.Tuple[t.List[YoInstance], t.List[YoVolume], t.Dict[str, str]]
-            ]
-        ] = [None for _ in regions]
         futures = {}
-        current_region = None
-        for idx, region in enumerate(regions):
-            if region == self.c.config.region:
-                current_region = (idx, region)
-            else:
-                futures[
-                    self.c._tpe.submit(
-                        self._list_region_resources,
-                        region,
-                        verbose,
-                        ip_by_instance_id,
-                    )
-                ] = idx
-        if current_region:
-            idx, region = current_region
-            results[idx] = self._list_region_resources(
-                region, verbose, ip_by_instance_id
+        for region in regions:
+            futures[region] = self.c._tpe.submit(
+                self._list_region_resources,
+                region,
+                verbose,
             )
-        for fut, idx in futures.items():
-            results[idx] = fut.result()
-
         all_instances: t.List[YoInstance] = []
         all_volumes: t.List[YoVolume] = []
-        for result in results:
-            if result is None:
-                continue
-            instances, volumes, ips = result
-            if ip_by_instance_id is not None:
-                ip_by_instance_id.update(ips)
+        for region, future in futures.items():
+            instances, volumes, ips = future.result()
             all_instances.extend(instances)
             all_volumes.extend(volumes)
+            self._ips.update(ips)
         return all_instances, all_volumes
 
     def get_columns(self) -> t.List[t.Tuple[str, Column]]:
@@ -644,6 +597,8 @@ class ListCmd(YoCmd):
             self.args.extra_column.append("IP")
         if self.args.ad:
             self.args.extra_column.append("AD")
+        if "IP" in self.args.extra_column:
+            self._fetch_ips = True
         names += self.args.extra_column
         if self.args.all_regions and "Region" not in names:
             names.insert(0, "Region")
@@ -664,22 +619,12 @@ class ListCmd(YoCmd):
             self.args.cached = False
 
         columns = self.get_columns()
-        include_ip = any(name == "IP" for name, _ in columns)
-        self._all_region_ips = None
-
         if not self.args.cached:
             self.es.enter_context(self.c.maybe_check_for_updates())
+        regions = [self.c.config.region]
         if self.args.all_regions:
-            if include_ip:
-                self._all_region_ips = {}
-            instances, volumes = self._list_all_region_resources(
-                verbose, self._all_region_ips
-            )
-        else:
-            instances, volumes = self._list_current_region_resources(
-                self.c, verbose
-            )
-
+            regions = list(self.c.config.regions)
+        instances, volumes = self._list_all_region_resources(regions, verbose)
         instances = [
             x for x in instances if x.state not in ("TERMINATED", "TERMINATING")
         ]
