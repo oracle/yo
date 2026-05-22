@@ -55,45 +55,17 @@ monstrosity and need to set the environment variable at the top of the script.
 import time
 import typing as t
 
-import oci.core  # noqa
-import oci.identity  # noqa
-import oci.limits  # noqa
 import rich.progress
 from oci import wait_until
 from oci.base_client import Response
-from oci.core.models import AttachBootVolumeDetails  # noqa
-from oci.core.models import AttachEmulatedVolumeDetails  # noqa
-from oci.core.models import AttachIScsiVolumeDetails  # noqa
-from oci.core.models import AttachParavirtualizedVolumeDetails  # noqa
-from oci.core.models import AttachServiceDeterminedVolumeDetails  # noqa
-from oci.core.models import CaptureConsoleHistoryDetails  # noqa
-from oci.core.models import CreateInstanceConsoleConnectionDetails  # noqa
-from oci.core.models import CreateVolumeDetails  # noqa
-from oci.core.models import InstanceAgentPluginConfigDetails  # noqa
-from oci.core.models import InstanceOptions  # noqa
-from oci.core.models import InstanceSourceViaBootVolumeDetails  # noqa
-from oci.core.models import InstanceSourceViaImageDetails  # noqa
-from oci.core.models import LaunchInstanceAgentConfigDetails  # noqa
-from oci.core.models import LaunchInstanceDetails  # noqa
-from oci.core.models import LaunchInstanceShapeConfigDetails  # noqa
-from oci.core.models import UpdateBootVolumeDetails  # noqa
-from oci.core.models import UpdateInstanceDetails  # noqa
-from oci.core.models import UpdateInstanceShapeConfigDetails  # noqa
-from oci.core.models import UpdateVolumeDetails  # noqa
-from oci.exceptions import ServiceError  # noqa
-from oci.exceptions import TransientServiceError  # noqa
-from oci.pagination import list_call_get_all_results  # noqa
-from oci.pagination import list_call_get_all_results_generator  # noqa
 from rich.progress import Progress
 
-from yo.api import YoCtx
-
-
-__all__ = ["oci"]
+if t.TYPE_CHECKING:
+    from yo.api import YoRegionalCtx
 
 
 def wait_until_progress(
-    ctx: YoCtx,
+    ctx: "YoRegionalCtx",
     client: t.Any,
     item: Response,
     attr: str,
@@ -109,7 +81,7 @@ def wait_until_progress(
         rich.progress.TimeElapsedColumn(),
         rich.progress.TextColumn("Timeout in:"),
         rich.progress.TimeRemainingColumn(),
-        console=ctx.con,
+        console=ctx.c.con,
     )
     with progress:
         task = progress.add_task(
@@ -123,8 +95,8 @@ def wait_until_progress(
             item_str = f"{item_kind} [blue]{display_name}[/blue]"
         else:
             item_str = f"{item_kind}"
-        ctx.con.log(f"Wait for {item_str} to enter state [purple]{state}")
-        ctx.con.log(f"{item_str} starts in state [purple]{last_state}")
+        ctx.c.con.log(f"Wait for {item_str} to enter state [purple]{state}")
+        ctx.c.con.log(f"{item_str} starts in state [purple]{last_state}")
 
         def update(check_count: int, last_response: Response) -> None:
             nonlocal last_update, last_state
@@ -150,5 +122,5 @@ def wait_until_progress(
             wait_callback=update,
         )
         progress.advance(task, max_wait_seconds)
-    ctx.con.log(f"{item_str} has reached state [purple]{state}!")
+    ctx.c.con.log(f"{item_str} has reached state [purple]{state}!")
     return resp

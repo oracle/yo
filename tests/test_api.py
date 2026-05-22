@@ -64,6 +64,18 @@ def fake_ctx(tmpdir):
         cc = YoCtx(config_factory(), {})
         ctx = YoRegionalCtx(cc, cc.region, cache)
         fake = FakeOCI(ctx)
+        es.enter_context(
+            mock.patch(
+                "yo.api.list_call_get_all_results",
+                side_effect=fake.list_call_get_all_results,
+            )
+        )
+        es.enter_context(
+            mock.patch(
+                "yo.api.list_call_get_all_results_generator",
+                side_effect=fake.list_call_get_all_results_generator,
+            )
+        )
         yield fake, ctx
 
 

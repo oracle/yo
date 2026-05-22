@@ -94,6 +94,8 @@ def test_rc_caches_regional_contexts(tmp_path):
     assert r1.region == "r1"
     assert r2.region == "r2"
     assert r1 is not r2
+    assert r1._cache_file == str(tmp_path / "yo.r1.json")
+    assert r2._cache_file == str(tmp_path / "yo.r2.json")
 
 
 def test_rc_requires_known_region(tmp_path):

@@ -53,10 +53,55 @@ import time
 import typing as t
 from collections import defaultdict
 
+import oci.config
 import rich.console
+from oci.core import BlockstorageClient
+from oci.core import ComputeClient
+from oci.core import VirtualNetworkClient
+from oci.core.models import AttachBootVolumeDetails
+from oci.core.models import AttachEmulatedVolumeDetails
+from oci.core.models import AttachIScsiVolumeDetails
+from oci.core.models import AttachParavirtualizedVolumeDetails
+from oci.core.models import AttachServiceDeterminedVolumeDetails
+from oci.core.models import BootVolume
+from oci.core.models import BootVolumeAttachment
+from oci.core.models import CaptureConsoleHistoryDetails
+from oci.core.models import CreateInstanceConsoleConnectionDetails
+from oci.core.models import CreateVolumeDetails
+from oci.core.models import Image
+from oci.core.models import ImageShapeCompatibilityEntry
+from oci.core.models import Instance
+from oci.core.models import InstanceAgentPluginConfigDetails
+from oci.core.models import InstanceConsoleConnection
+from oci.core.models import InstanceOptions
+from oci.core.models import InstanceSourceViaBootVolumeDetails
+from oci.core.models import InstanceSourceViaImageDetails
+from oci.core.models import LaunchInstanceAgentConfigDetails
+from oci.core.models import LaunchInstanceDetails
+from oci.core.models import LaunchInstanceShapeConfigDetails
+from oci.core.models import Shape
+from oci.core.models import Subnet
+from oci.core.models import UpdateBootVolumeDetails
+from oci.core.models import UpdateInstanceDetails
+from oci.core.models import UpdateInstanceShapeConfigDetails
+from oci.core.models import UpdateVolumeDetails
+from oci.core.models import Vnic
+from oci.core.models import VnicAttachment
+from oci.core.models import Volume
+from oci.core.models import VolumeAttachment
+from oci.exceptions import InvalidPrivateKey
+from oci.exceptions import MissingPrivateKeyPassphrase
+from oci.exceptions import ServiceError
+from oci.exceptions import TransientServiceError
+from oci.identity import IdentityClient
+from oci.identity.models import AvailabilityDomain
+from oci.limits import LimitsClient
+from oci.pagination import list_call_get_all_results
+from oci.pagination import list_call_get_all_results_generator
 from rich.prompt import Confirm
 
 import yo.util
+from yo.oci import wait_until_progress
 from yo.util import check_args_dataclass
 from yo.util import current_yo_version
 from yo.util import fmt_allow_deny
@@ -69,27 +114,6 @@ from yo.util import standardize_name
 from yo.util import validate_ssh_username
 from yo.util import YoConfig
 from yo.util import YoExc
-
-# These imports are not evaluated but are added to help type checking
-if t.TYPE_CHECKING:
-    from oci.core import BlockstorageClient
-    from oci.core import ComputeClient
-    from oci.core import VirtualNetworkClient
-    from oci.identity import IdentityClient
-    from oci.identity.models import AvailabilityDomain
-    from oci.limits import LimitsClient
-    from oci.core.models import BootVolume
-    from oci.core.models import BootVolumeAttachment
-    from oci.core.models import Instance
-    from oci.core.models import InstanceConsoleConnection
-    from oci.core.models import Vnic
-    from oci.core.models import VnicAttachment
-    from oci.core.models import Image
-    from oci.core.models import ImageShapeCompatibilityEntry
-    from oci.core.models import Shape
-    from oci.core.models import Subnet
-    from oci.core.models import Volume
-    from oci.core.models import VolumeAttachment
 
 
 _ISOFORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
@@ -1202,10 +1226,7 @@ class YoRegionalCtx:
             yocache.load(cache.get(yocache.name, {}))
 
     def _setup_oci(self) -> None:
-        import yo.oci as foo
-
-        self._oci = foo
-        self._oci_cfg = foo.oci.config.from_file(
+        self._oci_cfg = oci.config.from_file(
             profile_name=self.c.config.oci_profile
         )
         # The OCI SDK allows you to set the region. However, that's one extra
@@ -1234,13 +1255,13 @@ class YoRegionalCtx:
         # See: https://github.com/oracle/oci-python-sdk/issues/697
         while True:
             try:
-                self._vnet = foo.oci.core.VirtualNetworkClient(self._oci_cfg)
-            except foo.oci.exceptions.MissingPrivateKeyPassphrase:
+                self._vnet = VirtualNetworkClient(self._oci_cfg)
+            except MissingPrivateKeyPassphrase:
                 self._oci_cfg["pass_phrase"] = self.c.con.input(
                     prompt="OCI API Key Passphrase: ",
                     password=True,
                 )
-            except foo.oci.exceptions.InvalidPrivateKey:
+            except InvalidPrivateKey:
                 if not retry_with_passphrase:
                     raise
                 self.c.con.print("[red]Incorrect passphrase[/red]")
@@ -1256,10 +1277,11 @@ class YoRegionalCtx:
             self.c._oci_passphrase = self._oci_cfg["pass_phrase"]
 
         # And finally, initialize our other clients
-        self._compute = foo.oci.core.ComputeClient(self._oci_cfg)
-        self._block = foo.oci.core.BlockstorageClient(self._oci_cfg)
-        self._iam = foo.oci.identity.IdentityClient(self._oci_cfg)
-        self._limits = foo.oci.limits.LimitsClient(self._oci_cfg)
+        self._compute = ComputeClient(self._oci_cfg)
+        self._block = BlockstorageClient(self._oci_cfg)
+        self._iam = IdentityClient(self._oci_cfg)
+        self._limits = LimitsClient(self._oci_cfg)
+        self._oci = oci
 
     @property
     def oci(self) -> t.Any:
@@ -1269,37 +1291,42 @@ class YoRegionalCtx:
 
     @property
     def vnet(self) -> "VirtualNetworkClient":
-        if not self._oci:
+        if self._vnet is None:
             self._setup_oci()
+        assert self._vnet is not None
         return self._vnet
 
     @property
     def compute(self) -> "ComputeClient":
-        if not self._oci:
+        if self._compute is None:
             self._setup_oci()
+        assert self._compute is not None
         return self._compute
 
     @property
     def block(self) -> "BlockstorageClient":
-        if not self._block:
+        if self._block is None:
             self._setup_oci()
+        assert self._block is not None
         return self._block
 
     @property
     def iam(self) -> "IdentityClient":
-        if not self._iam:
+        if self._iam is None:
             self._setup_oci()
+        assert self._iam is not None
         return self._iam
 
     @property
     def limits(self) -> "LimitsClient":
-        if not self._limits:
+        if self._limits is None:
             self._setup_oci()
+        assert self._limits is not None
         return self._limits
 
     @property
     def tenancy_id(self) -> str:
-        if getattr(self, "_oci_cfg", None) is None:
+        if "tenancy" not in self._oci_cfg:
             self._setup_oci()
         return self._oci_cfg["tenancy"]
 
@@ -1397,7 +1424,7 @@ class YoRegionalCtx:
         self, verbose: bool = False, show_all: bool = False
     ) -> t.List[YoInstance]:
         cid = self.c.config.instance_compartment_id
-        instances_generator = self.oci.list_call_get_all_results(
+        instances_generator = list_call_get_all_results(
             self.compute.list_instances,
             cid,
             limit=1000,
@@ -1620,7 +1647,7 @@ class YoRegionalCtx:
             if not quiet:
                 self.c.con.log("Looking up instance IP/Vnic")
             cid = self.c.config.instance_compartment_id
-            vnic_gen = self.oci.list_call_get_all_results_generator(
+            vnic_gen = list_call_get_all_results_generator(
                 self.compute.list_vnic_attachments,
                 "record",
                 cid,
@@ -1664,7 +1691,7 @@ class YoRegionalCtx:
                 insts_fetch.append(inst)
         if insts_fetch:
             # Fetch all VnicAttachments from this compartment
-            vnic_gen = self.oci.list_call_get_all_results_generator(
+            vnic_gen = list_call_get_all_results_generator(
                 self.compute.list_vnic_attachments,
                 "record",
                 self.c.config.instance_compartment_id,
@@ -1688,7 +1715,7 @@ class YoRegionalCtx:
                     try:
                         vnic = self.vnet.get_vnic(atch_list[0].vnic_id).data
                         break
-                    except self.oci.TransientServiceError as e:
+                    except TransientServiceError as e:
                         if e.code == "TooManyRequests" and i < 2:
                             sleep = random.uniform(1, 4)
                             self.c.con.log(
@@ -1718,7 +1745,7 @@ class YoRegionalCtx:
         **kwargs: t.Any,
     ) -> YoInstance:
         resp = self.compute.get_instance(inst_id)
-        inst = self.oci.wait_until_progress(
+        inst = wait_until_progress(
             self,
             self.compute,
             resp,
@@ -1733,7 +1760,7 @@ class YoRegionalCtx:
         return yo_inst
 
     def _load_image_compatibility(self, image: YoImage) -> None:
-        res = self.oci.list_call_get_all_results_generator(
+        res = list_call_get_all_results_generator(
             self.compute.list_image_shape_compatibility_entries,
             "record",
             image.id,
@@ -1765,7 +1792,7 @@ class YoRegionalCtx:
             seen_ids = set()
             for cid in compartments:
                 cid = cid.split(":")[0]
-                img_gen = self.oci.list_call_get_all_results_generator(
+                img_gen = list_call_get_all_results_generator(
                     self.compute.list_images,
                     "record",
                     cid,
@@ -1894,7 +1921,7 @@ class YoRegionalCtx:
     def list_shapes(self) -> t.List[YoShape]:
         cid = self.c.config.instance_compartment_id
         if not self._shapes.is_current():
-            shape_gen = self.oci.list_call_get_all_results_generator(
+            shape_gen = list_call_get_all_results_generator(
                 self.compute.list_shapes, "record", cid
             )
             shapes_dupes = [YoShape.from_oci(shape) for shape in shape_gen]
@@ -1916,7 +1943,7 @@ class YoRegionalCtx:
         raise YoExc(f"Shape {shape} not found")
 
     def create_console(self, instance_id: str) -> YoConsole:
-        details = self.oci.CreateInstanceConsoleConnectionDetails(
+        details = CreateInstanceConsoleConnectionDetails(
             instance_id=instance_id,
             public_key=self.c.config.ssh_public_key_full,
         )
@@ -1926,7 +1953,7 @@ class YoRegionalCtx:
             "Created instance console connection. Waiting for it to become "
             "active."
         )
-        conn = self.oci.wait_until_progress(
+        conn = wait_until_progress(
             self,
             self.compute,
             self.compute.get_instance_console_connection(conn.id),
@@ -1992,7 +2019,7 @@ class YoRegionalCtx:
                     "you want."
                 )
         elif self.c.config.subnet_compartment_id:
-            gen = self.oci.list_call_get_all_results_generator(
+            gen = list_call_get_all_results_generator(
                 self.vnet.list_subnets,
                 "record",
                 self.c.config.subnet_compartment_id,
@@ -2024,32 +2051,28 @@ class YoRegionalCtx:
             kwargs = {"image_id": image_id}
             if boot_size:
                 kwargs["boot_volume_size_in_gbs"] = boot_size
-            details["source_details"] = self.oci.InstanceSourceViaImageDetails(
-                **kwargs
-            )
+            details["source_details"] = InstanceSourceViaImageDetails(**kwargs)
         elif volume_id:
-            details[
-                "source_details"
-            ] = self.oci.InstanceSourceViaBootVolumeDetails(
+            details["source_details"] = InstanceSourceViaBootVolumeDetails(
                 boot_volume_id=volume_id,
             )
         else:
             raise YoExc("You must pass either image_id or volume_id")
         shape_config = details.pop("shape_config", None)
         if shape_config:
-            details["shape_config"] = self.oci.LaunchInstanceShapeConfigDetails(
+            details["shape_config"] = LaunchInstanceShapeConfigDetails(
                 **shape_config,
             )
         cloudguard_wlp = details.pop(
             "cloudguard_wlp", DEFAULT_CLOUDGUARD_WLP_ENABLED
         )
         if cloudguard_wlp:
-            details["agent_config"] = self.oci.LaunchInstanceAgentConfigDetails(
+            details["agent_config"] = LaunchInstanceAgentConfigDetails(
                 plugins_config=[
-                    self.oci.InstanceAgentPluginConfigDetails(
+                    InstanceAgentPluginConfigDetails(
                         name=CLOUDGUARD_WLP_PLUGIN_NAME,
                         desired_state=(
-                            self.oci.InstanceAgentPluginConfigDetails.DESIRED_STATE_ENABLED
+                            InstanceAgentPluginConfigDetails.DESIRED_STATE_ENABLED
                         ),
                     )
                 ],
@@ -2060,7 +2083,7 @@ class YoRegionalCtx:
         disable_legacy_imds = details.pop(
             "are_legacy_imds_endpoints_disabled", True
         )
-        details["instance_options"] = self.oci.InstanceOptions(
+        details["instance_options"] = InstanceOptions(
             are_legacy_imds_endpoints_disabled=disable_legacy_imds,
         )
 
@@ -2075,7 +2098,7 @@ class YoRegionalCtx:
         }
         if username:
             details["freeform_tags"][USERNAME] = username
-        details = self.oci.LaunchInstanceDetails(**details)
+        details = LaunchInstanceDetails(**details)
         instance = YoInstance.from_oci(
             self.compute.launch_instance(details).data
         )
@@ -2434,12 +2457,10 @@ class YoRegionalCtx:
         create_args: t.Dict[str, t.Dict[str, t.Any]] = {"shape_config": {}}
         # This prints a "configured shape with ..." message.
         self._launch_config_mem_cpu(None, image, yoshape, cpu, mem, create_args)
-        shape_config = self.oci.UpdateInstanceShapeConfigDetails(
+        shape_config = UpdateInstanceShapeConfigDetails(
             **create_args["shape_config"]
         )
-        deets = self.oci.UpdateInstanceDetails(
-            shape=shape, shape_config=shape_config
-        )
+        deets = UpdateInstanceDetails(shape=shape, shape_config=shape_config)
         if not Confirm.ask(
             "This will reboot your instance! Is this ok?", console=self.c.con
         ):
@@ -2450,7 +2471,7 @@ class YoRegionalCtx:
             newinst = YoInstance.from_oci(
                 self.compute.update_instance(inst.id, deets).data
             )
-        except self.oci.ServiceError as e:
+        except ServiceError as e:
             if e.status == 404:
                 raise YoExc(
                     "OCI Returned: Not Authorized or Not Found (404)\n"
@@ -2473,7 +2494,7 @@ class YoRegionalCtx:
         vols = []
         attchs = []
         ids = set()
-        bootdev_gen = self.oci.list_call_get_all_results_generator(
+        bootdev_gen = list_call_get_all_results_generator(
             self.block.list_boot_volumes,
             "record",
             availability_domain=ad,
@@ -2484,7 +2505,7 @@ class YoRegionalCtx:
             if self.filter_by_creator(bv.created_by):
                 vols.append(bv)
                 ids.add(bv.id)
-        boot_attch_gen = self.oci.list_call_get_all_results_generator(
+        boot_attch_gen = list_call_get_all_results_generator(
             self.compute.list_boot_volume_attachments,
             "record",
             availability_domain=ad,
@@ -2517,7 +2538,7 @@ class YoRegionalCtx:
         vols = []
         attchs = []
         ids = set()
-        blockdev_gen = self.oci.list_call_get_all_results_generator(
+        blockdev_gen = list_call_get_all_results_generator(
             self.block.list_volumes,
             "record",
             compartment_id=self.c.config.instance_compartment_id,
@@ -2529,7 +2550,7 @@ class YoRegionalCtx:
                 ids.add(vol.id)
 
         # Now, we can start the request for volume attachments
-        attch_gen = self.oci.list_call_get_all_results_generator(
+        attch_gen = list_call_get_all_results_generator(
             self.compute.list_volume_attachments,
             "record",
             compartment_id=self.c.config.instance_compartment_id,
@@ -2616,7 +2637,7 @@ class YoRegionalCtx:
         if vol.kind == VolumeKind.BOOT:
             new = self.block.update_boot_volume(
                 vol.id,
-                self.oci.UpdateBootVolumeDetails(
+                UpdateBootVolumeDetails(
                     display_name=new_name,
                 ),
             )
@@ -2624,7 +2645,7 @@ class YoRegionalCtx:
         else:
             new = self.block.update_volume(
                 vol.id,
-                self.oci.UpdateVolumeDetails(
+                UpdateVolumeDetails(
                     display_name=new_name,
                 ),
             )
@@ -2636,7 +2657,7 @@ class YoRegionalCtx:
         freeform_tags = {
             CREATEDBY: self.c.config.my_email,
         }
-        details = self.oci.CreateVolumeDetails(
+        details = CreateVolumeDetails(
             compartment_id=self.c.config.instance_compartment_id,
             display_name=name,
             size_in_gbs=size_gbs,
@@ -2655,13 +2676,11 @@ class YoRegionalCtx:
         if volume.state != "AVAILABLE":
             raise YoExc("Volume must be in AVAILABLE state to resize")
         if volume.kind == VolumeKind.BOOT:
-            update_details = self.oci.UpdateBootVolumeDetails(
-                size_in_gbs=new_size
-            )
+            update_details = UpdateBootVolumeDetails(size_in_gbs=new_size)
             result = self.block.update_boot_volume(volume.id, update_details)
             new_volume = YoVolume.from_oci_boot(result.data)
         else:
-            update_details = self.oci.UpdateVolumeDetails(size_in_gbs=new_size)
+            update_details = UpdateVolumeDetails(size_in_gbs=new_size)
             result = self.block.update_volume(volume.id, update_details)
             new_volume = YoVolume.from_oci_block(result.data)
         self._vols.insert(new_volume)
@@ -2704,7 +2723,7 @@ class YoRegionalCtx:
         # doesn't make them bootable. For that sort of surgery, Yo isn't very
         # well suited.
         if vol.kind == VolumeKind.BOOT and atch_type == AttachmentType.BOOT:
-            details = self.oci.AttachBootVolumeDetails(
+            details = AttachBootVolumeDetails(
                 instance_id=inst_id,
                 boot_volume_id=vol.id,
             )
@@ -2714,11 +2733,11 @@ class YoRegionalCtx:
             if not atch_type:
                 atch_type = "service_determined"
             atch_type_to_details_cls = {
-                "service_determined": self.oci.AttachServiceDeterminedVolumeDetails,
-                "iscsi": self.oci.AttachIScsiVolumeDetails,
-                "pv": self.oci.AttachParavirtualizedVolumeDetails,
-                "paravirt": self.oci.AttachParavirtualizedVolumeDetails,
-                "emulated": self.oci.AttachEmulatedVolumeDetails,
+                "service_determined": AttachServiceDeterminedVolumeDetails,
+                "iscsi": AttachIScsiVolumeDetails,
+                "pv": AttachParavirtualizedVolumeDetails,
+                "paravirt": AttachParavirtualizedVolumeDetails,
+                "emulated": AttachEmulatedVolumeDetails,
             }
             details_cls = atch_type_to_details_cls[atch_type]
             details = details_cls(
@@ -2752,7 +2771,7 @@ class YoRegionalCtx:
             oci_vol = self.block.get_volume(vol.id)
         else:
             oci_vol = self.block.get_boot_volume(vol.id)
-        oci_new = self.oci.wait_until_progress(
+        oci_new = wait_until_progress(
             self,
             self.block,
             oci_vol,
@@ -2773,7 +2792,7 @@ class YoRegionalCtx:
     ) -> YoVolumeAttachment:
         if va.kind == VolumeKind.BLOCK:
             oci_va = self.compute.get_volume_attachment(va.id)
-            oci_new_va = self.oci.wait_until_progress(
+            oci_new_va = wait_until_progress(
                 self,
                 self.compute,
                 oci_va,
@@ -2784,7 +2803,7 @@ class YoRegionalCtx:
             new_va = YoVolumeAttachment.from_oci_block(oci_new_va)
         else:
             oci_bva = self.compute.get_boot_volume_attachment(va.id)
-            oci_new_bva = self.oci.wait_until_progress(
+            oci_new_bva = wait_until_progress(
                 self,
                 self.compute,
                 oci_bva,
@@ -2850,7 +2869,7 @@ class YoRegionalCtx:
           empty list to retrieve all of them.
         :returns: Availability summary object
         """
-        results = self.oci.list_call_get_all_results(
+        results = list_call_get_all_results(
             self.limits.list_limit_values,
             self.tenancy_id,
             service,
@@ -2972,7 +2991,7 @@ class YoRegionalCtx:
         return YoShapeAvail(q2r, ad_to_max, ad_to_limit, sorted(missing_quotas))
 
     def rename_instance(self, inst: YoInstance, new_name: str) -> YoInstance:
-        update = self.oci.UpdateInstanceDetails(display_name=new_name)
+        update = UpdateInstanceDetails(display_name=new_name)
         newinst = YoInstance.from_oci(
             self.compute.update_instance(inst.id, update).data
         )
@@ -2984,7 +3003,7 @@ class YoRegionalCtx:
         string = str(enabled).lower()
         freeform_tags = inst.freeform_tags.copy()
         freeform_tags[TERMPROTECT] = string
-        update = self.oci.UpdateInstanceDetails(freeform_tags=freeform_tags)
+        update = UpdateInstanceDetails(freeform_tags=freeform_tags)
         newinst = YoInstance.from_oci(
             self.compute.update_instance(inst.id, update).data
         )
@@ -2993,11 +3012,11 @@ class YoRegionalCtx:
         return newinst
 
     def get_console_history(self, inst: YoInstance) -> bytes:
-        details = self.oci.CaptureConsoleHistoryDetails(instance_id=inst.id)
+        details = CaptureConsoleHistoryDetails(instance_id=inst.id)
         hist = self.compute.capture_console_history(details).data
         try:
             resp = self.compute.get_console_history(hist.id)
-            hist = self.oci.wait_until_progress(
+            hist = wait_until_progress(
                 self,
                 self.compute,
                 resp,
@@ -3017,7 +3036,7 @@ class YoRegionalCtx:
         try:
             r = self.compute.get_windows_instance_initial_credentials(inst.id)
             return r.data.username, r.data.password
-        except self.oci.ServiceError:
+        except ServiceError:
             return None, None
 
     def get_ssh_user(self, inst: YoInstance) -> str:
@@ -3030,9 +3049,7 @@ class YoRegionalCtx:
         if SAVEDATA in volume.freeform_tags:
             freeform_tags = volume.freeform_tags
             del freeform_tags[SAVEDATA]
-            update = self.oci.UpdateBootVolumeDetails(
-                freeform_tags=freeform_tags
-            )
+            update = UpdateBootVolumeDetails(freeform_tags=freeform_tags)
             volume = YoVolume.from_oci_boot(
                 self.block.update_boot_volume(volume.id, update).data
             )
@@ -3068,7 +3085,7 @@ class YoRegionalCtx:
         vol = self.get_volume_by_id(atch.volume_id)
         freeform_tags = vol.freeform_tags
         freeform_tags[SAVEDATA] = savedata
-        update = self.oci.UpdateBootVolumeDetails(freeform_tags=freeform_tags)
+        update = UpdateBootVolumeDetails(freeform_tags=freeform_tags)
         volume = YoVolume.from_oci_boot(
             self.block.update_boot_volume(atch.volume_id, update).data
         )
@@ -3154,7 +3171,7 @@ class YoRegionalCtx:
     def _load_compartments(self) -> None:
         if not self._compartments.is_current():
             self.c.con.log("Refreshing cached compartment info")
-            results = self.oci.list_call_get_all_results_generator(
+            results = list_call_get_all_results_generator(
                 self.iam.list_compartments,
                 "record",
                 compartment_id=self.tenancy_id,
