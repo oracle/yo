@@ -186,8 +186,8 @@ def test_list_all_regions_results(mock_ctx):
     }[region]
 
     insts = [
-        instance_factory(name="test-r1"),
-        instance_factory(name="test-r2"),
+        instance_factory(name="test-r1", region=r1),
+        instance_factory(name="test-r2", region=r2),
     ]
     mock_ctx.list_instances.return_value = [insts[0]]
     region2_ctx.list_instances.return_value = [insts[1]]

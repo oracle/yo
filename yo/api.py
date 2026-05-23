@@ -314,14 +314,20 @@ CI = t.TypeVar("CI", bound="YoCachedItem")
 @dataclasses.dataclass
 class YoCachedItem:
     name: str
+    region: str = dataclasses.field(
+        init=False, default="", repr=False, compare=False
+    )
 
     def to_json(self) -> t.Dict[str, t.Any]:
         d = dataclasses.asdict(self)
         _convert_dts_to_string(d, type(self))
+        d.pop("region", None)
         return d
 
     @classmethod
     def from_json(cls: t.Type[CI], d: t.Dict[str, t.Any]) -> CI:
+        d = dict(d)
+        d.pop("region", None)
         _convert_dts_from_string(d, cls)
         return cls(**d)
 
@@ -927,6 +933,7 @@ class YoCache(t.Generic[U]):
         name: str,
         version: int,
         stale_hours: int = 6,
+        region: str = "",
     ):
         """
         Initialize an empty cache of type type_. The name field is only
@@ -943,6 +950,11 @@ class YoCache(t.Generic[U]):
         self._version = version
         self._data = []
         self._stale_hours = stale_hours
+        self._region = region
+
+    def _set_region(self, item: U) -> U:
+        item.region = self._region
+        return item
 
     def clear(self) -> None:
         self.last_update = None
@@ -967,7 +979,9 @@ class YoCache(t.Generic[U]):
         self.last_update = dtornull(d.get("last_update"))
         self.last_refresh = dtornull(d.get("last_refresh"))
         json_dicts = d.get("cache", [])
-        self._data = [self._type.from_json(x) for x in json_dicts]
+        self._data = [
+            self._set_region(self._type.from_json(x)) for x in json_dicts
+        ]
 
     def set(self, items: t.List[U]) -> None:
         """
@@ -975,7 +989,7 @@ class YoCache(t.Generic[U]):
         """
         self.last_update = now()
         self.last_refresh = now()
-        self._data = list(items)
+        self._data = [self._set_region(item) for item in items]
 
     def get_all_by(self, field: str, val: t.Any) -> t.Iterator[U]:
         for item in self._data:
@@ -1027,6 +1041,7 @@ class YoCache(t.Generic[U]):
 
     def insert(self, new_item: U) -> None:
         self.mark_update()
+        self._set_region(new_item)
         for idx, item in enumerate(self._data):
             if new_item.same_item(item):
                 self._data[idx] = new_item
@@ -1162,16 +1177,20 @@ class YoRegionalCtx:
         self.last_checked_for_update = now()  # TODO: fix updates
         self._oci_cfg = {}
         self._cache_file = os.path.expanduser(cache_file)
-        self._instances = YoCache(YoInstance, "instances", 5)
-        self._vnics = YoCache(YoVnic, "vnics", 2)
-        self._images = YoCache(YoImage, "images", 7)
-        self._consoles = YoCache(YoConsole, "consoles", 2)
-        self._shapes = YoCache(YoShape, "shapes", 5)
-        self._vols = YoCache(YoVolume, "bootvols", 5)
-        self._vas = YoCache(YoVolumeAttachment, "vas", 3)
-        self._ads = YoCache(YoAd, "ads", 1, stale_hours=24 * 7)
+        self._instances = YoCache(YoInstance, "instances", 5, region=region)
+        self._vnics = YoCache(YoVnic, "vnics", 2, region=region)
+        self._images = YoCache(YoImage, "images", 7, region=region)
+        self._consoles = YoCache(YoConsole, "consoles", 2, region=region)
+        self._shapes = YoCache(YoShape, "shapes", 5, region=region)
+        self._vols = YoCache(YoVolume, "bootvols", 5, region=region)
+        self._vas = YoCache(YoVolumeAttachment, "vas", 3, region=region)
+        self._ads = YoCache(YoAd, "ads", 1, stale_hours=24 * 7, region=region)
         self._compartments = YoCache(
-            YoCompartment, "compartments", 1, stale_hours=24 * 7
+            YoCompartment,
+            "compartments",
+            1,
+            stale_hours=24 * 7,
+            region=region,
         )
         self._compute = None
         self._vnet = None
@@ -1334,6 +1353,10 @@ class YoRegionalCtx:
     def region_config(self) -> yo.util.YoRegion:
         return self.c.config.regions[self.region]
 
+    def _set_region(self, item: U) -> U:
+        item.region = self.region
+        return item
+
     def save_cache(self) -> None:
         # It is possible for multiple executions of Yo to concurrently read and
         # write the cache file. In this case, the writer would truncate the
@@ -1465,7 +1488,7 @@ class YoRegionalCtx:
                     )
                     warned_on_missing_tag = True
                 email = instance.freeform_tags.get(CREATEDBY)
-            yo_inst = YoInstance.from_oci(instance)
+            yo_inst = self._set_region(YoInstance.from_oci(instance))
             instances.append(yo_inst)
             if self.filter_by_creator(email):
                 instances_cache.append(yo_inst)
@@ -2041,7 +2064,7 @@ class YoRegionalCtx:
                 raise YoExc("No subnets available...")
         else:
             raise YoExc("Need subnet_id or subnet_compartment_id.")
-        sub = YoSubnet.from_oci(subnet)
+        sub = self._set_region(YoSubnet.from_oci(subnet))
         self.c.con.log(f"Using subnet [blue]{sub.name}[/blue]")
         return sub
 

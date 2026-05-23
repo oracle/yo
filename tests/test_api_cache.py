@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 
 from tests.testing.factories import config_factory
+from tests.testing.factories import instance_factory
 from yo.api import YoCtx
 from yo.api import YoRegionalCtx
 from yo.util import YoExc
@@ -76,6 +77,28 @@ def test_load_cache_invalidates_resource_filtering_mismatch(tmp_path):
     )
     ctx2.clear_cache()
     assert not cache_file.exists()
+
+
+def test_cached_items_get_runtime_region_without_serializing(tmp_path):
+    ctx, cache_file = _make_ctx(tmp_path)
+    inst = instance_factory()
+
+    ctx._instances.set([inst])
+
+    assert inst.region == ctx.region
+    inserted = instance_factory()
+    ctx._instances.insert(inserted)
+    assert inserted.region == ctx.region
+    assert all(
+        "region" not in item for item in ctx._instances.export()["cache"]
+    )
+
+    ctx.save_cache()
+    cache = json.loads(cache_file.read_text())
+    assert all("region" not in item for item in cache["instances"]["cache"])
+
+    loaded, _ = _make_ctx(tmp_path, clear=False)
+    assert {item.region for item in loaded._instances.get_all()} == {ctx.region}
 
 
 def test_rc_caches_regional_contexts(tmp_path):

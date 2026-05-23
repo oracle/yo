@@ -45,6 +45,7 @@ from yo.api import ShapeMemoryOptions
 from yo.api import ShapeOcpuOptions
 from yo.api import TERMPROTECT
 from yo.api import VolumeKind
+from yo.api import YoCachedItem
 from yo.api import YoImage
 from yo.api import YoInstance
 from yo.api import YoShape
@@ -64,6 +65,7 @@ NOT_MY_EMAIL = "test2@example.com"
 MY_USERNAME = "test"
 
 _NAME_SEQNO = 1
+_C = t.TypeVar("_C", bound=YoCachedItem)
 
 
 class FakeResponse:
@@ -84,12 +86,19 @@ def _unique_name() -> str:
     return name
 
 
+def _with_region(item: _C, region: t.Optional[str]) -> _C:
+    if region is not None:
+        item.region = region
+    return item
+
+
 def short_name(name: str, username: str = MY_USERNAME) -> str:
     assert name.startswith(username + "-")
     return name[len(username) + 1 :]
 
 
 def instance_factory(**kwargs) -> YoInstance:
+    region = kwargs.pop("region", None)
     defaults = {
         "name": _unique_name(),
         "id": _random_id(),
@@ -109,10 +118,11 @@ def instance_factory(**kwargs) -> YoInstance:
     defaults["defined_tags"] = {
         "Oracle-Tags": {"CreatedBy": defaults.pop("created_by")},
     }
-    return YoInstance(**defaults)  # type: ignore
+    return _with_region(YoInstance(**defaults), region)  # type: ignore
 
 
 def image_factory(**kwargs) -> YoImage:
+    region = kwargs.pop("region", None)
     defaults = {  # type: ignore
         "name": _unique_name(),
         "id": _random_id(),
@@ -131,7 +141,7 @@ def image_factory(**kwargs) -> YoImage:
         "created_by": None,
     }
     defaults.update(kwargs)
-    return YoImage(**defaults)  # type: ignore
+    return _with_region(YoImage(**defaults), region)  # type: ignore
 
 
 def config_factory(**kwargs) -> YoConfig:
@@ -199,6 +209,7 @@ def oci_instance_fromyo(i: YoInstance) -> t.Any:
 
 
 def shape_factory(**kwargs) -> YoShape:
+    region = kwargs.pop("region", None)
     defaults = {
         "name": SHAPE,
         "shape": SHAPE,
@@ -220,7 +231,7 @@ def shape_factory(**kwargs) -> YoShape:
         "max_vnic_attachment_options": None,
     }
     defaults.update(kwargs)
-    return YoShape(**defaults)  # type: ignore
+    return _with_region(YoShape(**defaults), region)  # type: ignore
 
 
 def flex_shape_factory(**kwargs) -> YoShape:
@@ -244,6 +255,7 @@ def flex_shape_factory(**kwargs) -> YoShape:
 
 
 def volume_factory(**kwargs) -> YoVolume:
+    region = kwargs.pop("region", None)
     defaults = {
         "id": _random_id(),
         "name": _unique_name(),
@@ -265,7 +277,7 @@ def volume_factory(**kwargs) -> YoVolume:
         defaults["alt_name"] = str(defaults["name"]).replace(
             " (Boot Volume)", ""
         )
-    return YoVolume(**defaults)  # type: ignore
+    return _with_region(YoVolume(**defaults), region)  # type: ignore
 
 
 def saved_boot_volume_factory(name: str, **kwargs) -> YoVolume:
@@ -287,6 +299,7 @@ def saved_boot_volume_factory(name: str, **kwargs) -> YoVolume:
 
 
 def volume_attachment_factory(**kwargs) -> YoVolumeAttachment:
+    region = kwargs.pop("region", None)
     defaults = {
         "id": _random_id(),
         "name": "attachment",
@@ -308,7 +321,7 @@ def volume_attachment_factory(**kwargs) -> YoVolumeAttachment:
         "iscsi_iqn": None,
     }
     defaults.update(kwargs)
-    return YoVolumeAttachment(**defaults)  # type: ignore
+    return _with_region(YoVolumeAttachment(**defaults), region)  # type: ignore
 
 
 def oci_boot_volume_fromyo(vol: YoVolume) -> t.Any:
