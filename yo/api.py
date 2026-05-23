@@ -1330,6 +1330,10 @@ class YoRegionalCtx:
             self._setup_oci()
         return self._oci_cfg["tenancy"]
 
+    @property
+    def region_config(self) -> yo.util.YoRegion:
+        return self.c.config.regions[self.region]
+
     def save_cache(self) -> None:
         # It is possible for multiple executions of Yo to concurrently read and
         # write the cache file. In this case, the writer would truncate the
@@ -2008,8 +2012,9 @@ class YoRegionalCtx:
             )
 
     def pick_subnet(self, ad: str) -> YoSubnet:
-        if self.c.config.subnet_id:
-            resp = self.vnet.get_subnet(subnet_id=self.c.config.subnet_id)
+        region_config = self.region_config
+        if region_config.subnet_id:
+            resp = self.vnet.get_subnet(subnet_id=region_config.subnet_id)
             subnet = resp.data
             if subnet.availability_domain and subnet.availability_domain != ad:
                 self.c.con.log(
@@ -2018,12 +2023,12 @@ class YoRegionalCtx:
                     "instance profile. Continuing, but this may not be what "
                     "you want."
                 )
-        elif self.c.config.subnet_compartment_id:
+        elif region_config.subnet_compartment_id:
             gen = list_call_get_all_results_generator(
                 self.vnet.list_subnets,
                 "record",
-                self.c.config.subnet_compartment_id,
-                vcn_id=self.c.config.vcn_id,
+                region_config.subnet_compartment_id,
+                vcn_id=region_config.vcn_id,
                 lifecycle_state="AVAILABLE",
             )
             for subnet in gen:

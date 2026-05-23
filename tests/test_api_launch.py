@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import dataclasses
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -16,14 +17,15 @@ from yo.api import ShapeOcpuOptions
 from yo.api import YoCtx
 from yo.api import YoRegionalCtx
 from yo.util import YoExc
+from yo.util import YoRegion
 
 
-def _make_ctx(tmp_path, **cfg_kwargs):
+def _make_ctx(tmp_path, ctx_region=None, **cfg_kwargs):
     cache_file = tmp_path / "yo-cache.json"
     cfg = config_factory(**cfg_kwargs)
     cc = YoCtx(cfg, {})
     cc.con = mock.Mock()
-    ctx = YoRegionalCtx(cc, cfg.region, str(cache_file))
+    ctx = YoRegionalCtx(cc, ctx_region or cfg.region, str(cache_file))
     ctx.con = cc.con
     ctx.clear_cache()
     return ctx
@@ -189,3 +191,85 @@ def test_get_ssh_user_rejects_invalid_username_tag(tmp_path):
 
     with pytest.raises(YoExc, match="yo-username tag"):
         ctx.get_ssh_user(inst)
+
+
+def test_pick_subnet_uses_context_region_not_config_region(tmp_path):
+    regions = {
+        "home-region": YoRegion(
+            "home-region", "vcn-home", subnet_id="subnet-home"
+        ),
+        "other-region": YoRegion(
+            "other-region", "vcn-other", subnet_id="subnet-other"
+        ),
+    }
+    ctx = _make_ctx(
+        tmp_path,
+        ctx_region="other-region",
+        region="home-region",
+        regions=regions,
+    )
+    ctx._vnet = mock.Mock()
+    ctx._vnet.get_subnet.return_value = SimpleNamespace(
+        data=SimpleNamespace(
+            id="subnet-other",
+            display_name="other-subnet",
+            availability_domain="AD-1",
+            lifecycle_state="AVAILABLE",
+            vcn_id="vcn-other",
+            cidr_block="10.0.0.0/24",
+            virtual_router_ip="10.0.0.1",
+            virtual_router_mac="00:11:22:33:44:55",
+        )
+    )
+
+    subnet = ctx.pick_subnet("AD-1")
+
+    ctx._vnet.get_subnet.assert_called_once_with(subnet_id="subnet-other")
+    assert subnet.id == "subnet-other"
+
+
+def test_pick_subnet_list_uses_context_region_vcn_and_compartment(tmp_path):
+    regions = {
+        "home-region": YoRegion(
+            "home-region",
+            "vcn-home",
+            subnet_compartment_id="compartment-home",
+        ),
+        "other-region": YoRegion(
+            "other-region",
+            "vcn-other",
+            subnet_compartment_id="compartment-other",
+        ),
+    }
+    ctx = _make_ctx(
+        tmp_path,
+        ctx_region="other-region",
+        region="home-region",
+        regions=regions,
+    )
+    ctx._vnet = mock.Mock()
+    oci_subnet = SimpleNamespace(
+        id="subnet-other",
+        display_name="other-subnet",
+        availability_domain="AD-1",
+        lifecycle_state="AVAILABLE",
+        vcn_id="vcn-other",
+        cidr_block="10.0.0.0/24",
+        virtual_router_ip="10.0.0.1",
+        virtual_router_mac="00:11:22:33:44:55",
+    )
+
+    with mock.patch(
+        "yo.api.list_call_get_all_results_generator",
+        return_value=iter([oci_subnet]),
+    ) as list_all:
+        subnet = ctx.pick_subnet("AD-1")
+
+    list_all.assert_called_once_with(
+        ctx._vnet.list_subnets,
+        "record",
+        "compartment-other",
+        vcn_id="vcn-other",
+        lifecycle_state="AVAILABLE",
+    )
+    assert subnet.id == "subnet-other"

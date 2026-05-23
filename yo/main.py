@@ -602,7 +602,7 @@ class ListCmd(YoCmd):
         columns = self.get_columns()
         if not self.args.cached:
             self.es.enter_context(self.c.maybe_check_for_updates())
-        regions = [self.cc.config.region]
+        regions = [self.c.region]
         if self.args.all_regions:
             regions = list(self.cc.config.regions)
         instances, volumes = self._list_all_region_resources(regions, verbose)
@@ -1804,10 +1804,7 @@ class LaunchCmd(YoCmd):
     """
 
     def _profile_choices(self) -> t.Optional[t.List[str]]:
-        if hasattr(self, "c"):
-            return list(self.cc.instance_profiles)
-        else:
-            return None  # for docs
+        return list(self.cc.instance_profiles)
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
