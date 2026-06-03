@@ -46,6 +46,10 @@ example:
    mkdir -p ~/.zfunc
    cp contrib/yo.zsh ~/.zfunc/_yo
 
+   # Ensure ~/.zfunc is in your $fpath as below, or use a different path
+   # already part of the $fpath.
+   echo 'fpath=(~/.zfunc $fpath)' >> ~/.zshrc
+
 You may need to delete ``~/.zcompdump`` to pick up the new completion
 definition depending on your distribution and configuration.
 
