@@ -37,10 +37,17 @@ features native to the zsh completion system like tags, descriptions, and
 argument groups.
 
 An alternative zsh completion definition is available in contrib/yo.zsh that
-implements a more native zsh experience. Add this file to a directory in your
-$fpath and run ``compinit`` again. You may need to delete ~/.zcompdump to pick
-up the new completion definition depending on your distribution and
-configuration.
+implements a more native zsh experience. Install this file in a directory in
+your ``$fpath`` with the exact filename ``_yo`` and run ``compinit`` again. For
+example:
+
+.. code::
+
+   mkdir -p ~/.zfunc
+   cp contrib/yo.zsh ~/.zfunc/_yo
+
+You may need to delete ``~/.zcompdump`` to pick up the new completion
+definition depending on your distribution and configuration.
 
 For these completions, ``jq`` is used to parse the yo cache files if it is
 installed. Otherwise, argument listings for some words like instances and
