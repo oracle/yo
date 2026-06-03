@@ -2510,8 +2510,8 @@ class ShapesCmd(YoCmd):
         "intel": lambda s: "Intel" in s.processor_description,
         "arm": lambda s: "Ampere" in s.processor_description,
         "flex": lambda s: s.ocpu_options is not None,
-        "gpu": lambda s: s.gpus > 0,
-        "disk": lambda s: s.local_disks > 0,
+        "gpu": lambda s: (s.gpus or 0) > 0,
+        "disk": lambda s: (s.local_disks or 0) > 0,
     }
 
     def add_args(self, parser: argparse.ArgumentParser) -> None:
