@@ -174,11 +174,13 @@ class ParagraphFormatter(argparse.HelpFormatter):
         return "\n\n".join(wrapped_pars)
 
 
-def arg_choices(c: t.List[str]) -> t.Optional[t.List[str]]:
+def arg_choices(
+    c: t.Callable[[], t.Optional[t.List[str]]]
+) -> t.Optional[t.List[str]]:
     if os.environ.get("SPHINX_BUILD") == "1":
         return None
     else:
-        return c
+        return c()
 
 
 @dataclasses.dataclass
@@ -1312,7 +1314,7 @@ class TaskRunCmd(SingleInstanceCommand):
         super().add_args(parser)
         parser.add_argument(
             "task",
-            choices=arg_choices(list_tasks()),
+            choices=arg_choices(list_tasks),
             help="name of the task to execute",
             nargs="+",
         )
@@ -1410,7 +1412,7 @@ class TaskWaitCmd(SingleInstanceCommand):
         super().add_args(parser)
         parser.add_argument(
             "task",
-            choices=arg_choices(list_tasks()),
+            choices=arg_choices(list_tasks),
             help="name of the task to execute",
         )
 
@@ -1441,7 +1443,7 @@ class TaskInfo(YoCmd):
     def add_args(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "task",
-            choices=arg_choices(list_tasks()),
+            choices=arg_choices(list_tasks),
             help="name of task to give info on",
         )
 
@@ -1919,7 +1921,7 @@ class LaunchCmd(YoCmd):
             "-p",
             type=str,
             default="DEFAULT",
-            choices=self._profile_choices(),
+            choices=arg_choices(self._profile_choices),
             help="Which profile (from your ~/.oci/yo.ini) should be used",
         )
         parser.add_argument(
@@ -1929,7 +1931,7 @@ class LaunchCmd(YoCmd):
             action="append",
             dest="tasks",
             default=[],
-            choices=arg_choices(list_tasks() + ["-"]),
+            choices=arg_choices(lambda: list_tasks() + ["-"]),
             help="Tasks to run once the instance is up and accessible",
         )
         parser.add_argument(
