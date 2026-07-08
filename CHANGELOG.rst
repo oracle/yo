@@ -7,17 +7,17 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
-1.12.2 - Mon, Mar 9, 2025
+1.12.2 - Mon, Mar 9, 2026
 --------------------------
 
 - Fixed image selection for ``OS:VERSION`` -- version was being ignored.
 
-1.12.1 - Mon, Mar 9, 2025
+1.12.1 - Mon, Mar 9, 2026
 --------------------------
 
 - Fixed breakage in ``yo version`` parsing logic.
 
-1.12.0 - Fri, Mar 6, 2025
+1.12.0 - Fri, Mar 6, 2026
 --------------------------
 
 - **Breaking Change:** custom images must now be prefixed by their compartment
