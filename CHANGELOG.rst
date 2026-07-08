@@ -7,6 +7,36 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
+1.13.0 - Wed, Jul 8, 2026
+-------------------------
+
+Changes & Features:
+
+- **User-visible Change:** We've updated the default where yo's tasks are
+  stored and executed. Previously, task scripts, outputs, and working
+  directories were under ``/tmp/tasks``, but placing them under your home dir is
+  a bit more secure, plus it is more reliable for images where ``/tmp`` is
+  actually a tmpfs. This directory has always been configurable via the
+  ``task_dir`` configuration value.
+- Yo now properly handles SSH host keys. Previously, yo's SSH commands would
+  ignore host keys because IP address reuse is reasonably common on small
+  subnets, which can result in scary false-positives. Now, we use "HostKeyAlias"
+  to associate the host key with the OCI instance ID, eliminating the risk of
+  false positives.
+- ``yo list [--all-regions|-A]`` added by Srikanth C S. This allows you to list
+  instances in all configured regions.
+
+Fixes:
+
+- Fixed a crash in ``yo shapes -f disk`` or ``yo shapes -f gpu``. Thanks to Liam
+  Merwick for the report.
+- Yo username tags from instances are now validated to ensure they cannot
+  contain incorrect or malicious content.
+- Cleaned up our usage of the OCI SDK substantially, removing a hack for ancient
+  versions which were slow to import.
+- Several internal improvements related to how we handle regions internally.
+  This should open the door to more multi-region operations in the future.
+
 1.12.2 - Mon, Mar 9, 2026
 --------------------------
 

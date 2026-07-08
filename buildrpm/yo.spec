@@ -1,8 +1,8 @@
-# Copyright (c) 2025, Oracle and/or its affiliates.
+# Copyright (c) 2025, 2026, Oracle and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 Name:           yo
-Version:        1.12.2
-Release:        0%{?dist}
+Version:        1.13.0
+Release:        1%{?dist}
 Summary:        A fast and simple CLI client for managing OCI instances
 
 License:        UPL
@@ -60,6 +60,9 @@ cp README.* %{buildroot}/%{_docdir}/yo/
 
 
 %changelog
+* Wed Jul 8 2026 Stephen Brennan <stephen.s.brennan@oracle.com> - 1.13.0-1
+- Update to 1.13.0, see documentation for details
+
 * Mon Mar 9 2026 Stephen Brennan <stephen.s.brennan@oracle.com> - 1.12.2-0
 - Fixed image selection for OS:Version -- version was being ignored.
 
