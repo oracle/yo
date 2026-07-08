@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; yo v1.12.2 documentation</title>
+    <title>Changelog &#8212; yo v1.13.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <script src="_static/documentation_options.js?v=c624a2ae"></script>
+    <script src="_static/documentation_options.js?v=2471e684"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="icon" href="_static/yo.png"/>
@@ -40,20 +40,50 @@
 <p>Any changes which are committed, but not yet present in a released
 version, should appear here.</p>
 </section>
-<section id="mon-mar-9-2025">
-<h2>1.12.2 - Mon, Mar 9, 2025<a class="headerlink" href="#mon-mar-9-2025" title="Link to this heading">¶</a></h2>
+<section id="wed-jul-8-2026">
+<h2>1.13.0 - Wed, Jul 8, 2026<a class="headerlink" href="#wed-jul-8-2026" title="Link to this heading">¶</a></h2>
+<p>Changes &amp; Features:</p>
+<ul class="simple">
+<li><p><strong>User-visible Change:</strong> We’ve updated the default where yo’s tasks are
+stored and executed. Previously, task scripts, outputs, and working
+directories were under <code class="docutils literal notranslate"><span class="pre">/tmp/tasks</span></code>, but placing them under your home dir is
+a bit more secure, plus it is more reliable for images where <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> is
+actually a tmpfs. This directory has always been configurable via the
+<code class="docutils literal notranslate"><span class="pre">task_dir</span></code> configuration value.</p></li>
+<li><p>Yo now properly handles SSH host keys. Previously, yo’s SSH commands would
+ignore host keys because IP address reuse is reasonably common on small
+subnets, which can result in scary false-positives. Now, we use “HostKeyAlias”
+to associate the host key with the OCI instance ID, eliminating the risk of
+false positives.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">list</span> <span class="pre">[--all-regions|-A]</span></code> added by Srikanth C S. This allows you to list
+instances in all configured regions.</p></li>
+</ul>
+<p>Fixes:</p>
+<ul class="simple">
+<li><p>Fixed a crash in <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">shapes</span> <span class="pre">-f</span> <span class="pre">disk</span></code> or <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">shapes</span> <span class="pre">-f</span> <span class="pre">gpu</span></code>. Thanks to Liam
+Merwick for the report.</p></li>
+<li><p>Yo username tags from instances are now validated to ensure they cannot
+contain incorrect or malicious content.</p></li>
+<li><p>Cleaned up our usage of the OCI SDK substantially, removing a hack for ancient
+versions which were slow to import.</p></li>
+<li><p>Several internal improvements related to how we handle regions internally.
+This should open the door to more multi-region operations in the future.</p></li>
+</ul>
+</section>
+<section id="mon-mar-9-2026">
+<h2>1.12.2 - Mon, Mar 9, 2026<a class="headerlink" href="#mon-mar-9-2026" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed image selection for <code class="docutils literal notranslate"><span class="pre">OS:VERSION</span></code> – version was being ignored.</p></li>
 </ul>
 </section>
 <section id="id1">
-<h2>1.12.1 - Mon, Mar 9, 2025<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<h2>1.12.1 - Mon, Mar 9, 2026<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed breakage in <code class="docutils literal notranslate"><span class="pre">yo</span> <span class="pre">version</span></code> parsing logic.</p></li>
 </ul>
 </section>
-<section id="fri-mar-6-2025">
-<h2>1.12.0 - Fri, Mar 6, 2025<a class="headerlink" href="#fri-mar-6-2025" title="Link to this heading">¶</a></h2>
+<section id="fri-mar-6-2026">
+<h2>1.12.0 - Fri, Mar 6, 2026<a class="headerlink" href="#fri-mar-6-2026" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Breaking Change:</strong> custom images must now be prefixed by their compartment
 name when specified via the <code class="docutils literal notranslate"><span class="pre">os</span></code> and <code class="docutils literal notranslate"><span class="pre">image</span></code> configs, or when specified

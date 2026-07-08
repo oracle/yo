@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configuration &#8212; yo v1.12.2 documentation</title>
+    <title>Configuration &#8212; yo v1.13.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
-    <script src="../_static/documentation_options.js?v=c624a2ae"></script>
+    <script src="../_static/documentation_options.js?v=2471e684"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="icon" href="../_static/yo.png"/>
@@ -112,8 +112,8 @@ the following command:</p>
 <section id="vnc-prog">
 <span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">vnc_prog</span></code><a class="headerlink" href="#vnc-prog" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired program to launch for VNC (remote desktop).
-This string will be interpreted by your shell, but first Python’s format method
-will replace the following strings:</p>
+This string will first be split into arguments according to shell quoting rules,
+and Python’s format method will replace the following strings:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">{host}</span></code> host for VNC connection</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">{port}</span></code> port for VNC connection</p></li>
@@ -124,8 +124,8 @@ desktop client), feel free to modify it.</p>
 <section id="rdp-prog">
 <span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">rdp_prog</span></code><a class="headerlink" href="#rdp-prog" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set a desired program to launch for RDP (remote desktop).
-This string will be interpreted by your shell, but first Python’s format method
-will replace the following strings:</p>
+This string will first be split into arguments according to shell quoting rules,
+and Python’s format method will replace the following strings:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">{host}</span></code> host for RDP connection</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">{port}</span></code> port for VNC connection</p></li>
@@ -190,14 +190,13 @@ thoroughly.</p>
 <section id="task-dir">
 <span id="config-task-dir"></span><h3><code class="docutils literal notranslate"><span class="pre">task_dir</span></code><a class="headerlink" href="#task-dir" title="Link to this heading">¶</a></h3>
 <p>(String, Optional) Set the directory in which yo <a class="reference internal" href="tasks.html#tasks-overview"><span class="std std-ref">tasks</span></a>
-are stored. This may be useful in case the default (<code class="docutils literal notranslate"><span class="pre">/tmp/tasks</span></code>) is ephemeral
-– that is, if it is deleted on reboot. This must be an absolute path, with the
-following exception: if you begin the path with <code class="docutils literal notranslate"><span class="pre">$HOME/</span></code> or <code class="docutils literal notranslate"><span class="pre">~/</span></code>, then the
-path will be interpreted relative to the instance user’s home directory.
-However, this interpolation is performed manually by yo – no other shell
-processing occurs, and the remaining portion of the string will be interpreted
-literally. Spaces and other special characters are supported in the directory
-name, though not recommended.</p>
+are stored. The default is <code class="docutils literal notranslate"><span class="pre">~/.cache/yo-tasks</span></code>. This must be an absolute path,
+with the following exception: if you begin the path with <code class="docutils literal notranslate"><span class="pre">$HOME/</span></code> or <code class="docutils literal notranslate"><span class="pre">~/</span></code>,
+then the path will be interpreted relative to the instance user’s home
+directory. However, this interpolation is performed manually by yo – no other
+shell processing occurs, and the remaining portion of the string will be
+interpreted literally. Spaces and other special characters are supported in the
+directory name, though not recommended.</p>
 <p>Your instance’s user needs to have permission to create the directory (and its
 parents) if it does not exist.</p>
 </section>
@@ -706,15 +705,13 @@ of copy/paste.</p>
 <span class="c1"># OPTIONAL: task_dir</span>
 <span class="c1">#</span>
 <span class="c1"># Specify the directory on OCI instances where yo tasks are copied and in which</span>
-<span class="c1"># they execute. The default is /tmp/tasks, but in some cases, this may not be</span>
-<span class="c1"># suitable (e.g. if /tmp is ephemeral). The setting can&#39;t be changed on a</span>
-<span class="c1"># per-instance basis, but it should be good enough.</span>
+<span class="c1"># they execute. The default is ~/.cache/yo-tasks. The setting can&#39;t be changed</span>
+<span class="c1"># on a per-instance basis, but it should be good enough.</span>
 <span class="c1"># The path should be absolute, and your user should have permission to create</span>
 <span class="c1"># the directory (and parents) if it does not exist.</span>
-<span class="c1"># Note: shell home directory syntax cannot be used (~/), but you can use</span>
-<span class="c1"># $HOME instead.</span>
+<span class="c1"># You can use shell home directory syntax (~/) or $HOME.</span>
 <span class="c1">#</span>
-<span class="c1"># task_dir = /tmp/tasks</span>
+<span class="c1"># task_dir = ~/.cache/yo-tasks</span>
 
 <span class="c1"># OPTIONAL: exact_name</span>
 <span class="c1">#</span>
