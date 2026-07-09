@@ -169,6 +169,26 @@ def test_list_results(mock_ctx):
     ]
 
 
+def test_list_ip_column_from_config_fetches_ips(mock_ctx):
+    inst = instance_factory()
+    mock_ctx.config.list_columns = "Name,IP"
+    mock_ctx.list_instances.return_value = [inst]
+    mock_ctx.get_all_instance_ips.return_value = {inst.id: "10.0.0.1"}
+
+    YoCmd.main("", args=["list"])
+
+    mock_ctx.get_all_instance_ips.assert_called_once_with([inst])
+    mock_ctx.con.print.assert_called_once()
+    table = mock_ctx.con.print.call_args[0][0]
+    assert table._columns == ["Name", "IP"]
+    assert table._rows == [
+        (
+            inst.name,
+            "10.0.0.1",
+        ),
+    ]
+
+
 def test_list_all_regions_results(mock_ctx):
     r1 = mock_ctx.config.region
     r2 = "us-phoenix-1"

@@ -580,8 +580,6 @@ class ListCmd(YoCmd):
             self.args.extra_column.append("IP")
         if self.args.ad:
             self.args.extra_column.append("AD")
-        if "IP" in self.args.extra_column:
-            self._fetch_ips = True
         names += self.args.extra_column
         if self.args.all_regions and "Region" not in names:
             names.insert(0, "Region")
@@ -592,6 +590,8 @@ class ListCmd(YoCmd):
             if name not in col_defs:
                 raise YoExc(f"column {name} has no implementation!")
             ret.append((name, col_defs[name]))
+            if name == "IP":
+                self._fetch_ips = True
         return ret
 
     def run(self) -> None:
