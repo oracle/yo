@@ -12,12 +12,13 @@ version, should appear here.
 
 Changes & Features:
 
-- **User-visible Change:** We've updated the default where yo's tasks are
-  stored and executed. Previously, task scripts, outputs, and working
-  directories were under ``/tmp/tasks``, but placing them under your home dir is
-  a bit more secure, plus it is more reliable for images where ``/tmp`` is
-  actually a tmpfs. This directory has always been configurable via the
-  ``task_dir`` configuration value.
+- **User-visible Change:** We've updated the default directory where yo's tasks
+  are stored and executed. The new directory is ``~/.cache/yo-tasks``.
+  Previously, task scripts, outputs, and working directories were under
+  ``/tmp/tasks``, but placing them under your home dir is a bit more secure,
+  plus it is more reliable for images where ``/tmp`` is actually a tmpfs. This
+  directory has always been configurable via the ``task_dir`` configuration
+  value, so if you prefered the old way, you can set it in your config.
 - Yo now properly handles SSH host keys. Previously, yo's SSH commands would
   ignore host keys because IP address reuse is reasonably common on small
   subnets, which can result in scary false-positives. Now, we use "HostKeyAlias"
