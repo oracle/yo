@@ -7,6 +7,11 @@ Unreleased
 Any changes which are committed, but not yet present in a released
 version, should appear here.
 
+1.13.1 - Thu, Jul 9, 2026
+-------------------------
+
+- Fix crash in ``yo list`` when the IP column is specified in ``list_columns``
+
 1.13.0 - Wed, Jul 8, 2026
 -------------------------
 
