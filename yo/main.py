@@ -86,6 +86,10 @@ import typing as t
 from configparser import ConfigParser
 from fnmatch import fnmatch
 
+# The OCI SDK reads this during import. Set it before yo.api imports SDK
+# modules, otherwise every OCI service is loaded for even a simple `yo list`.
+os.environ.setdefault("OCI_PYTHON_SDK_NO_SERVICE_IMPORTS", "True")
+
 import argcomplete  # type: ignore
 import rich.console
 import rich.progress
@@ -3583,7 +3587,6 @@ def _old_extension_modules(ctx: YoCtx) -> None:
 
 
 def main() -> None:
-    os.environ["OCI_PYTHON_SDK_NO_SERVICE_IMPORTS"] = "True"
     try:
         desc = (
             "A simple OCI client. Use 'yo help' for an overview, or yo -h "

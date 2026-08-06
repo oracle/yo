@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import importlib
 import inspect
+import os
 from pathlib import Path
 from unittest import mock
 
@@ -7,6 +9,14 @@ import pytest
 
 import yo.main as main
 from yo.util import YoExc
+
+
+def test_main_sets_oci_sdk_import_flag_before_api_import(monkeypatch):
+    monkeypatch.delenv("OCI_PYTHON_SDK_NO_SERVICE_IMPORTS", raising=False)
+
+    importlib.reload(main)
+
+    assert os.environ["OCI_PYTHON_SDK_NO_SERVICE_IMPORTS"] == "True"
 
 
 @pytest.fixture
